@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shipping — ExportLots</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">Export<span>Lots</span></div>
+  <div class="nav-links">
+    <a href="index.html">Catalog</a>
+    <a href="shipping.html" class="active">Shipping</a>
+    <a href="how-it-works.html">How it works</a>
+    <a href="wholesale.html">Wholesale</a>
+  </div>
+  <a class="nav-wa" href="https://wa.me/12127966646" target="_blank">
+    <i class="ti ti-brand-whatsapp"></i> WhatsApp
+  </a>
+</nav>
+
+<div style="padding:36px 24px 24px;border-bottom:1px solid var(--border)">
+  <div style="font-size:12px;color:var(--text2);font-family:var(--mono);margin-bottom:8px">FMC NVOCC #022641 · Active</div>
+  <h1 style="font-size:28px;font-weight:500;margin-bottom:8px">International shipping to 113 countries.</h1>
+  <p style="font-size:15px;color:var(--text2);max-width:520px;line-height:1.65">Logistics handled by Dapex Inc. — US-based FMC licensed NVOCC. Auction pickup, NJ warehouse loading, weekly ocean cuts, HBL issuance, AES/ISF in-house.</p>
+</div>
+
+<div style="display:flex;gap:0;border-bottom:1px solid var(--border);overflow-x:auto" id="dest-tabs">
+  <button class="dest-tab active" onclick="showDest('nigeria')">🇳🇬 Nigeria</button>
+  <button class="dest-tab" onclick="showDest('uae')">🇦🇪 UAE</button>
+  <button class="dest-tab" onclick="showDest('ghana')">🇬🇭 Ghana</button>
+  <button class="dest-tab" onclick="showDest('europe')">🇱🇹 Eastern Europe</button>
+  <button class="dest-tab" onclick="showDest('dr')">🇩🇴 Dominican Republic</button>
+</div>
+
+<style>
+.dest-tab{font-size:13px;padding:12px 18px;border:none;background:transparent;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;white-space:nowrap;font-family:var(--font)}
+.dest-tab.active{color:var(--text);border-bottom-color:var(--text);font-weight:500}
+.dest-content{display:none;padding:24px}
+.dest-content.active{display:block}
+.rules-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:20px}
+.rule-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px}
+.rule-card.alert{border-color:var(--red)}
+.rule-card.good{border-color:var(--goodg)}
+.rl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px}
+.rv{font-size:14px;font-weight:500;color:var(--text);margin-bottom:3px}
+.rv.red{color:var(--red)}
+.rv.green{color:var(--goodg)}
+.rn{font-size:11px;color:var(--text2);line-height:1.5}
+.steps{display:flex;flex-direction:column}
+.step{display:flex;gap:14px;padding:13px 0;border-bottom:1px solid var(--border)}
+.step:last-child{border-bottom:none}
+.sn{width:26px;height:26px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(--text2);flex-shrink:0;margin-top:2px}
+.st{font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px}
+.sd{font-size:12px;color:var(--text2);line-height:1.6}
+.sd strong{color:var(--text);font-weight:500}
+.wa-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;display:flex;gap:14px;margin-top:20px}
+.wa-title{font-size:14px;font-weight:500;margin-bottom:5px}
+.wa-desc{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px}
+</style>
+
+<!-- NIGERIA -->
+<div class="dest-content active" id="dest-nigeria">
+  <div class="rules-grid">
+    <div class="rule-card alert"><div class="rl">Drive side</div><div class="rv red">LHD only</div><div class="rn">RHD prohibited. No JDM.</div></div>
+    <div class="rule-card"><div class="rl">Age limit</div><div class="rv">No federal cap</div><div class="rn">Check state-level rules.</div></div>
+    <div class="rule-card alert"><div class="rl">Form M</div><div class="rv red">Required pre-sailing</div><div class="rn">Bank date must precede vessel sailing date.</div></div>
+    <div class="rule-card"><div class="rl">Fuel</div><div class="rv">¼ tank max</div><div class="rn">Both RoRo and container.</div></div>
+    <div class="rule-card"><div class="rl">Duty</div><div class="rv">~70–90% of CIF</div><div class="rn">20–35% import + 15% NAC + VAT etc.</div></div>
+    <div class="rule-card good"><div class="rl">Transit</div><div class="rv green">14–21 days</div><div class="rn">Newark → Apapa/Tin Can</div></div>
+  </div>
+  <div class="steps">
+    <div class="step"><div class="sn">1</div><div><div class="st">Send VIN + lot on WhatsApp</div><div class="sd">We reply with <strong>itemized quote in 4 hours</strong>.</div></div></div>
+    <div class="step"><div class="sn">2</div><div><div class="st">Your bank opens Form M</div><div class="sd">Via GTB, Zenith, Wema, UBA. <strong>Date must precede sailing date.</strong> We give you ETD in advance.</div></div></div>
+    <div class="step"><div class="sn">3</div><div><div class="st">We pick up and load</div><div class="sd">Inland truckers dispatched within <strong>3 days of payment</strong>. Container loaded at NJ. AES/ISF filed in-house.</div></div></div>
+    <div class="step"><div class="sn">4</div><div><div class="st">Docs to your Lagos agent</div><div class="sd"><strong>HBL + pre-alert + commercial invoice</strong> to your Apapa clearing agent. ECTN/BESC filed before vessel arrival.</div></div></div>
+  </div>
+  <div class="wa-box">
+    <div style="font-size:28px;color:var(--green)"><i class="ti ti-brand-whatsapp"></i></div>
+    <div>
+      <div class="wa-title">WhatsApp — Lagos desk</div>
+      <div class="wa-desc">Send: VIN + lot + yard + destination + cars/month. Itemized quote back within 4 hours.</div>
+      <a class="btn-wa-lg" href="https://wa.me/12127966646?text=Hi+ExportLots.+Nigeria+shipment.+VIN%3A+___+Lot%3A+___+Yard%3A+___" target="_blank" style="display:inline-flex">
+        <i class="ti ti-brand-whatsapp"></i> WhatsApp — Lagos
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- UAE -->
+<div class="dest-content" id="dest-uae">
+  <div style="background:#fee2e2;border:1px solid var(--red);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:16px;display:flex;gap:10px">
+    <i class="ti ti-alert-triangle" style="color:var(--red);font-size:18px;flex-shrink:0;margin-top:2px"></i>
+    <div>
+      <div style="font-size:13px;font-weight:500;color:#991b1b;margin-bottom:3px">Dubai RTA does not register branded, salvage, rebuilt, or flood titles</div>
+      <div style="font-size:12px;color:#7f1d1d;line-height:1.6">Branded-title vehicles are seized at Jebel Ali. We check VIN title status at quote stage and flag any issues before you commit.</div>
+    </div>
+  </div>
+  <div class="rules-grid">
+    <div class="rule-card good"><div class="rl">Age limit</div><div class="rv green">No restriction</div><div class="rn">Most open market in the region.</div></div>
+    <div class="rule-card good"><div class="rl">Drive side</div><div class="rv green">LHD + RHD</div><div class="rn">Both accepted.</div></div>
+    <div class="rule-card alert"><div class="rl">Title</div><div class="rv red">Clean only</div><div class="rn">RTA hard rule. No exceptions.</div></div>
+    <div class="rule-card"><div class="rl">GCC duty</div><div class="rv">5% CIF + 5% VAT</div><div class="rn">~10.25% total.</div></div>
+    <div class="rule-card good"><div class="rl">Transit</div><div class="rv green">25–35 days</div><div class="rn">Newark → Jebel Ali</div></div>
+  </div>
+  <div class="wa-box">
+    <div style="font-size:28px;color:var(--green)"><i class="ti ti-brand-whatsapp"></i></div>
+    <div>
+      <div class="wa-title">WhatsApp — Jebel Ali desk</div>
+      <div class="wa-desc">Send VIN + lot. We check title first, then quote. Available Sun–Thu for UAE hours.</div>
+      <a class="btn-wa-lg" href="https://wa.me/12127966646?text=Hi+ExportLots.+Jebel+Ali.+VIN%3A+___+Title%3A+clean" target="_blank" style="display:inline-flex">
+        <i class="ti ti-brand-whatsapp"></i> WhatsApp — Jebel
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- GHANA -->
+<div class="dest-content" id="dest-ghana">
+  <div class="rules-grid">
+    <div class="rule-card alert"><div class="rl">Drive side</div><div class="rv red">LHD only</div><div class="rn">Same as Nigeria.</div></div>
+    <div class="rule-card"><div class="rl">Port</div><div class="rv">Tema</div><div class="rn">Main Ghana discharge port.</div></div>
+    <div class="rule-card alert"><div class="rl">ECTN/SPN</div><div class="rv red">Required</div><div class="rn">Smart Port Note — filed 5 days before arrival.</div></div>
+    <div class="rule-card good"><div class="rl">Transit</div><div class="rv green">18–24 days</div><div class="rn">Newark → Tema</div></div>
+  </div>
+  <div class="wa-box">
+    <div style="font-size:28px;color:var(--green)"><i class="ti ti-brand-whatsapp"></i></div>
+    <div>
+      <div class="wa-title">WhatsApp — Ghana/West Africa desk</div>
+      <a class="btn-wa-lg" href="https://wa.me/12127966646?text=Hi+ExportLots.+Ghana+Tema.+VIN%3A+___" target="_blank" style="display:inline-flex">
+        <i class="ti ti-brand-whatsapp"></i> WhatsApp — Tema
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- EASTERN EUROPE -->
+<div class="dest-content" id="dest-europe">
+  <div class="rules-grid">
+    <div class="rule-card alert"><div class="rl">Age limit (LT)</div><div class="rv red">Max 10 years</div><div class="rn">Manufacture year — not registration.</div></div>
+    <div class="rule-card alert"><div class="rl">Pre-shipment</div><div class="rv red">Steam clean + refrigerants</div><div class="rn">Lithuanian customs enforces this.</div></div>
+    <div class="rule-card"><div class="rl">Duty (under 7yr)</div><div class="rv">10% + 21% VAT</div><div class="rn">Both apply.</div></div>
+    <div class="rule-card"><div class="rl">Duty (7–10yr)</div><div class="rv">21% VAT only</div><div class="rn">Import duty waived.</div></div>
+    <div class="rule-card good"><div class="rl">Transit</div><div class="rv green">14–18 days</div><div class="rn">Newark → Klaipeda</div></div>
+    <div class="rule-card"><div class="rl">Russian ops</div><div class="rv">Available</div><div class="rn">Telegram + WhatsApp.</div></div>
+  </div>
+  <div class="wa-box">
+    <div style="font-size:28px;color:var(--green)"><i class="ti ti-brand-whatsapp"></i></div>
+    <div>
+      <div class="wa-title">WhatsApp — Klaipeda desk · Работаем на русском</div>
+      <a class="btn-wa-lg" href="https://wa.me/12127966646?text=Hi+ExportLots.+Klaipeda.+VIN%3A+___+Manufacture+year%3A+___" target="_blank" style="display:inline-flex">
+        <i class="ti ti-brand-whatsapp"></i> WhatsApp — Klaipeda
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- DOMINICAN REPUBLIC -->
+<div class="dest-content" id="dest-dr">
+  <div class="rules-grid">
+    <div class="rule-card alert"><div class="rl">Age limit</div><div class="rv red">Max 5 years</div><div class="rn">Law 04-07. Manufacture year.</div></div>
+    <div class="rule-card"><div class="rl">Port</div><div class="rv">Rio Haina / Caucedo</div><div class="rn">Weekly sailings.</div></div>
+    <div class="rule-card"><div class="rl">Duty</div><div class="rv">20–40% + 18% VAT</div><div class="rn">Plus excise for luxury.</div></div>
+    <div class="rule-card good"><div class="rl">Transit</div><div class="rv green">8–12 days</div><div class="rn">Newark → Rio Haina</div></div>
+  </div>
+  <div class="wa-box">
+    <div style="font-size:28px;color:var(--green)"><i class="ti ti-brand-whatsapp"></i></div>
+    <div>
+      <div class="wa-title">WhatsApp — Rio Haina · Hablamos español</div>
+      <a class="btn-wa-lg" href="https://wa.me/12127966646?text=Hola+ExportLots.+Rio+Haina.+VIN%3A+___" target="_blank" style="display:inline-flex">
+        <i class="ti ti-brand-whatsapp"></i> WhatsApp — Rio Haina
+      </a>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-col"><strong>ExportLots</strong>Powered by Dapex Inc.<br>FMC NVOCC #022641<br>Old Bridge, NJ</div>
+  <div class="footer-col"><strong>Contact</strong>sales@dapex.net<br>+1 (212) 796-6646</div>
+</footer>
+
+<a style="position:fixed;bottom:20px;right:20px;z-index:999;display:flex;align-items:center;gap:7px;background:#25D366;color:#fff;font-size:14px;font-weight:500;padding:12px 20px;border-radius:50px;box-shadow:0 4px 18px rgba(37,211,102,0.3);text-decoration:none" href="https://wa.me/12127966646" target="_blank">
+  <i class="ti ti-brand-whatsapp" style="font-size:20px"></i> WhatsApp
+</a>
+
+<script>
+function showDest(key) {
+  document.querySelectorAll('.dest-content').forEach(d => d.classList.remove('active'));
+  document.querySelectorAll('.dest-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('dest-' + key).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
