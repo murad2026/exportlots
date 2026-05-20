@@ -130,52 +130,55 @@ img { display: block; }
   gap: 14px;
 }
 
-/* ---- VEHICLE CARD — все секции фиксированной высоты ---- */
-.v-card { background: #fff; border: 0.5px solid rgba(0,0,0,0.09); border-radius: var(--radius-lg); overflow: hidden; cursor: pointer; transition: transform 0.1s, box-shadow 0.15s; display: flex; flex-direction: column; }
-.v-card:hover { transform: translateY(-2px); box-shadow: 0 4px 18px rgba(0,0,0,0.08); }
-.v-card.sold { opacity: 0.4; }
-.v-img { position: relative; height: 170px; flex-shrink: 0; background: var(--bg2); overflow: hidden; }
+/* ---- VEHICLE CARD ---- */
+.v-card {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden;
+  cursor: pointer; transition: border-color 0.15s, transform 0.1s;
+}
+.v-card:hover { border-color: var(--border2); transform: translateY(-1px); }
+.v-card.sold { opacity: 0.55; pointer-events: none; }
+
+.v-img {
+  position: relative; height: 170px;
+  background: var(--bg2); overflow: hidden;
+}
 .v-img img { width: 100%; height: 100%; object-fit: cover; }
-.v-img-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--text3); flex-direction: column; gap: 6px; }
-.v-color { position: absolute; top: 8px; right: 9px; display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.58); color: #fff; font-size: 11px; font-weight: 500; padding: 4px 9px; border-radius: 20px; }
-.v-cdot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.5); flex-shrink: 0; }
-.v-status { position: absolute; top: 8px; left: 9px; font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 20px; }
+.v-img-placeholder {
+  width: 100%; height: 100%; display: flex; align-items: center;
+  justify-content: center; font-size: 12px; color: var(--text3);
+}
+.v-status {
+  position: absolute; top: 8px; left: 9px;
+  font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 20px;
+}
 .vs-available { background: rgba(59,109,17,0.88); color: #fff; }
 .vs-sold      { background: rgba(60,60,60,0.82);  color: #fff; }
 .vs-auction   { background: rgba(27,90,200,0.88); color: #fff; }
-.vs-soon      { background: rgba(234,88,12,0.88); color: #fff; }
-.vs-urgent    { background: rgba(220,38,38,0.9);  color: #fff; }
-.v-vin { position: absolute; bottom: 7px; left: 9px; font-size: 10px; font-family: var(--mono); background: rgba(0,0,0,0.52); color: #fff; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.04em; }
-.v-body { padding: 12px 13px 10px; flex-shrink: 0; overflow: hidden; display: flex; flex-direction: column; }
-.v-price { font-size: 26px; font-weight: 700; color: var(--text); letter-spacing: -0.8px; margin-bottom: 3px; line-height: 1.1; }
-.v-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.v-sub   { font-size: 12px; color: var(--text2); margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.v-badges { display: flex; gap: 4px; flex-wrap: nowrap; overflow: hidden; height: 20px; align-items: center; flex-shrink: 0; }
-.vb { font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 500; white-space: nowrap; flex-shrink: 0; }
-.vb-warn    { background: #fef9c3; color: #854d0e; }
+.v-vin {
+  position: absolute; bottom: 7px; left: 9px;
+  font-size: 10px; font-family: var(--mono);
+  background: rgba(0,0,0,0.52); color: #fff;
+  padding: 2px 7px; border-radius: 4px;
+}
+
+.v-body { padding: 11px 13px; }
+.v-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+.v-sub   { font-size: 11px; color: var(--text2); margin-bottom: 7px; }
+.v-badges { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+.vb { font-size: 10px; padding: 2px 7px; border-radius: var(--radius); font-weight: 500; }
+.vb-warn    { background: #fef3c7; color: #92400e; }
 .vb-danger  { background: #fee2e2; color: #991b1b; }
-.vb-neutral { background: #f3f4f6; color: #6b7280; }
+.vb-neutral { background: var(--bg2); color: var(--text2); }
 .vb-ok      { background: #dcfce7; color: #166534; }
-.v-spacer { flex: 1; }
-.v-flags-row { height: 38px; padding: 0 13px; display: flex; align-items: center; gap: 5px; border-top: 0.5px solid #f0efe9; flex-shrink: 0; }
-.v-flags-label { font-size: 10px; color: var(--text3); flex-shrink: 0; }
-.v-flag-btn { font-size: 20px; padding: 2px 4px; border-radius: 5px; border: 0.5px solid var(--border); background: var(--bg2); line-height: 1.2; cursor: pointer; flex-shrink: 0; text-decoration: none; }
-.v-flag-x   { font-size: 20px; padding: 2px 4px; opacity: 0.2; flex-shrink: 0; }
-.v-footer { height: 46px; padding: 0 13px; display: flex; align-items: center; gap: 8px; border-top: 0.5px solid #f0efe9; flex-shrink: 0; }
-.v-wa-btn { display: inline-flex; align-items: center; gap: 8px; background: #25D366; color: #fff; font-size: 12px; font-weight: 500; padding: 7px 16px; border-radius: 50px; border: none; cursor: pointer; white-space: nowrap; flex-shrink: 0; text-decoration: none; }
-.v-wa-btn:hover { background: #1ea952; }
-.v-wa-icon { width: 20px; height: 20px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.v-wa-icon i { font-size: 13px; color: #25D366; }
-.v-mmr { font-size: 10px; color: var(--text3); margin-left: auto; text-align: right; line-height: 1.5; white-space: nowrap; }
-.v-timer { height: 32px; padding: 0 13px; display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 500; border-top: 0.5px solid #f0efe9; flex-shrink: 0; }
-.v-timer-normal { color: #6b7280; background: #f9fafb; }
-.v-timer-soon   { color: #c2410c; background: #fff7ed; border-top-color: #fed7aa; }
-.v-timer-urgent { color: #b91c1c; background: #fef2f2; border-top-color: #fecaca; }
-.v-timer-sold   { color: var(--text3); background: var(--bg2); }
+
 .v-prices { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 9px; }
 .vp { font-size: 11px; color: var(--text2); display: flex; align-items: center; gap: 3px; }
 .vp-val { font-weight: 500; color: var(--text); }
 .vp-blocked { font-size: 11px; color: var(--red); display: flex; align-items: center; gap: 3px; }
+
+.v-footer { display: flex; gap: 7px; align-items: center; }
+.v-mmr { font-size: 10px; color: var(--text3); margin-left: auto; }
 
 /* ---- DETAIL PAGE ---- */
 .detail-wrap { max-width: 840px; margin: 0 auto; padding: 20px 24px; }

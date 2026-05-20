@@ -62,86 +62,10 @@ const RATES = {
     upTo15k:  350,
     upTo30k:  450,
     above30k: 550,
-  },
-
-  // ---- AUCTION BUYER FEE ----
-  auctionFee: [
-    { max: 499,      fee: 25  },
-    { max: 999,      fee: 50  },
-    { max: 1499,     fee: 75  },
-    { max: 1999,     fee: 100 },
-    { max: 2499,     fee: 125 },
-    { max: 2999,     fee: 150 },
-    { max: 3999,     fee: 175 },
-    { max: 4999,     fee: 200 },
-    { max: 5999,     fee: 250 },
-    { max: 6999,     fee: 275 },
-    { max: 7999,     fee: 300 },
-    { max: 9999,     fee: 325 },
-    { max: 11999,    fee: 350 },
-    { max: 14999,    fee: 375 },
-    { max: 19999,    fee: 400 },
-    { max: 24999,    fee: 450 },
-    { max: 29999,    fee: 500 },
-    { max: 34999,    fee: 550 },
-    { max: Infinity, fee: 600 },
-  ],
-
-  // ---- TRANSACTION FEE (per lot) ----
-  transactionFee: 110,
+  }
 };
 
-// ---- AUCTION FEE LOOKUP ----
-function getAuctionFee(price) {
-  for (const tier of RATES.auctionFee) {
-    if (price <= tier.max) return tier.fee;
-  }
-  return 600;
-}
-
-// ---- BROKER FEE LOOKUP ----
-function getBrokerFee(price) {
-  if (price <= 5000)  return RATES.brokerFee.upTo5k;
-  if (price <= 15000) return RATES.brokerFee.upTo15k;
-  if (price <= 30000) return RATES.brokerFee.upTo30k;
-  return RATES.brokerFee.above30k;
-}
-
-// ---- FULL ALL-IN PRICE CALCULATOR ----
-// Returns breakdown + total for each destination
-function calculateAllIn(lotPrice, destination, originPort = 'NJ', includeBroker = true) {
-  const auctionFee     = getAuctionFee(lotPrice);
-  const transactionFee = RATES.transactionFee;
-  const brokerFee      = includeBroker ? getBrokerFee(lotPrice) : 0;
-  const inland         = RATES.inland[originPort] || RATES.inland.NJ;
-  const portFee        = RATES.portFees[originPort] || RATES.portFees.NJ;
-  const loading        = RATES.loading[originPort] || RATES.loading.NJ;
-  const ocean          = RATES.ocean[destination];
-  const docs           = RATES.fixed.ISF + RATES.fixed.AES + RATES.fixed.BL +
-                         (['Lagos','Tema'].includes(destination) ? RATES.fixed.ECTN : 0);
-  const margin         = RATES.margin.retail;
-
-  const total = lotPrice + auctionFee + transactionFee + brokerFee +
-                inland + portFee + loading + ocean + docs + margin;
-
-  return {
-    breakdown: {
-      'Lot price':        lotPrice,
-      'Auction fee':      auctionFee,
-      'Transaction fee':  transactionFee,
-      'Broker assist':    brokerFee,
-      'Inland transport': inland,
-      'Port fee':         portFee,
-      'Loading':          loading,
-      'Ocean freight':    ocean,
-      'Docs (ISF/AES/BL)':docs,
-      'Service fee':      margin,
-    },
-    total: Math.ceil(total / 50) * 50,
-  };
-}
-
-
+// ---- CALCULATOR FUNCTION ----
 function calculateDelivery(destination, originPort = 'NJ', cars = 4) {
   const inland  = RATES.inland[originPort] || RATES.inland.NJ;
   const port    = RATES.portFees[originPort] || RATES.portFees.NJ;
