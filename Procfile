@@ -1,1 +1,1 @@
-web: npx serve . -l $PORT --no-clipboard
+web: npx serve . -l $PORT --single
