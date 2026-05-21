@@ -1,6 +1,4 @@
 {
-  "rewrites": [
-    { "source": "/detail.html", "destination": "/detail.html" },
-    { "source": "/shipping.html", "destination": "/shipping.html" }
-  ]
+  "cleanUrls": false,
+  "trailingSlash": false
 }
