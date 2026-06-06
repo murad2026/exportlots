@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wholesale Partners — ExportLots</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+/* HERO */
+.wh-hero { padding: 60px 20px 52px; text-align: center; border-bottom: 1px solid var(--border); background: #fff; }
+.wh-hero-tag { display: inline-flex; align-items: center; gap: 6px; background: var(--bg2); border: 1px solid var(--border); color: var(--text2); font-size: 12px; font-weight: 500; padding: 5px 14px; border-radius: 20px; margin-bottom: 20px; }
+.wh-hero h1 { font-size: 38px; font-weight: 700; letter-spacing: -1.2px; line-height: 1.15; margin-bottom: 14px; max-width: 600px; margin-left: auto; margin-right: auto; }
+.wh-hero h1 span { color: #1B5AC8; }
+.wh-hero p { font-size: 16px; color: var(--text2); max-width: 500px; margin: 0 auto 32px; line-height: 1.65; }
+.wh-stats { display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; margin-top: 36px; }
+.wh-stat { text-align: center; }
+.wh-stat-num { font-size: 28px; font-weight: 700; letter-spacing: -0.8px; color: var(--text); }
+.wh-stat-label { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+/* TABS */
+.wh-tabs { display: flex; max-width: 700px; margin: 0 auto; padding: 32px 20px 0; gap: 12px; }
+.wh-tab { flex: 1; padding: 18px 20px; border-radius: var(--radius-lg); border: 1.5px solid var(--border); cursor: pointer; transition: all 0.15s; background: #fff; }
+.wh-tab:hover { border-color: var(--border2); }
+.wh-tab.active { border-color: var(--text); background: var(--text); color: #fff; }
+.wh-tab-icon { font-size: 22px; margin-bottom: 8px; }
+.wh-tab h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.wh-tab p { font-size: 11px; opacity: 0.7; line-height: 1.4; }
+
+/* CONTENT PANELS */
+.wh-panel { max-width: 700px; margin: 0 auto; padding: 32px 20px 48px; display: none; }
+.wh-panel.active { display: block; }
+
+.wh-section-title { font-size: 11px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; }
+
+/* PORTAL PANEL */
+.portal-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+@media(max-width:540px){ .portal-cards { grid-template-columns: 1fr; } }
+.portal-card { background: var(--bg2); border-radius: var(--radius-lg); padding: 18px; }
+.portal-card-icon { font-size: 20px; margin-bottom: 8px; }
+.portal-card h4 { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.portal-card p { font-size: 11px; color: var(--text2); line-height: 1.5; }
+
+.revenue-box { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 24px; }
+.rev-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 0.5px solid var(--border); }
+.rev-row:last-child { border-bottom: none; }
+.rev-label { font-size: 12px; color: var(--text2); }
+.rev-val { font-size: 13px; font-weight: 600; color: var(--text); font-family: var(--mono); }
+.rev-val.green { color: #166534; }
+
+/* DEALER PANEL */
+.dealer-steps { display: flex; flex-direction: column; gap: 0; margin-bottom: 24px; }
+.d-step { display: flex; gap: 14px; position: relative; }
+.d-step:not(:last-child)::after { content: ''; position: absolute; left: 15px; top: 36px; width: 2px; height: calc(100% - 8px); background: var(--border); }
+.d-num { width: 32px; height: 32px; border-radius: 50%; background: var(--text); color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; z-index: 1; }
+.d-body { padding: 6px 0 24px; }
+.d-title { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+.d-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
+
+.models-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; }
+.model-tag { font-size: 11px; padding: 4px 10px; background: var(--bg2); border: 0.5px solid var(--border); border-radius: 20px; color: var(--text2); }
+
+.terms-box { background: var(--bg2); border-radius: var(--radius-lg); padding: 16px 20px; margin-bottom: 24px; }
+.term-row { display: flex; gap: 10px; font-size: 12px; padding: 5px 0; }
+.term-icon { color: #166534; flex-shrink: 0; }
+.term-text { color: var(--text2); }
+.term-text strong { color: var(--text); }
+
+/* CTA */
+.wh-cta { background: var(--text); border-radius: var(--radius-lg); padding: 28px 24px; text-align: center; }
+.wh-cta h3 { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+.wh-cta p { font-size: 13px; color: rgba(255,255,255,0.65); margin-bottom: 20px; }
+.wh-cta-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.btn-wa-wh { display: inline-flex; align-items: center; gap: 8px; background: #25D366; color: #fff; font-size: 13px; font-weight: 600; padding: 11px 22px; border-radius: 50px; text-decoration: none; }
+.btn-wa-wh:hover { background: #1ea952; }
+.btn-email-wh { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.12); color: #fff; font-size: 13px; font-weight: 500; padding: 11px 22px; border-radius: 50px; text-decoration: none; border: 1px solid rgba(255,255,255,0.2); }
+.btn-email-wh:hover { background: rgba(255,255,255,0.2); }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a href="index.html" class="nav-logo">Export<span>Lots</span></a>
+  <div class="nav-links">
+    <a href="index.html">Catalog</a>
+    <a href="shipping.html">Shipping</a>
+    <a href="wholesale.html" class="active">Wholesale</a>
+  </div>
+  <a class="nav-wa" href="https://wa.me/12127966646" target="_blank">
+    <i class="ti ti-brand-whatsapp"></i> WhatsApp
+  </a>
+</nav>
+
+<div class="wh-hero">
+  <div class="wh-hero-tag"><i class="ti ti-building-store"></i> Wholesale & Partnership Program</div>
+  <h1>Source US cars at<br><span>dealer auction prices</span></h1>
+  <p>Direct from Manheim to your port. Weekly containers from NJ. Clean title only. Full documentation included.</p>
+  <div class="wh-stats">
+    <div class="wh-stat"><div class="wh-stat-num">20+</div><div class="wh-stat-label">Years in business</div></div>
+    <div class="wh-stat"><div class="wh-stat-num">300</div><div class="wh-stat-label">Cars/month via Dubai</div></div>
+    <div class="wh-stat"><div class="wh-stat-num">7</div><div class="wh-stat-label">Export destinations</div></div>
+    <div class="wh-stat"><div class="wh-stat-num">FMC</div><div class="wh-stat-label">NVOCC #022641</div></div>
+  </div>
+</div>
+
+<div class="wh-tabs">
+  <div class="wh-tab active" onclick="switchTab('portal')">
+    <div class="wh-tab-icon">🌐</div>
+    <h3>Portal Owners</h3>
+    <p>Autokunbo, Jiji dealers, car portals — earn on every car</p>
+  </div>
+  <div class="wh-tab" onclick="switchTab('dealer')">
+    <div class="wh-tab-icon">🏢</div>
+    <h3>Wholesale Dealers</h3>
+    <p>Import 10+ cars/month directly from Manheim auctions</p>
+  </div>
+</div>
+
+<!-- PORTAL PANEL -->
+<div class="wh-panel active" id="panel-portal">
+  <div class="wh-section-title">Why partner with ExportLots</div>
+  <div class="portal-cards">
+    <div class="portal-card">
+      <div class="portal-card-icon">📦</div>
+      <h4>Exclusive US inventory</h4>
+      <p>List our Manheim cars on your portal. Unique inventory your competitors don't have.</p>
+    </div>
+    <div class="portal-card">
+      <div class="portal-card-icon">💰</div>
+      <h4>Revenue on every car</h4>
+      <p>Earn a fixed fee for every car that ships through your network. No risk, no upfront cost.</p>
+    </div>
+    <div class="portal-card">
+      <div class="portal-card-icon">🏷️</div>
+      <h4>White label option</h4>
+      <p>"Powered by [Your Portal]" — your brand stays front and centre with your dealers.</p>
+    </div>
+    <div class="portal-card">
+      <div class="portal-card-icon">📣</div>
+      <h4>We drive traffic to you</h4>
+      <p>ExportLots runs ads in your region. Buyers land on your portal through our campaigns.</p>
+    </div>
+  </div>
+
+  <div class="wh-section-title">Revenue structure</div>
+  <div class="revenue-box">
+    <div class="rev-row">
+      <span class="rev-label">Per car shipped through your network</span>
+      <span class="rev-val green">$100 – $200</span>
+    </div>
+    <div class="rev-row">
+      <span class="rev-label">Monthly minimum to qualify</span>
+      <span class="rev-val">4 cars (1 container)</span>
+    </div>
+    <div class="rev-row">
+      <span class="rev-label">Partner portals per country</span>
+      <span class="rev-val green">Unlimited</span>
+    </div>
+    <div class="rev-row">
+      <span class="rev-label">Setup fee</span>
+      <span class="rev-val green">$0</span>
+    </div>
+  </div>
+
+  <div class="wh-cta">
+    <h3>Let's talk partnership</h3>
+    <p>We're onboarding portal partners across all our markets. Let's discuss how we can work together.</p>
+    <div class="wh-cta-btns">
+      <a class="btn-wa-wh" href="https://wa.me/12127966646?text=Hi+ExportLots.+I+am+interested+in+the+portal+partnership+program." target="_blank">
+        <i class="ti ti-brand-whatsapp"></i> WhatsApp us
+      </a>
+      <a class="btn-email-wh" href="mailto:sales@dapex.net?subject=Portal Partnership Inquiry">
+        <i class="ti ti-mail"></i> sales@dapex.net
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- DEALER PANEL -->
+<div class="wh-panel" id="panel-dealer">
+  <div class="wh-section-title">How it works for dealers</div>
+  <div class="dealer-steps">
+    <div class="d-step">
+      <div class="d-num">1</div>
+      <div class="d-body">
+        <div class="d-title">Tell us what you need</div>
+        <div class="d-desc">Models, years, colors, condition, budget. We search Manheim — 150,000+ cars weekly at dealer auction prices.</div>
+      </div>
+    </div>
+    <div class="d-step">
+      <div class="d-num">2</div>
+      <div class="d-body">
+        <div class="d-title">We send you options</div>
+        <div class="d-desc">Real auction photos, condition report, exact CIF price to your port. You approve before we buy.</div>
+      </div>
+    </div>
+    <div class="d-step">
+      <div class="d-num">3</div>
+      <div class="d-body">
+        <div class="d-title">Wire transfer — we buy</div>
+        <div class="d-desc">100% payment before loading. We purchase at dealer price, load into container at NJ port.</div>
+      </div>
+    </div>
+    <div class="d-step">
+      <div class="d-num">4</div>
+      <div class="d-body">
+        <div class="d-title">Weekly shipments</div>
+        <div class="d-desc">Container departs every week from NJ. BL + full export docs sent within 24hrs of loading.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wh-section-title">Available models</div>
+  <div class="models-grid">
+    <span class="model-tag">Toyota Camry</span>
+    <span class="model-tag">Toyota Highlander</span>
+    <span class="model-tag">Toyota Land Cruiser</span>
+    <span class="model-tag">Lexus RX 350</span>
+    <span class="model-tag">Lexus LX 570</span>
+    <span class="model-tag">Honda Accord</span>
+    <span class="model-tag">Honda CR-V</span>
+    <span class="model-tag">GMC Yukon</span>
+    <span class="model-tag">Chevrolet Tahoe</span>
+    <span class="model-tag">Ford F-150</span>
+    <span class="model-tag">Acura MDX</span>
+    <span class="model-tag">Nissan Pathfinder</span>
+  </div>
+
+  <div class="wh-section-title">Terms & conditions</div>
+  <div class="terms-box">
+    <div class="term-row"><i class="ti ti-check term-icon"></i><span class="term-text"><strong>Minimum order:</strong> 4 cars per container (one 40HC)</span></div>
+    <div class="term-row"><i class="ti ti-check term-icon"></i><span class="term-text"><strong>Payment:</strong> 100% wire transfer before loading</span></div>
+    <div class="term-row"><i class="ti ti-check term-icon"></i><span class="term-text"><strong>Title:</strong> Clean title only (no salvage, no rebuilt)</span></div>
+    <div class="term-row"><i class="ti ti-check term-icon"></i><span class="term-text"><strong>Docs included:</strong> BL, title, commercial invoice, ISF, AES</span></div>
+    <div class="term-row"><i class="ti ti-check term-icon"></i><span class="term-text"><strong>Departure:</strong> Weekly from Newark, NJ</span></div>
+    <div class="term-row"><i class="ti ti-check term-icon"></i><span class="term-text"><strong>Currency:</strong> USD only</span></div>
+  </div>
+
+  <div class="wh-cta">
+    <h3>Ready to start importing?</h3>
+    <p>Send us your requirements — models, destination, monthly volume. We'll get back within 24 hours.</p>
+    <div class="wh-cta-btns">
+      <a class="btn-wa-wh" href="https://wa.me/12127966646?text=Hi+ExportLots.+I+am+a+wholesale+dealer+interested+in+importing+from+USA.+Destination%3A+___+Models%3A+___+Monthly+volume%3A+___" target="_blank">
+        <i class="ti ti-brand-whatsapp"></i> WhatsApp us
+      </a>
+      <a class="btn-email-wh" href="mailto:sales@dapex.net?subject=Wholesale Dealer Inquiry">
+        <i class="ti ti-mail"></i> sales@dapex.net
+      </a>
+    </div>
+  </div>
+</div>
+
+<a style="position:fixed;bottom:20px;right:20px;z-index:999;display:flex;align-items:center;gap:7px;background:#25D366;color:#fff;font-size:14px;font-weight:500;padding:12px 20px;border-radius:50px;box-shadow:0 4px 18px rgba(37,211,102,0.3);text-decoration:none" href="https://wa.me/12127966646" target="_blank">
+  <i class="ti ti-brand-whatsapp" style="font-size:20px"></i> WhatsApp
+</a>
+
+<script>
+function switchTab(type) {
+  document.querySelectorAll('.wh-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.wh-panel').forEach(p => p.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById('panel-' + type).classList.add('active');
+}
+</script>
+</body>
+</html>
