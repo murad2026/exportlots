@@ -40,6 +40,13 @@ const RATES = {
     JebelAli:  3800 / 4,  // $950/car — UAE
     Klaipeda:  2400 / 4,  // $600/car — Lithuania
     RioHaina:  2000 / 4,  // $500/car — Dominican Republic
+    Poti:      1885 / 4,  // $471/car — Georgia (ONE carrier, eff. 05/16)
+    Yerevan:   1885 / 4,  // $471/car ocean + $350 trucking Poti→Yerevan
+  },
+
+  // ---- TRUCKING (Poti → Yerevan, per car) ----
+  trucking: {
+    Yerevan: 350,
   },
 
   // ---- FIXED FEES (per car, every shipment) ----
@@ -117,12 +124,13 @@ function calculateAllIn(lotPrice, destination, originPort = 'NJ', includeBroker 
   const portFee        = RATES.portFees[originPort] || RATES.portFees.NJ;
   const loading        = RATES.loading[originPort] || RATES.loading.NJ;
   const ocean          = RATES.ocean[destination];
+  const trucking       = destination === 'Yerevan' ? RATES.trucking.Yerevan : 0;
   const docs           = RATES.fixed.ISF + RATES.fixed.AES + RATES.fixed.BL +
                          (['Lagos','Tema'].includes(destination) ? RATES.fixed.ECTN : 0);
   const margin         = RATES.margin.retail;
 
   const total = lotPrice + auctionFee + transactionFee + brokerFee +
-                inland + portFee + loading + ocean + docs + margin;
+                inland + portFee + loading + ocean + trucking + docs + margin;
 
   return {
     breakdown: {
@@ -134,6 +142,7 @@ function calculateAllIn(lotPrice, destination, originPort = 'NJ', includeBroker 
       'Port fee':         portFee,
       'Loading':          loading,
       'Ocean freight':    ocean,
+      ...(trucking ? { 'Trucking Poti→Yerevan': trucking } : {}),
       'Docs (ISF/AES/BL)':docs,
       'Service fee':      margin,
     },
@@ -164,6 +173,8 @@ const DESTINATIONS = [
   { key: 'JebelAli', flag: '🇦🇪', label: 'Jebel Ali',      note: 'UAE — clean title only' },
   { key: 'Klaipeda', flag: '🇱🇹', label: 'Klaipeda',       note: 'Lithuania' },
   { key: 'RioHaina', flag: '🇩🇴', label: 'Rio Haina',      note: 'Dominican Republic' },
+  { key: 'Poti',     flag: '🇬🇪', label: 'Poti',           note: 'Georgia' },
+  { key: 'Yerevan',  flag: '🇦🇲', label: 'Yerevan',        note: 'Armenia via Poti' },
 ];
 
 if (typeof module !== 'undefined') module.exports = { RATES, calculateDelivery, DESTINATIONS };
