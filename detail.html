@@ -148,7 +148,7 @@ if (!v) {
   const titleText = v.titleStatus === 'clean' ? 'Clean title' : v.titleStatus === 'absent' ? 'Title absent' : v.titleStatus === 'salvage' ? 'Salvage' : '? Title unknown';
   const gradeClass = !v.grade ? 'vb-neutral' : v.grade < 3 ? 'vb-warn' : v.grade >= 4 ? 'vb-ok' : 'vb-neutral';
   const gradeText = v.grade ? `Grade ${v.grade}` : 'No CR';
-  const vinDisplay = `${v.vin.slice(0,6)}<span style="filter:blur(3px);cursor:pointer" onclick="this.style.filter='none'">${v.vin.slice(6,-3)}</span>${v.vin.slice(-3)}`;
+  const vinDisplay = `${v.vin.slice(0,11)}<span style="filter:blur(3px);cursor:pointer" onclick="this.style.filter='none'">${v.vin.slice(11)}</span>`;
 
   const flagsHtml = DESTINATIONS.map(d => {
     if (d.key === 'JebelAli' && isUAEBlocked) return `<span class="dflag-x" title="Clean title required">🇦🇪</span>`;

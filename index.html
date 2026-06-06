@@ -224,7 +224,7 @@ function getColorDot(color) {
 
 function renderCard(v) {
   const s = getStatusLabel(v);
-  const vinMasked = v.vin.slice(0,6) + '••••••' + v.vin.slice(-3);
+  const vinMasked = v.vin.slice(0,11) + '••••••';
   const grade = !v.grade ? 'vb-neutral' : v.grade < 3 ? 'vb-warn' : v.grade >= 4 ? 'vb-ok' : 'vb-neutral';
   const gradeText = v.grade ? `Grade ${v.grade}` : 'No CR';
   const status = getStatus(v);
