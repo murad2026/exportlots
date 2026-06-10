@@ -3,253 +3,641 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shipping — ExportLots</title>
+<title>Destinations & Shipping — ExportLots by Dapex</title>
 <link rel="stylesheet" href="style.css">
+<style>
+.dest-tabs-bar { background:var(--bg-elev); border-top:1px solid var(--line); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:100; overflow-x:auto; }
+.dest-tabs-inner { display:flex; min-width:max-content; max-width:1100px; margin:0 auto; padding:0 var(--gap); }
+.dest-tab { padding:14px 20px; background:none; border:none; border-bottom:2px solid transparent; cursor:pointer; font-family:var(--font); font-size:13px; font-weight:500; color:var(--ink-mute); white-space:nowrap; transition:all 0.15s; display:flex; align-items:center; gap:7px; }
+.dest-tab:hover { color:var(--ink); }
+.dest-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+.dest-panel { display:none; }
+.dest-panel.active { display:block; }
+
+.rule-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; margin-bottom:32px; }
+.rule-card { background:var(--bg-elev); border:1px solid var(--line); border-radius:var(--radius-lg); padding:16px; }
+.rule-card.ok { border-color:#86efac; background:#f0fdf4; }
+.rule-card.warn { border-color:#fca5a5; background:#fef2f2; }
+.rule-label { font-size:10px; font-family:var(--mono); text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-mute); margin-bottom:5px; }
+.rule-val { font-size:15px; font-weight:600; color:var(--ink); margin-bottom:3px; }
+.rule-val.red { color:#dc2626; }
+.rule-val.green { color:#16a34a; }
+.rule-note { font-size:11px; color:var(--ink-soft); line-height:1.5; }
+
+.ship-step { display:grid; grid-template-columns:40px 1fr; gap:0 20px; position:relative; }
+.ship-step:not(:last-child) .ship-line { position:absolute; left:19px; top:46px; width:2px; bottom:0; background:var(--line); }
+.ship-num { width:40px; height:40px; border-radius:50%; background:var(--bg-deep); color:var(--bg); font-family:var(--mono); font-size:14px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; position:relative; z-index:1; margin-top:2px; }
+.ship-body { padding:4px 0 32px; }
+.ship-title { font-size:15px; font-weight:600; margin-bottom:4px; }
+.ship-desc { font-size:13px; color:var(--ink-soft); line-height:1.7; }
+.ship-desc strong { color:var(--ink); font-weight:500; }
+
+.alert-box { display:flex; gap:12px; padding:14px 16px; border-radius:var(--radius-lg); margin-bottom:24px; }
+.alert-box.red { background:#fef2f2; border:1px solid #fca5a5; }
+.alert-box.amber { background:#fffbeb; border:1px solid #fde68a; }
+.alert-box-icon { font-size:18px; flex-shrink:0; margin-top:1px; }
+.alert-box-title { font-size:13px; font-weight:600; margin-bottom:3px; }
+.alert-box-desc { font-size:12px; line-height:1.6; }
+.alert-box.red .alert-box-title { color:#991b1b; }
+.alert-box.red .alert-box-desc { color:#7f1d1d; }
+.alert-box.amber .alert-box-title { color:#92400e; }
+.alert-box.amber .alert-box-desc { color:#78350f; }
+
+.quote-box { background:var(--bg-deep); border-radius:var(--radius-lg); padding:28px; color:var(--bg); }
+.quote-box h3 { font-family:var(--serif); font-size:20px; font-weight:400; margin-bottom:6px; }
+.quote-box p { font-size:13px; color:rgba(246,242,233,0.65); margin-bottom:20px; line-height:1.6; }
+</style>
 </head>
 <body>
 
 <nav class="nav">
-  <a href="index.html" class="nav-logo">Export<span>Lots</span></a>
-  <div class="nav-links">
-    <a href="index.html">Catalog</a>
-    <a href="shipping.html" class="active">Shipping</a>
-    <a href="how-it-works.html">How it works</a>
-    <a href="wholesale.html">Wholesale</a>
-    <a href="partners.html">Partners</a>
+  <div class="nav-inner">
+    <a href="/" class="nav-brand"><span class="dot"></span>ExportLots</a>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/shipping" class="active">Destinations</a>
+      <a href="/how-it-works">How it works</a>
+      <a href="/partners">Partners</a>
+    </div>
+    <div class="nav-cta">
+      <a href="/login" class="nav-login">Dealer login</a>
+      <a href="/join" class="btn btn-accent btn-sm">Apply for access</a>
+    </div>
   </div>
-  <a class="nav-wa" href="https://wa.me/12127965517" target="_blank">
-    <i class="ti ti-brand-whatsapp"></i> WhatsApp
-  </a>
 </nav>
 
-<div style="padding:36px 24px 24px;border-bottom:1px solid var(--border)">
-  <div style="font-size:12px;color:var(--text2);font-family:var(--mono);margin-bottom:8px">FMC NVOCC #022641 · Active</div>
-  <h1 style="font-size:28px;font-weight:500;margin-bottom:8px">International shipping to 113 countries.</h1>
-  <p style="font-size:15px;color:var(--text2);max-width:520px;line-height:1.65">Logistics handled by Dapex Inc. — US-based FMC licensed NVOCC. Auction pickup, NJ warehouse loading, weekly ocean cuts, HBL issuance, AES/ISF in-house.</p>
+<div class="trust-strip">
+  <div class="trust-strip-inner">
+    <span>Dapex Inc.</span><span class="sep">·</span>
+    <span>FMC NVOCC #022641</span><span class="sep">·</span>
+    <span>Weekly containers from NJ</span><span class="sep">·</span>
+    <span>7 routes · 113 countries</span>
+  </div>
 </div>
 
-<div style="display:flex;gap:0;border-bottom:1px solid var(--border);overflow-x:auto" id="dest-tabs">
-  <button class="dest-tab active" onclick="showDest('nigeria')">🇳🇬 Nigeria</button>
-  <button class="dest-tab" onclick="showDest('uae')">🇦🇪 UAE</button>
-  <button class="dest-tab" onclick="showDest('ghana')">🇬🇭 Ghana</button>
-  <button class="dest-tab" onclick="showDest('europe')">🇱🇹 Eastern Europe</button>
-  <button class="dest-tab" onclick="showDest('dr')">🇩🇴 Dominican Republic</button>
-  <button class="dest-tab" onclick="showDest('georgia')">🇬🇪 Georgia</button>
-  <button class="dest-tab" onclick="showDest('armenia')">🇦🇲 Armenia</button>
+<!-- HERO -->
+<section style="padding:52px 0 40px;border-bottom:1px solid var(--line)">
+  <div class="container">
+    <div class="eyebrow" style="margin-bottom:12px">Destinations</div>
+    <h1 style="font-family:var(--serif);font-size:clamp(28px,4vw,46px);font-weight:400;margin-bottom:12px;line-height:1.1">7 routes.<br><em>Weekly sailings.</em></h1>
+    <p style="font-size:15px;color:var(--ink-soft);max-width:560px;line-height:1.7">Dapex Inc. is a licensed NVOCC (FMC #022641) — we issue our own House Bill of Lading and file AES/ISF in-house. All-in price from NJ to your port. No agents, no markups.</p>
+  </div>
+</section>
+
+<!-- DESTINATION TABS -->
+<div class="dest-tabs-bar">
+  <div class="dest-tabs-inner">
+    <button class="dest-tab active" onclick="showDest('nigeria','this')" id="tab-nigeria">🇳🇬 Nigeria</button>
+    <button class="dest-tab" onclick="showDest('uae','this')" id="tab-uae">🇦🇪 UAE</button>
+    <button class="dest-tab" onclick="showDest('ghana','this')" id="tab-ghana">🇬🇭 Ghana</button>
+    <button class="dest-tab" onclick="showDest('europe','this')" id="tab-europe">🇱🇹 Eastern Europe</button>
+    <button class="dest-tab" onclick="showDest('dr','this')" id="tab-dr">🇩🇴 Dom. Republic</button>
+    <button class="dest-tab" onclick="showDest('georgia','this')" id="tab-georgia">🇬🇪 Georgia</button>
+    <button class="dest-tab" onclick="showDest('armenia','this')" id="tab-armenia">🇦🇲 Armenia</button>
+  </div>
 </div>
 
-<style>
-.dest-tab{font-size:13px;padding:12px 18px;border:none;background:transparent;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;white-space:nowrap;font-family:var(--font)}
-.dest-tab.active{color:var(--text);border-bottom-color:var(--text);font-weight:500}
-.dest-content{display:none;padding:24px}
-.dest-content.active{display:block}
-.rules-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:20px}
-.rule-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px}
-.rule-card.alert{border-color:var(--red)}
-.rule-card.good{border-color:var(--goodg)}
-.rl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px}
-.rv{font-size:14px;font-weight:500;color:var(--text);margin-bottom:3px}
-.rv.red{color:var(--red)}
-.rv.green{color:var(--goodg)}
-.rn{font-size:11px;color:var(--text2);line-height:1.5}
-.steps{display:flex;flex-direction:column}
-.step{display:flex;gap:14px;padding:13px 0;border-bottom:1px solid var(--border)}
-.step:last-child{border-bottom:none}
-.sn{width:26px;height:26px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(--text2);flex-shrink:0;margin-top:2px}
-.st{font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px}
-.sd{font-size:12px;color:var(--text2);line-height:1.6}
-.sd strong{color:var(--text);font-weight:500}
-.wa-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;display:flex;gap:14px;margin-top:20px}
-.wa-title{font-size:14px;font-weight:500;margin-bottom:5px}
-.wa-desc{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px}
-</style>
+<!-- ===== NIGERIA ===== -->
+<div class="dest-panel active" id="panel-nigeria">
+  <section class="block">
+    <div class="container" style="max-width:900px;display:grid;grid-template-columns:1fr 320px;gap:56px;align-items:start">
+      <div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+          <span style="font-size:32px">🇳🇬</span>
+          <div>
+            <h2 style="font-family:var(--serif);font-size:28px;font-weight:400;line-height:1.1">Nigeria</h2>
+            <div style="font-size:13px;color:var(--ink-mute);font-family:var(--mono)">Apapa / Tin Can Island · Newark NJ → Lagos</div>
+          </div>
+        </div>
 
-<!-- NIGERIA -->
-<div class="dest-content active" id="dest-nigeria">
-  <div class="rules-grid">
-    <div class="rule-card alert"><div class="rl">Drive side</div><div class="rv red">LHD only</div><div class="rn">RHD prohibited. No JDM.</div></div>
-    <div class="rule-card"><div class="rl">Age limit</div><div class="rv">No federal cap</div><div class="rn">Check state-level rules.</div></div>
-    <div class="rule-card alert"><div class="rl">Form M</div><div class="rv red">Required pre-sailing</div><div class="rn">Bank date must precede vessel sailing date.</div></div>
-    <div class="rule-card"><div class="rl">Fuel</div><div class="rv">¼ tank max</div><div class="rn">Both RoRo and container.</div></div>
-    <div class="rule-card"><div class="rl">Duty</div><div class="rv">~70–90% of CIF</div><div class="rn">20–35% import + 15% NAC + VAT etc.</div></div>
-    <div class="rule-card good"><div class="rl">Transit</div><div class="rv green">14–21 days</div><div class="rn">Newark → Apapa/Tin Can</div></div>
-  </div>
-  <div class="steps">
-    <div class="step"><div class="sn">1</div><div><div class="st">Send VIN + lot on WhatsApp</div><div class="sd">We reply with <strong>itemized quote in 4 hours</strong>.</div></div></div>
-    <div class="step"><div class="sn">2</div><div><div class="st">Your bank opens Form M</div><div class="sd">Via GTB, Zenith, Wema, UBA. <strong>Date must precede sailing date.</strong> We give you ETD in advance.</div></div></div>
-    <div class="step"><div class="sn">3</div><div><div class="st">We pick up and load</div><div class="sd">Inland truckers dispatched within <strong>3 days of payment</strong>. Container loaded at NJ. AES/ISF filed in-house.</div></div></div>
-    <div class="step"><div class="sn">4</div><div><div class="st">Docs to your Lagos agent</div><div class="sd"><strong>HBL + pre-alert + commercial invoice</strong> to your Apapa clearing agent. ECTN/BESC filed before vessel arrival.</div></div></div>
-  </div>
-  <div class="wa-box">
-    <div style="font-size:28px;color:var(--green)"><i class="ti ti-brand-whatsapp"></i></div>
-    <div>
-      <div class="wa-title">WhatsApp</div>
-      <div class="wa-desc">Send: VIN + lot + yard + destination + cars/month. Itemized quote back within 4 hours.</div>
-      <a class="btn-wa-lg" href="https://wa.me/12127965517?text=Hi+ExportLots.+Nigeria+shipment.+VIN%3A+___+Lot%3A+___+Yard%3A+___" target="_blank" style="display:inline-flex">
-        <i class="ti ti-brand-whatsapp"></i> WhatsApp
-      </a>
+        <div class="rule-grid" style="margin-top:24px">
+          <div class="rule-card warn"><div class="rule-label">Drive side</div><div class="rule-val red">LHD only</div><div class="rule-note">RHD prohibited. No JDM.</div></div>
+          <div class="rule-card"><div class="rule-label">Age limit</div><div class="rule-val">No federal cap</div><div class="rule-note">Check state-level rules for your city.</div></div>
+          <div class="rule-card warn"><div class="rule-label">Form M</div><div class="rule-val red">Required pre-sailing</div><div class="rule-note">Bank date must precede vessel sailing date.</div></div>
+          <div class="rule-card"><div class="rule-label">Import duty</div><div class="rule-val">~70–90% CIF</div><div class="rule-note">20–35% import + 15% NAC + VAT.</div></div>
+          <div class="rule-card ok"><div class="rule-label">Transit time</div><div class="rule-val green">14–21 days</div><div class="rule-note">Newark → Apapa / Tin Can Island</div></div>
+          <div class="rule-card"><div class="rule-label">Fuel level</div><div class="rule-val">¼ tank max</div><div class="rule-note">Applies to both RoRo and container.</div></div>
+        </div>
+
+        <div class="alert-box amber">
+          <span class="alert-box-icon">⚠️</span>
+          <div>
+            <div class="alert-box-title">Form M — critical timing</div>
+            <div class="alert-box-desc">Your Nigerian bank must open the Form M before the vessel sailing date. We give you the ETD (estimated departure) in advance so your bank has enough time. GTB, Zenith, Wema, UBA all handle this.</div>
+          </div>
+        </div>
+
+        <h3 style="font-size:16px;font-weight:600;margin-bottom:20px">How your shipment moves</h3>
+        <div style="position:relative">
+          <div class="ship-step">
+            <div class="ship-line"></div>
+            <div class="ship-num">1</div>
+            <div class="ship-body">
+              <div class="ship-title">You send VIN + lot on WhatsApp</div>
+              <div class="ship-desc">We reply with an <strong>itemized all-in quote within 4 hours</strong> — auction price, inland transport, port fees, ocean freight, AES/ISF, HBL.</div>
+            </div>
+          </div>
+          <div class="ship-step">
+            <div class="ship-line"></div>
+            <div class="ship-num">2</div>
+            <div class="ship-body">
+              <div class="ship-title">Your bank opens Form M</div>
+              <div class="ship-desc">We provide ETD at least <strong>5–7 days before sailing</strong>. You open the Form M at your Nigerian bank. This must happen before the vessel departs.</div>
+            </div>
+          </div>
+          <div class="ship-step">
+            <div class="ship-line"></div>
+            <div class="ship-num">3</div>
+            <div class="ship-body">
+              <div class="ship-title">We pick up and load</div>
+              <div class="ship-desc">Inland truckers dispatched within <strong>3 days of payment</strong>. Car loaded into 40HC container at our NJ facility. AES and ISF filed in-house.</div>
+            </div>
+          </div>
+          <div class="ship-step">
+            <div class="ship-num">4</div>
+            <div class="ship-body">
+              <div class="ship-title">Docs to your Lagos clearing agent</div>
+              <div class="ship-desc"><strong>HBL + commercial invoice + US title</strong> sent as pre-alert. ECTN/BESC filed before vessel arrival. Your agent handles customs and port release.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="position:sticky;top:70px">
+        <div class="quote-box">
+          <h3>Get a quote for Nigeria</h3>
+          <p>Send us VIN + lot number. Itemized all-in quote to Lagos back within 4 hours.</p>
+          <a href="https://wa.me/12127965517?text=Hi+ExportLots.+Nigeria+shipment.+VIN%3A+___+Lot%3A+___+Yard%3A+___" target="_blank" class="btn btn-wa btn-lg" style="width:100%;justify-content:center;margin-bottom:10px"><i class="ti ti-brand-whatsapp"></i> WhatsApp quote</a>
+          <a href="/join" class="btn btn-secondary btn-sm" style="width:100%;justify-content:center">Apply for dealer access</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ===== UAE ===== -->
+<div class="dest-panel" id="panel-uae">
+  <section class="block">
+    <div class="container" style="max-width:900px;display:grid;grid-template-columns:1fr 320px;gap:56px;align-items:start">
+      <div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+          <span style="font-size:32px">🇦🇪</span>
+          <div>
+            <h2 style="font-family:var(--serif);font-size:28px;font-weight:400;line-height:1.1">UAE</h2>
+            <div style="font-size:13px;color:var(--ink-mute);font-family:var(--mono)">Jebel Ali · Newark NJ → Dubai</div>
+          </div>
+        </div>
+
+        <div class="rule-grid" style="margin-top:24px">
+          <div class="rule-card warn"><div class="rule-label">Title</div><div class="rule-val red">Clean only</div><div class="rule-note">Dubai RTA hard rule. No exceptions.</div></div>
+          <div class="rule-card ok"><div class="rule-label">Age limit</div><div class="rule-val green">No restriction</div><div class="rule-note">Most open market in the region.</div></div>
+          <div class="rule-card ok"><div class="rule-label">Drive side</div><div class="rule-val green">LHD + RHD</div><div class="rule-note">Both accepted by RTA.</div></div>
+          <div class="rule-card"><div class="rule-label">Import duty</div><div class="rule-val">5% CIF + 5% VAT</div><div class="rule-note">~10.25% total. GCC standard.</div></div>
+          <div class="rule-card ok"><div class="rule-label">Transit time</div><div class="rule-val green">25–35 days</div><div class="rule-note">Newark → Jebel Ali</div></div>
+        </div>
+
+        <div class="alert-box red">
+          <span class="alert-box-icon">🚫</span>
+          <div>
+            <div class="alert-box-title">Clean title only — no exceptions</div>
+            <div class="alert-box-desc">Dubai RTA does not register branded, salvage, rebuilt, flood, or lemon-law titles. Vehicles with branded titles are seized at Jebel Ali. We check VIN title status at quote stage and flag any issues before you commit to buying.</div>
+          </div>
+        </div>
+
+        <h3 style="font-size:16px;font-weight:600;margin-bottom:20px">How your shipment moves</h3>
+        <div style="position:relative">
+          <div class="ship-step">
+            <div class="ship-line"></div>
+            <div class="ship-num">1</div>
+            <div class="ship-body">
+              <div class="ship-title">Send VIN + lot — we check title first</div>
+              <div class="ship-desc">Before quoting, we run title verification. If clean, we send the all-in CIF Jebel Ali quote within 4 hours.</div>
+            </div>
+          </div>
+          <div class="ship-step">
+            <div class="ship-line"></div>
+            <div class="ship-num">2</div>
+            <div class="ship-body">
+              <div class="ship-title">We purchase and load</div>
+              <div class="ship-desc">Auction purchase, inland transport to NJ, container loading. AES and ISF filed in-house. <strong>Weekly cuts from NJ.</strong></div>
+            </div>
+          </div>
+          <div class="ship-step">
+            <div class="ship-num">3</div>
+            <div class="ship-body">
+              <div class="ship-title">HBL + docs to your Dubai agent</div>
+              <div class="ship-desc">Original US title, HBL, and commercial invoice sent as pre-alert. Your Dubai clearing agent handles RTA registration on arrival.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="position:sticky;top:70px">
+        <div class="quote-box">
+          <h3>Get a quote for UAE</h3>
+          <p>Send VIN + lot. We verify title first, then quote CIF Jebel Ali.</p>
+          <a href="https://wa.me/12127965517?text=Hi+ExportLots.+Jebel+Ali+UAE.+VIN%3A+___+Lot%3A+___" target="_blank" class="btn btn-wa btn-lg" style="width:100%;justify-content:center;margin-bottom:10px"><i class="ti ti-brand-whatsapp"></i> WhatsApp quote</a>
+          <a href="/join" class="btn btn-secondary btn-sm" style="width:100%;justify-content:center">Apply for dealer access</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ===== GHANA ===== -->
+<div class="dest-panel" id="panel-ghana">
+  <section class="block">
+    <div class="container" style="max-width:900px;display:grid;grid-template-columns:1fr 320px;gap:56px;align-items:start">
+      <div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+          <span style="font-size:32px">🇬🇭</span>
+          <div>
+            <h2 style="font-family:var(--serif);font-size:28px;font-weight:400;line-height:1.1">Ghana</h2>
+            <div style="font-size:13px;color:var(--ink-mute);font-family:var(--mono)">Tema Port · Newark NJ → Tema</div>
+          </div>
+        </div>
+
+        <div class="rule-grid" style="margin-top:24px">
+          <div class="rule-card warn"><div class="rule-label">Drive side</div><div class="rule-val red">LHD only</div><div class="rule-note">Same rule as Nigeria. RHD not accepted.</div></div>
+          <div class="rule-card warn"><div class="rule-label">ECTN / SPN</div><div class="rule-val red">Required</div><div class="rule-note">Smart Port Note — filed 5 days before vessel arrival.</div></div>
+          <div class="rule-card"><div class="rule-label">Port</div><div class="rule-val">Tema</div><div class="rule-note">Main Ghana auto import port.</div></div>
+          <div class="rule-card ok"><div class="rule-label">Transit time</div><div class="rule-val green">18–24 days</div><div class="rule-note">Newark → Tema</div></div>
+        </div>
+
+        <div class="alert-box amber">
+          <span class="alert-box-icon">⚠️</span>
+          <div>
+            <div class="alert-box-title">ECTN / Smart Port Note required</div>
+            <div class="alert-box-desc">Ghana requires an Electronic Cargo Tracking Note (ECTN / SPN) filed at least 5 days before the vessel arrives at Tema. We handle this filing on your behalf as part of the all-in service.</div>
+          </div>
+        </div>
+
+        <h3 style="font-size:16px;font-weight:600;margin-bottom:20px">How your shipment moves</h3>
+        <div style="position:relative">
+          <div class="ship-step">
+            <div class="ship-line"></div>
+            <div class="ship-num">1</div>
+            <div class="ship-body">
+              <div class="ship-title">Send VIN + lot on WhatsApp</div>
+              <div class="ship-desc">All-in CIF Tema quote back within 4 hours.</div>
+            </div>
+          </div>
+          <div class="ship-step">
+            <div class="ship-line"></div>
+            <div class="ship-num">2</div>
+            <div class="ship-body">
+              <div class="ship-title">We purchase, load, and file ECTN</div>
+              <div class="ship-desc">Auction pickup, NJ container loading, AES/ISF + ECTN/SPN filed in-house before vessel departure.</div>
+            </div>
+          </div>
+          <div class="ship-step">
+            <div class="ship-num">3</div>
+            <div class="ship-body">
+              <div class="ship-title">Docs to your Tema clearing agent</div>
+              <div class="ship-desc">HBL + commercial invoice + US title + SPN pre-alert. Your agent handles GRA customs clearance at Tema.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="position:sticky;top:70px">
+        <div class="quote-box">
+          <h3>Get a quote for Ghana</h3>
+          <p>Send VIN + lot. All-in CIF Tema including ECTN filing.</p>
+          <a href="https://wa.me/12127965517?text=Hi+ExportLots.+Ghana+Tema.+VIN%3A+___+Lot%3A+___" target="_blank" class="btn btn-wa btn-lg" style="width:100%;justify-content:center;margin-bottom:10px"><i class="ti ti-brand-whatsapp"></i> WhatsApp quote</a>
+          <a href="/join" class="btn btn-secondary btn-sm" style="width:100%;justify-content:center">Apply for dealer access</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ===== EASTERN EUROPE ===== -->
+<div class="dest-panel" id="panel-europe">
+  <section class="block">
+    <div class="container" style="max-width:900px;display:grid;grid-template-columns:1fr 320px;gap:56px;align-items:start">
+      <div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+          <span style="font-size:32px">🇱🇹</span>
+          <div>
+            <h2 style="font-family:var(--serif);font-size:28px;font-weight:400;line-height:1.1">Eastern Europe</h2>
+            <div style="font-size:13px;color:var(--ink-mute);font-family:var(--mono)">Klaipeda, Lithuania · Newark NJ → Klaipeda</div>
+          </div>
+        </div>
+
+        <div class="rule-grid" style="margin-top:24px">
+          <div class="rule-card warn"><div class="rule-label">Age limit</div><div class="rule-val red">Max 10 years</div><div class="rule-note">From manufacture date — not registration.</div></div>
+          <div class="rule-card warn"><div class="rule-label">Pre-shipment</div><div class="rule-val red">Steam clean + refrigerants</div><div class="rule-note">Lithuanian customs enforces strictly.</div></div>
+          <div class="rule-card"><div class="rule-label">Duty (under 7yr)</div><div class="rule-val">10% + 21% VAT</div><div class="rule-note">Both import duty and VAT apply.</div></div>
+          <div class="rule-card ok"><div class="rule-label">Duty (7–10yr)</div><div class="rule-val green">VAT only (21%)</div><div class="rule-note">Import duty waived over 7 years.</div></div>
+          <div class="rule-card ok"><div class="rule-label">Transit time</div><div class="rule-val green">14–18 days</div><div class="rule-note">Newark → Klaipeda</div></div>
+          <div class="rule-card"><div class="rule-label">Language</div><div class="rule-val">RU support</div><div class="rule-note">Telegram + WhatsApp available.</div></div>
+        </div>
+
+        <div class="alert-box amber">
+          <span class="alert-box-icon">⚠️</span>
+          <div>
+            <div class="alert-box-title">Pre-shipment requirements — Lithuania</div>
+            <div class="alert-box-desc">Vehicles must be steam cleaned and refrigerant systems evacuated before loading. Lithuanian customs enforces this on arrival. We handle pre-shipment prep at our NJ facility as part of the service.</div>
+          </div>
+        </div>
+
+        <h3 style="font-size:16px;font-weight:600;margin-bottom:20px">How your shipment moves</h3>
+        <div style="position:relative">
+          <div class="ship-step">
+            <div class="ship-line"></div>
+            <div class="ship-num">1</div>
+            <div class="ship-body">
+              <div class="ship-title">Send VIN + manufacture year</div>
+              <div class="ship-desc">We verify age compliance first — max 10 years from manufacture date. Then quote all-in CIF Klaipeda within 4 hours.</div>
+            </div>
+          </div>
+          <div class="ship-step">
+            <div class="ship-line"></div>
+            <div class="ship-num">2</div>
+            <div class="ship-body">
+              <div class="ship-title">Pre-shipment prep at NJ facility</div>
+              <div class="ship-desc">Steam cleaning + refrigerant evacuation done before loading. <strong>Included in our service fee.</strong></div>
+            </div>
+          </div>
+          <div class="ship-step">
+            <div class="ship-num">3</div>
+            <div class="ship-body">
+              <div class="ship-title">HBL + docs to your Klaipeda agent</div>
+              <div class="ship-desc">All export documents, US title, HBL sent as pre-alert. Your Lithuanian customs broker handles EU import clearance.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="position:sticky;top:70px">
+        <div class="quote-box">
+          <h3>Get a quote for Eastern Europe</h3>
+          <p>Send VIN + manufacture year. All-in CIF Klaipeda quote within 4 hours.</p>
+          <a href="https://wa.me/12127965517?text=Hi+ExportLots.+Klaipeda.+VIN%3A+___+Lot%3A+___+Manufacture+year%3A+___" target="_blank" class="btn btn-wa btn-lg" style="width:100%;justify-content:center;margin-bottom:10px"><i class="ti ti-brand-whatsapp"></i> WhatsApp quote</a>
+          <a href="/join" class="btn btn-secondary btn-sm" style="width:100%;justify-content:center">Apply for dealer access</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ===== DOMINICAN REPUBLIC ===== -->
+<div class="dest-panel" id="panel-dr">
+  <section class="block">
+    <div class="container" style="max-width:900px;display:grid;grid-template-columns:1fr 320px;gap:56px;align-items:start">
+      <div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+          <span style="font-size:32px">🇩🇴</span>
+          <div>
+            <h2 style="font-family:var(--serif);font-size:28px;font-weight:400;line-height:1.1">Dominican Republic</h2>
+            <div style="font-size:13px;color:var(--ink-mute);font-family:var(--mono)">Rio Haina / Caucedo · Newark NJ → Santo Domingo</div>
+          </div>
+        </div>
+
+        <div class="rule-grid" style="margin-top:24px">
+          <div class="rule-card warn"><div class="rule-label">Age limit</div><div class="rule-val red">Max 5 years</div><div class="rule-note">Law 04-07. From manufacture date.</div></div>
+          <div class="rule-card"><div class="rule-label">Port</div><div class="rule-val">Rio Haina / Caucedo</div><div class="rule-note">Both ports served. Weekly sailings.</div></div>
+          <div class="rule-card"><div class="rule-label">Import duty</div><div class="rule-val">20–40% + 18% VAT</div><div class="rule-note">Plus excise for luxury vehicles.</div></div>
+          <div class="rule-card ok"><div class="rule-label">Transit time</div><div class="rule-val green">8–12 days</div><div class="rule-note">Closest route — Newark → Rio Haina</div></div>
+        </div>
+
+        <div class="alert-box amber">
+          <span class="alert-box-icon">⚠️</span>
+          <div>
+            <div class="alert-box-title">5-year age limit — Law 04-07</div>
+            <div class="alert-box-desc">The Dominican Republic prohibits importing vehicles older than 5 years from manufacture date. We filter our catalog accordingly — only eligible vehicles are shown as DR-compatible. We verify age at quote stage.</div>
+          </div>
+        </div>
+
+        <h3 style="font-size:16px;font-weight:600;margin-bottom:20px">How your shipment moves</h3>
+        <div style="position:relative">
+          <div class="ship-step">
+            <div class="ship-line"></div>
+            <div class="ship-num">1</div>
+            <div class="ship-body">
+              <div class="ship-title">Send VIN + lot — we verify year</div>
+              <div class="ship-desc">We confirm manufacture year compliance and quote all-in CIF Rio Haina or Caucedo within 4 hours.</div>
+            </div>
+          </div>
+          <div class="ship-step">
+            <div class="ship-line"></div>
+            <div class="ship-num">2</div>
+            <div class="ship-body">
+              <div class="ship-title">Fastest ocean route on our network</div>
+              <div class="ship-desc">8–12 days transit. Weekly container cuts from NJ. <strong>Shortest lead time of all our destinations.</strong></div>
+            </div>
+          </div>
+          <div class="ship-step">
+            <div class="ship-num">3</div>
+            <div class="ship-body">
+              <div class="ship-title">Docs to your Santo Domingo agent</div>
+              <div class="ship-desc">HBL + US title + commercial invoice pre-alert. Your customs broker handles DGA clearance at Haina or Caucedo.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="position:sticky;top:70px">
+        <div class="quote-box">
+          <h3>Get a quote for DR</h3>
+          <p>Send VIN + lot. All-in CIF Rio Haina — fastest route on our network.</p>
+          <a href="https://wa.me/12127965517?text=Hola+ExportLots.+Rio+Haina.+VIN%3A+___+Lot%3A+___" target="_blank" class="btn btn-wa btn-lg" style="width:100%;justify-content:center;margin-bottom:10px"><i class="ti ti-brand-whatsapp"></i> WhatsApp quote</a>
+          <a href="/join" class="btn btn-secondary btn-sm" style="width:100%;justify-content:center">Apply for dealer access</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ===== GEORGIA ===== -->
+<div class="dest-panel" id="panel-georgia">
+  <section class="block">
+    <div class="container" style="max-width:900px;display:grid;grid-template-columns:1fr 320px;gap:56px;align-items:start">
+      <div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+          <span style="font-size:32px">🇬🇪</span>
+          <div>
+            <h2 style="font-family:var(--serif);font-size:28px;font-weight:400;line-height:1.1">Georgia</h2>
+            <div style="font-size:13px;color:var(--ink-mute);font-family:var(--mono)">Poti Port · Newark NJ → Poti</div>
+          </div>
+        </div>
+
+        <div class="rule-grid" style="margin-top:24px">
+          <div class="rule-card ok"><div class="rule-label">Title</div><div class="rule-val green">Any title</div><div class="rule-note">Clean, salvage, rebuilt — all accepted.</div></div>
+          <div class="rule-card ok"><div class="rule-label">Age limit</div><div class="rule-val green">No restriction</div><div class="rule-note">Very flexible import rules.</div></div>
+          <div class="rule-card warn"><div class="rule-label">Drive side</div><div class="rule-val red">LHD only</div><div class="rule-note">RHD not accepted in Georgia.</div></div>
+          <div class="rule-card ok"><div class="rule-label">Import duty</div><div class="rule-val green">~5%</div><div class="rule-note">One of the lowest import duties.</div></div>
+          <div class="rule-card"><div class="rule-label">Port</div><div class="rule-val">Poti</div><div class="rule-note">Main auto import port. Weekly sailings.</div></div>
+          <div class="rule-card ok"><div class="rule-label">Transit time</div><div class="rule-val green">25–30 days</div><div class="rule-note">Newark → Poti</div></div>
+        </div>
+
+        <h3 style="font-size:16px;font-weight:600;margin-bottom:20px">How your shipment moves</h3>
+        <div style="position:relative">
+          <div class="ship-step">
+            <div class="ship-line"></div>
+            <div class="ship-num">1</div>
+            <div class="ship-body">
+              <div class="ship-title">Send VIN + lot on WhatsApp</div>
+              <div class="ship-desc">All-in CIF Poti quote within 4 hours. Any title accepted — no pre-screening needed for Georgia.</div>
+            </div>
+          </div>
+          <div class="ship-step">
+            <div class="ship-line"></div>
+            <div class="ship-num">2</div>
+            <div class="ship-body">
+              <div class="ship-title">Wire transfer — we buy and load</div>
+              <div class="ship-desc">100% payment before loading. Weekly containers from NJ. AES/ISF filed in-house.</div>
+            </div>
+          </div>
+          <div class="ship-step">
+            <div class="ship-num">3</div>
+            <div class="ship-body">
+              <div class="ship-title">HBL + docs to your Poti agent</div>
+              <div class="ship-desc">HBL + commercial invoice + US title sent within 24h of loading. Your clearing agent handles Georgian customs at Poti.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="position:sticky;top:70px">
+        <div class="quote-box">
+          <h3>Get a quote for Georgia</h3>
+          <p>Any title accepted. CIF Poti quote within 4 hours.</p>
+          <a href="https://wa.me/12127965517?text=Hi+ExportLots.+Poti+Georgia.+VIN%3A+___+Lot%3A+___" target="_blank" class="btn btn-wa btn-lg" style="width:100%;justify-content:center;margin-bottom:10px"><i class="ti ti-brand-whatsapp"></i> WhatsApp quote</a>
+          <a href="/join" class="btn btn-secondary btn-sm" style="width:100%;justify-content:center">Apply for dealer access</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ===== ARMENIA ===== -->
+<div class="dest-panel" id="panel-armenia">
+  <section class="block">
+    <div class="container" style="max-width:900px;display:grid;grid-template-columns:1fr 320px;gap:56px;align-items:start">
+      <div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+          <span style="font-size:32px">🇦🇲</span>
+          <div>
+            <h2 style="font-family:var(--serif);font-size:28px;font-weight:400;line-height:1.1">Armenia</h2>
+            <div style="font-size:13px;color:var(--ink-mute);font-family:var(--mono)">Poti → Yerevan · Newark NJ → Poti → Yerevan</div>
+          </div>
+        </div>
+
+        <div class="rule-grid" style="margin-top:24px">
+          <div class="rule-card warn"><div class="rule-label">Age limit</div><div class="rule-val red">Max 10 years</div><div class="rule-note">From manufacture date.</div></div>
+          <div class="rule-card warn"><div class="rule-label">Drive side</div><div class="rule-val red">LHD only</div><div class="rule-note">RHD not accepted.</div></div>
+          <div class="rule-card ok"><div class="rule-label">Route</div><div class="rule-val green">Poti → Yerevan</div><div class="rule-note">Trucking $350/car. 2–3 days transit.</div></div>
+          <div class="rule-card ok"><div class="rule-label">Duty advantage</div><div class="rule-val green">Poti FIZ exempt</div><div class="rule-note">Transit via Poti Free Industrial Zone — no Georgian excise.</div></div>
+          <div class="rule-card ok"><div class="rule-label">Ocean rate</div><div class="rule-val green">$471/car</div><div class="rule-note">ONE carrier from NJ. Best rate on our network.</div></div>
+          <div class="rule-card"><div class="rule-label">Total transit</div><div class="rule-val">30–35 days</div><div class="rule-note">NJ → Poti → Yerevan</div></div>
+        </div>
+
+        <h3 style="font-size:16px;font-weight:600;margin-bottom:20px">How your shipment moves</h3>
+        <div style="position:relative">
+          <div class="ship-step">
+            <div class="ship-line"></div>
+            <div class="ship-num">1</div>
+            <div class="ship-body">
+              <div class="ship-title">Send VIN + lot on WhatsApp</div>
+              <div class="ship-desc">We verify age compliance (max 10 years) and quote <strong>all-in to Yerevan</strong> — ocean + Poti trucking included.</div>
+            </div>
+          </div>
+          <div class="ship-step">
+            <div class="ship-line"></div>
+            <div class="ship-num">2</div>
+            <div class="ship-body">
+              <div class="ship-title">Weekly containers NJ → Poti</div>
+              <div class="ship-desc">Ship transits via Poti Free Industrial Zone — <strong>no Georgian excise tax applies.</strong> Best ocean rate on our network at $471/car.</div>
+            </div>
+          </div>
+          <div class="ship-step">
+            <div class="ship-line"></div>
+            <div class="ship-num">3</div>
+            <div class="ship-body">
+              <div class="ship-title">Trucking Poti → Yerevan</div>
+              <div class="ship-desc">Our partner trucks the car from Poti to Yerevan within <strong>2–3 days</strong> of port arrival. $350/car included in all-in quote.</div>
+            </div>
+          </div>
+          <div class="ship-step">
+            <div class="ship-num">4</div>
+            <div class="ship-body">
+              <div class="ship-title">Customs clearance in Yerevan</div>
+              <div class="ship-desc">All export documents provided — HBL, US title, commercial invoice. Your Armenian customs broker handles final clearance.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="position:sticky;top:70px">
+        <div class="quote-box">
+          <h3>Get a quote for Armenia</h3>
+          <p>All-in to Yerevan including Poti trucking. Lowest ocean rate on our network.</p>
+          <a href="https://wa.me/12127965517?text=Hi+ExportLots.+Yerevan+Armenia.+VIN%3A+___+Lot%3A+___" target="_blank" class="btn btn-wa btn-lg" style="width:100%;justify-content:center;margin-bottom:10px"><i class="ti ti-brand-whatsapp"></i> WhatsApp quote</a>
+          <a href="/join" class="btn btn-secondary btn-sm" style="width:100%;justify-content:center">Apply for dealer access</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- DARK CTA -->
+<section class="block-tight" style="background:var(--bg-deep);border:none">
+  <div class="container" style="text-align:center;max-width:580px">
+    <div class="eyebrow muted" style="justify-content:center;margin-bottom:20px">Weekly containers from NJ</div>
+    <h2 style="font-family:var(--serif);font-size:clamp(26px,4vw,42px);font-weight:400;color:var(--bg);margin-bottom:16px;line-height:1.1">Quote in 4 hours.<br><em>Ship this week.</em></h2>
+    <p style="font-size:15px;color:rgba(246,242,233,0.6);margin-bottom:32px;line-height:1.6">Send VIN + destination on WhatsApp. Itemized all-in price back within 4 hours. We cut containers every week — no waiting for a full load.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <a href="https://wa.me/12127965517?text=Hi+ExportLots.+I+want+a+shipping+quote.+VIN%3A+___+Destination%3A+___" class="btn btn-wa btn-lg" target="_blank"><i class="ti ti-brand-whatsapp"></i> Get a quote now</a>
+      <a href="/join" class="btn btn-accent btn-lg">Apply for dealer access →</a>
     </div>
   </div>
-</div>
-
-<!-- UAE -->
-<div class="dest-content" id="dest-uae">
-  <div style="background:#fee2e2;border:1px solid var(--red);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:16px;display:flex;gap:10px">
-    <i class="ti ti-alert-triangle" style="color:var(--red);font-size:18px;flex-shrink:0;margin-top:2px"></i>
-    <div>
-      <div style="font-size:13px;font-weight:500;color:#991b1b;margin-bottom:3px">Dubai RTA does not register branded, salvage, rebuilt, or flood titles</div>
-      <div style="font-size:12px;color:#7f1d1d;line-height:1.6">Branded-title vehicles are seized at Jebel Ali. We check VIN title status at quote stage and flag any issues before you commit.</div>
-    </div>
-  </div>
-  <div class="rules-grid">
-    <div class="rule-card good"><div class="rl">Age limit</div><div class="rv green">No restriction</div><div class="rn">Most open market in the region.</div></div>
-    <div class="rule-card good"><div class="rl">Drive side</div><div class="rv green">LHD + RHD</div><div class="rn">Both accepted.</div></div>
-    <div class="rule-card alert"><div class="rl">Title</div><div class="rv red">Clean only</div><div class="rn">RTA hard rule. No exceptions.</div></div>
-    <div class="rule-card"><div class="rl">GCC duty</div><div class="rv">5% CIF + 5% VAT</div><div class="rn">~10.25% total.</div></div>
-    <div class="rule-card good"><div class="rl">Transit</div><div class="rv green">25–35 days</div><div class="rn">Newark → Jebel Ali</div></div>
-  </div>
-  <div class="wa-box">
-    <div style="font-size:28px;color:var(--green)"><i class="ti ti-brand-whatsapp"></i></div>
-    <div>
-      <div class="wa-title">WhatsApp</div>
-      <div class="wa-desc">Send VIN + lot. We check title first, then quote. Available Sun–Thu for UAE hours.</div>
-      <a class="btn-wa-lg" href="https://wa.me/12127965517?text=Hi+ExportLots.+Jebel+Ali.+VIN%3A+___+Title%3A+clean" target="_blank" style="display:inline-flex">
-        <i class="ti ti-brand-whatsapp"></i> WhatsApp
-      </a>
-    </div>
-  </div>
-</div>
-
-<!-- GHANA -->
-<div class="dest-content" id="dest-ghana">
-  <div class="rules-grid">
-    <div class="rule-card alert"><div class="rl">Drive side</div><div class="rv red">LHD only</div><div class="rn">Same as Nigeria.</div></div>
-    <div class="rule-card"><div class="rl">Port</div><div class="rv">Tema</div><div class="rn">Main Ghana discharge port.</div></div>
-    <div class="rule-card alert"><div class="rl">ECTN/SPN</div><div class="rv red">Required</div><div class="rn">Smart Port Note — filed 5 days before arrival.</div></div>
-    <div class="rule-card good"><div class="rl">Transit</div><div class="rv green">18–24 days</div><div class="rn">Newark → Tema</div></div>
-  </div>
-  <div class="wa-box">
-    <div style="font-size:28px;color:var(--green)"><i class="ti ti-brand-whatsapp"></i></div>
-    <div>
-      <div class="wa-title">WhatsApp</div>
-      <a class="btn-wa-lg" href="https://wa.me/12127965517?text=Hi+ExportLots.+Ghana+Tema.+VIN%3A+___" target="_blank" style="display:inline-flex">
-        <i class="ti ti-brand-whatsapp"></i> WhatsApp
-      </a>
-    </div>
-  </div>
-</div>
-
-<!-- EASTERN EUROPE -->
-<div class="dest-content" id="dest-europe">
-  <div class="rules-grid">
-    <div class="rule-card alert"><div class="rl">Age limit (LT)</div><div class="rv red">Max 10 years</div><div class="rn">Manufacture year — not registration.</div></div>
-    <div class="rule-card alert"><div class="rl">Pre-shipment</div><div class="rv red">Steam clean + refrigerants</div><div class="rn">Lithuanian customs enforces this.</div></div>
-    <div class="rule-card"><div class="rl">Duty (under 7yr)</div><div class="rv">10% + 21% VAT</div><div class="rn">Both apply.</div></div>
-    <div class="rule-card"><div class="rl">Duty (7–10yr)</div><div class="rv">21% VAT only</div><div class="rn">Import duty waived.</div></div>
-    <div class="rule-card good"><div class="rl">Transit</div><div class="rv green">14–18 days</div><div class="rn">Newark → Klaipeda</div></div>
-    <div class="rule-card"><div class="rl">Russian ops</div><div class="rv">Available</div><div class="rn">Telegram + WhatsApp.</div></div>
-  </div>
-  <div class="wa-box">
-    <div style="font-size:28px;color:var(--green)"><i class="ti ti-brand-whatsapp"></i></div>
-    <div>
-      <div class="wa-title">WhatsApp</div>
-      <a class="btn-wa-lg" href="https://wa.me/12127965517?text=Hi+ExportLots.+Klaipeda.+VIN%3A+___+Manufacture+year%3A+___" target="_blank" style="display:inline-flex">
-        <i class="ti ti-brand-whatsapp"></i> WhatsApp
-      </a>
-    </div>
-  </div>
-</div>
-
-<!-- DOMINICAN REPUBLIC -->
-<div class="dest-content" id="dest-dr">
-  <div class="rules-grid">
-    <div class="rule-card alert"><div class="rl">Age limit</div><div class="rv red">Max 5 years</div><div class="rn">Law 04-07. Manufacture year.</div></div>
-    <div class="rule-card"><div class="rl">Port</div><div class="rv">Rio Haina / Caucedo</div><div class="rn">Weekly sailings.</div></div>
-    <div class="rule-card"><div class="rl">Duty</div><div class="rv">20–40% + 18% VAT</div><div class="rn">Plus excise for luxury.</div></div>
-    <div class="rule-card good"><div class="rl">Transit</div><div class="rv green">8–12 days</div><div class="rn">Newark → Rio Haina</div></div>
-  </div>
-  <div class="wa-box">
-    <div style="font-size:28px;color:var(--green)"><i class="ti ti-brand-whatsapp"></i></div>
-    <div>
-      <div class="wa-title">WhatsApp</div>
-      <a class="btn-wa-lg" href="https://wa.me/12127965517?text=Hola+ExportLots.+Rio+Haina.+VIN%3A+___" target="_blank" style="display:inline-flex">
-        <i class="ti ti-brand-whatsapp"></i> WhatsApp
-      </a>
-    </div>
-  </div>
-</div>
-
-<!-- GEORGIA -->
-<div class="dest-content" id="dest-georgia" style="display:none">
-  <div class="rules-grid">
-    <div class="rule-card good"><div class="rl">Drive side</div><div class="rv green">LHD only</div><div class="rn">RHD not accepted.</div></div>
-    <div class="rule-card good"><div class="rl">Age limit</div><div class="rv green">No restriction</div><div class="rn">Clean and salvage accepted.</div></div>
-    <div class="rule-card good"><div class="rl">Title</div><div class="rv green">Any title</div><div class="rn">Clean, salvage, rebuilt all accepted.</div></div>
-    <div class="rule-card good"><div class="rl">Duty</div><div class="rv green">~5%</div><div class="rn">Very low import duty. VAT applies.</div></div>
-    <div class="rule-card"><div class="rl">Port</div><div class="rv">Poti</div><div class="rn">Main auto import port. Weekly sailings.</div></div>
-    <div class="rule-card good"><div class="rl">Transit</div><div class="rv green">25–30 days</div><div class="rn">Newark → Poti</div></div>
-  </div>
-  <div class="steps">
-    <div class="step"><div class="sn">1</div><div><div class="st">Send VIN + lot on WhatsApp</div><div class="sd">We reply with itemized quote within 4 hours.</div></div></div>
-    <div class="step"><div class="sn">2</div><div><div class="st">Wire transfer — we buy and load</div><div class="sd">100% payment before loading. Weekly containers from NJ.</div></div></div>
-    <div class="step"><div class="sn">3</div><div><div class="st">BL + docs to your Poti agent</div><div class="sd">HBL + commercial invoice + title sent within 24hrs of loading.</div></div></div>
-    <div class="step"><div class="sn">4</div><div><div class="st">Car released at Poti port</div><div class="sd">Your clearing agent handles customs and releases vehicle.</div></div></div>
-  </div>
-  <div class="wa-box">
-    <div style="font-size:28px;color:var(--green)"><i class="ti ti-brand-whatsapp"></i></div>
-    <div>
-      <div class="wa-title">WhatsApp</div>
-      <div class="wa-desc">Send VIN + lot. We quote CIF Poti within 4 hours.</div>
-      <a class="btn-wa-lg" href="https://wa.me/12127965517?text=Hi+ExportLots.+Poti+Georgia.+VIN%3A+___+Lot%3A+___" target="_blank" style="display:inline-flex">
-        <i class="ti ti-brand-whatsapp"></i> WhatsApp
-      </a>
-    </div>
-  </div>
-</div>
-
-<!-- ARMENIA -->
-<div class="dest-content" id="dest-armenia" style="display:none">
-  <div class="rules-grid">
-    <div class="rule-card good"><div class="rl">Drive side</div><div class="rv green">LHD only</div><div class="rn">RHD not accepted.</div></div>
-    <div class="rule-card"><div class="rl">Age limit</div><div class="rv">Max 10 years</div><div class="rn">From manufacture date.</div></div>
-    <div class="rule-card good"><div class="rl">Route</div><div class="rv green">Poti → Yerevan</div><div class="rn">Trucking $350/car from Poti. 2–3 days.</div></div>
-    <div class="rule-card good"><div class="rl">Duty</div><div class="rv green">Low</div><div class="rn">Transit via Poti FIZ — exempt from Georgian excise tax.</div></div>
-    <div class="rule-card"><div class="rl">Transit</div><div class="rv">30–35 days</div><div class="rn">Newark → Poti → Yerevan</div></div>
-    <div class="rule-card good"><div class="rl">Ocean rate</div><div class="rv green">$471/car</div><div class="rn">ONE carrier from NJ. Lowest rate on our network.</div></div>
-  </div>
-  <div class="steps">
-    <div class="step"><div class="sn">1</div><div><div class="st">Send VIN + lot on WhatsApp</div><div class="sd">We quote CIF Yerevan including $350 trucking from Poti.</div></div></div>
-    <div class="step"><div class="sn">2</div><div><div class="st">Wire transfer — we buy and ship</div><div class="sd">Weekly containers NJ → Poti. Transit via Poti Free Industrial Zone.</div></div></div>
-    <div class="step"><div class="sn">3</div><div><div class="st">Trucking Poti → Yerevan</div><div class="sd">Our partner trucks car from Poti to Yerevan within 2–3 days of arrival.</div></div></div>
-    <div class="step"><div class="sn">4</div><div><div class="st">Customs clearance in Yerevan</div><div class="sd">Your local agent handles Armenian customs. All docs provided.</div></div></div>
-  </div>
-  <div class="wa-box">
-    <div style="font-size:28px;color:var(--green)"><i class="ti ti-brand-whatsapp"></i></div>
-    <div>
-      <div class="wa-title">WhatsApp</div>
-      <div class="wa-desc">Send VIN + lot. We quote all-in to Yerevan including trucking.</div>
-      <a class="btn-wa-lg" href="https://wa.me/12127965517?text=Hi+ExportLots.+Yerevan+Armenia.+VIN%3A+___+Lot%3A+___" target="_blank" style="display:inline-flex">
-        <i class="ti ti-brand-whatsapp"></i> WhatsApp
-      </a>
-    </div>
-  </div>
-</div>
+</section>
 
 <footer class="footer">
-  <div class="footer-col"><strong>ExportLots</strong>Powered by Dapex Inc.<br>FMC NVOCC #022641<br>Old Bridge, NJ</div>
-  <div class="footer-col"><strong>Contact</strong>sales@dapex.net<br>+1 (212) 796-5517</div>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="logo">ExportLots</div>
+      <p>Powered by Dapex Inc.<br>FMC NVOCC #022641<br>Old Bridge, NJ · USA</p>
+    </div>
+    <div class="footer-col">
+      <h4>Platform</h4>
+      <a href="/catalog">Dealer catalog</a>
+      <a href="/join">Apply for access</a>
+      <a href="/login">Dealer login</a>
+    </div>
+    <div class="footer-col">
+      <h4>Destinations</h4>
+      <a href="/shipping">Nigeria</a>
+      <a href="/shipping">UAE</a>
+      <a href="/shipping">Ghana</a>
+      <a href="/shipping">Eastern Europe</a>
+      <a href="/shipping">Dominican Republic</a>
+    </div>
+    <div class="footer-col">
+      <h4>Contact</h4>
+      <a href="mailto:sales@dapex.net">sales@dapex.net</a>
+      <a href="tel:+12127965517">+1 (212) 796-5517</a>
+      <a href="https://wa.me/12127965517" target="_blank">WhatsApp</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 Dapex Inc. All rights reserved.</span>
+    <span>FMC NVOCC #022641 · Old Bridge, NJ</span>
+  </div>
 </footer>
 
-<a style="position:fixed;bottom:20px;right:20px;z-index:999;display:flex;align-items:center;gap:7px;background:#25D366;color:#fff;font-size:14px;font-weight:500;padding:12px 20px;border-radius:50px;box-shadow:0 4px 18px rgba(37,211,102,0.3);text-decoration:none" href="https://wa.me/12127965517" target="_blank">
-  <i class="ti ti-brand-whatsapp" style="font-size:20px"></i> WhatsApp
+<a class="wa-float" href="https://wa.me/12127965517" target="_blank">
+  <i class="ti ti-brand-whatsapp"></i> WhatsApp
 </a>
 
 <script>
 function showDest(key) {
-  document.querySelectorAll('.dest-content').forEach(d => d.classList.remove('active'));
+  document.querySelectorAll('.dest-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.dest-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('dest-' + key).classList.add('active');
-  event.target.classList.add('active');
+  document.getElementById('panel-' + key).classList.add('active');
+  document.getElementById('tab-' + key).classList.add('active');
 }
 </script>
 </body>
