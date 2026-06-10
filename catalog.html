@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dealer Inventory — ExportLots</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-brand"><span class="dot"></span>ExportLots</a>
+    <div class="nav-links">
+      <a href="/catalog" class="active">Inventory</a>
+      <a href="/shipping">Destinations</a>
+      <a href="/how-it-works">How it works</a>
+    </div>
+    <div class="nav-cta">
+      <span id="dealer-name" style="font-size:13px;color:var(--ink-mute);font-family:var(--mono)"></span>
+      <button onclick="logout()" class="btn btn-ghost btn-sm">Sign out</button>
+    </div>
+  </div>
+</nav>
+
+<div style="padding:24px var(--gap) 16px;border-bottom:1px solid var(--line);background:var(--bg)">
+  <div style="max-width:var(--max);margin:0 auto;display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px">
+    <div>
+      <div class="eyebrow" style="margin-bottom:8px">Wholesale dealer inventory</div>
+      <h1 style="font-family:var(--serif);font-size:28px;font-weight:400">Live listings — <span id="total-count" style="color:var(--ink-mute)">loading...</span></h1>
+    </div>
+    <a href="https://wa.me/12127965517?text=Hi+ExportLots.+I+need+a+quote." class="btn btn-wa" target="_blank"><i class="ti ti-brand-whatsapp"></i> Request quote</a>
+  </div>
+</div>
+
+<div class="filters-bar">
+  <div class="filters-inner">
+    <select class="filter-select" id="f-market" onchange="applyFilters()">
+      <option value="">All destinations</option>
+      <option value="NG">🇳🇬 Nigeria</option>
+      <option value="AE">🇦🇪 UAE</option>
+      <option value="GH">🇬🇭 Ghana</option>
+      <option value="LT">🇱🇹 Eastern Europe</option>
+      <option value="DO">🇩🇴 Dominican Republic</option>
+      <option value="GE">🇬🇪 Georgia</option>
+      <option value="AM">🇦🇲 Armenia</option>
+    </select>
+    <select class="filter-select" id="f-make" onchange="applyFilters()">
+      <option value="">All makes</option>
+    </select>
+    <select class="filter-select" id="f-type" onchange="applyFilters()">
+      <option value="">All types</option>
+      <option value="timed">Timed sale (Buy Now)</option>
+      <option value="simulcast">Simulcast (Live)</option>
+    </select>
+    <select class="filter-select" id="f-status" onchange="applyFilters()">
+      <option value="active">Active only</option>
+      <option value="">All (incl. sold)</option>
+    </select>
+    <div class="filter-count" id="filter-count"></div>
+  </div>
+</div>
+
+<div class="catalog-grid" id="catalog-grid">
+  <div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--ink-mute);font-family:var(--mono);font-size:12px">Loading inventory...</div>
+</div>
+
+<footer class="footer" style="margin-top:40px">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="logo">ExportLots</div>
+      <p>Powered by Dapex Inc.<br>FMC NVOCC #022641<br>Old Bridge, NJ · USA</p>
+    </div>
+    <div class="footer-col">
+      <h4>Contact</h4>
+      <a href="mailto:sales@dapex.net">sales@dapex.net</a>
+      <a href="tel:+12127965517">+1 (212) 796-5517</a>
+      <a href="https://wa.me/12127965517" target="_blank">WhatsApp</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 Dapex Inc. All rights reserved.</span>
+  </div>
+</footer>
+
+<a class="wa-float" href="https://wa.me/12127965517?text=Hi+ExportLots.+I+need+a+quote." target="_blank"><i class="ti ti-brand-whatsapp"></i> Quote</a>
+
+<script src="rates.js"></script>
+<script>
+const MARKET_FLAGS = { NG:'🇳🇬', AE:'🇦🇪', GH:'🇬🇭', LT:'🇱🇹', DO:'🇩🇴', GE:'🇬🇪', AM:'🇦🇲' };
+const MARKET_NAMES = { NG:'Nigeria', AE:'UAE', GH:'Ghana', LT:'Eastern Europe', DO:'Dominican Republic', GE:'Georgia', AM:'Armenia' };
+const DEST_KEYS = { NG:'Lagos', AE:'JebelAli', GH:'Tema', LT:'Klaipeda', DO:'RioHaina', GE:'Poti', AM:'Yerevan' };
+const PORT_FROM_LOC = (loc) => {
+  if (!loc) return 'NJ';
+  if (loc.includes('NJ')) return 'NJ';
+  if (loc.includes('GA') || loc.includes('Atlanta')) return 'GA';
+  if (loc.includes('TX') || loc.includes('Dallas') || loc.includes('San Antonio') || loc.includes('Houston')) return 'TX';
+  if (loc.includes('CA') || loc.includes('Los Angeles')) return 'CA';
+  if (loc.includes('FL') || loc.includes('Florida') || loc.includes('Miami')) return 'FL';
+  return 'NJ';
+};
+
+let allVehicles = [];
+
+function fmtUSD(n) { return n ? '$' + Math.round(n).toLocaleString() : null; }
+function fmtMi(n) { return n ? n.toLocaleString() + ' mi' : '—'; }
+
+function getCountdown(v) {
+  const now = Date.now();
+  if (v.status === 'sold') return { label:'SOLD', cls:'vs-sold', timer:'Ended', timerCls:'' };
+  if (v.status === 'live') return { label:'LIVE', cls:'vs-live', timer:'🔴 LIVE NOW', timerCls:'v-timer-live' };
+  const target = v.sale_type === 'simulcast' ? v.start_time : v.end_time;
+  if (!target) return { label:'ACTIVE', cls:'vs-active', timer:'', timerCls:'' };
+  const diff = new Date(target).getTime() - now;
+  if (diff <= 0) {
+    if (v.sale_type === 'simulcast') return { label:'LIVE', cls:'vs-live', timer:'🔴 LIVE NOW', timerCls:'v-timer-live' };
+    return { label:'ENDED', cls:'vs-sold', timer:'Ended', timerCls:'' };
+  }
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor((diff % 86400000) / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const timeStr = (d > 0 ? d + 'd ' : '') + h + 'h ' + m + 'm';
+  const prefix = v.sale_type === 'simulcast' ? 'Starts in: ' : 'Ends in: ';
+  const isUrgent = diff < 21600000;
+  return { label: isUrgent ? 'URGENT' : 'ACTIVE', cls: isUrgent ? 'vs-urgent' : 'vs-active', timer: prefix + timeStr, timerCls: isUrgent ? 'v-timer-urgent' : '' };
+}
+
+function buildCard(v) {
+  const cd = getCountdown(v);
+  const price = v.buy_now ? fmtUSD(v.buy_now) : null;
+  const mmr = fmtUSD(v.mmr_avg);
+  const originPort = PORT_FROM_LOC(v.location);
+
+  // Per-market all-in prices
+  const marketPrices = (v.markets||[]).map(m => {
+    const destKey = DEST_KEYS[m];
+    if (!destKey || typeof calculateDelivery === 'undefined') return null;
+    try {
+      const lotPrice = v.buy_now || v.mmr_avg || 0;
+      const d = calculateDelivery(destKey, originPort, 4);
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--line-soft);font-size:12px">
+        <span>${MARKET_FLAGS[m]} ${MARKET_NAMES[m]}</span>
+        <span style="font-family:var(--mono);font-weight:600;color:var(--accent)">+${fmtUSD(d.dealer)} shipping</span>
+      </div>`;
+    } catch { return null; }
+  }).filter(Boolean);
+
+  const markets = (v.markets||[]).map(m=>`<span class="v-market-flag" title="${MARKET_NAMES[m]||m}">${MARKET_FLAGS[m]||m}</span>`).join('');
+  const tags = [
+    v.grade ? `<span class="vtag vtag-ok">Grade ${v.grade}</span>` : '',
+    v.accidents > 0 ? `<span class="vtag vtag-bad">${v.accidents} accident</span>` : `<span class="vtag vtag-ok">0 accidents</span>`,
+    v.owners ? `<span class="vtag vtag-mute">${v.owners} owner</span>` : '',
+    !v.condition_report ? `<span class="vtag vtag-warn">No CR</span>` : `<span class="vtag vtag-ok">CR available</span>`,
+    v.announcements ? `<span class="vtag vtag-accent">${v.announcements.split('/')[0].trim()}</span>` : '',
+    v.title_status && v.title_status !== 'Not Specified' ? `<span class="vtag ${v.title_status.toLowerCase()==='clean'?'vtag-ok':'vtag-warn'}">${v.title_status}</span>` : '',
+  ].join('');
+  const photo = v.photo ? `<img src="${v.photo}" alt="" loading="lazy">` : `<div class="v-img-placeholder"><i class="ti ti-car"></i><span>${v.color_ext||'No photo'}</span></div>`;
+  const waMsg = encodeURIComponent(`Hi ExportLots. Dealer inquiry.\nLot: ${v.lot}\n${v.year} ${v.make} ${v.model} ${v.trim||''}\nMileage: ${fmtMi(v.mileage)}\nLocation: ${v.location||''}`);
+
+  return `<div class="v-card${v.status==='sold'?' sold':''}">
+    <div class="v-img">
+      ${photo}
+      <span class="v-status ${cd.cls}">${cd.label}</span>
+      <span class="v-type">${v.sale_type==='simulcast'?'SIMULCAST':'TIMED SALE'}</span>
+      <span class="v-vin">${v.vin_masked}</span>
+    </div>
+    <div class="v-body">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:2px">
+        <div>
+          ${price ? `<div class="v-price">${price}</div><div class="v-price-label">Buy Now · <span style="color:var(--accent)">${v.lot}</span></div>` : ''}
+          ${!price && mmr ? `<div class="v-price">${mmr}</div><div class="v-price-label">Est. MMR · <span style="color:var(--accent)">${v.lot}</span></div>` : ''}
+        </div>
+        ${price && mmr ? `<div class="v-mmr">MMR: ${mmr}</div>` : ''}
+      </div>
+      <div class="v-title">${v.year} ${v.make} ${v.model} ${v.trim||''}</div>
+      <div class="v-sub">${fmtMi(v.mileage)} · ${v.drivetrain||''} · ${v.engine||''} · ${v.color_ext||''}</div>
+      <div class="v-tags" style="margin-bottom:8px">${tags}</div>
+      <div class="v-markets" style="margin-bottom:8px">${markets}</div>
+      ${v.autocheck ? `<div style="font-size:11px;color:var(--ink-mute);font-family:var(--mono);margin-bottom:6px">AutoCheck: ${v.autocheck}/100</div>` : ''}
+      <div class="v-spacer"></div>
+    </div>
+    ${cd.timer ? `<div class="v-timer ${cd.timerCls}"><i class="ti ti-clock"></i>${cd.timer}</div>` : ''}
+    <div class="v-footer">
+      <div style="flex:1">
+        <div style="font-size:10px;color:var(--ink-mute);font-family:var(--mono)">${(v.location||'').replace(/^[A-Z]+ - /,'')}</div>
+        <div style="font-size:10px;color:var(--ink-mute);font-family:var(--mono)">Added: ${new Date(v.added).toLocaleDateString()}</div>
+      </div>
+      <a class="btn btn-wa btn-sm" href="https://wa.me/12127965517?text=${waMsg}" target="_blank"><i class="ti ti-brand-whatsapp"></i> Inquire</a>
+    </div>
+  </div>`;
+}
+
+function applyFilters() {
+  const market = document.getElementById('f-market').value;
+  const make = document.getElementById('f-make').value;
+  const type = document.getElementById('f-type').value;
+  const status = document.getElementById('f-status').value;
+
+  let filtered = allVehicles.filter(v => {
+    if (market && !(v.markets||[]).includes(market)) return false;
+    if (make && v.make !== make) return false;
+    if (type && v.sale_type !== type) return false;
+    if (status === 'active' && (v.status === 'sold')) return false;
+    return true;
+  });
+
+  // Sort: active/live/urgent first, then sold
+  filtered.sort((a,b) => {
+    if (a.status === 'sold' && b.status !== 'sold') return 1;
+    if (b.status === 'sold' && a.status !== 'sold') return -1;
+    if (a.status === 'live') return -1;
+    if (b.status === 'live') return 1;
+    const ta = a.sale_type === 'simulcast' ? a.start_time : a.end_time;
+    const tb = b.sale_type === 'simulcast' ? b.start_time : b.end_time;
+    if (!ta && !tb) return 0;
+    if (!ta) return 1;
+    if (!tb) return -1;
+    return new Date(ta) - new Date(tb);
+  });
+
+  const grid = document.getElementById('catalog-grid');
+  document.getElementById('filter-count').textContent = filtered.length + ' listings';
+  if (!filtered.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--ink-mute)">No listings match your filters.</div>';
+    return;
+  }
+  grid.innerHTML = filtered.map(buildCard).join('');
+}
+
+function populateMakeFilter(vehicles) {
+  const makes = [...new Set(vehicles.map(v=>v.make).filter(Boolean))].sort();
+  const sel = document.getElementById('f-make');
+  makes.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; sel.appendChild(o); });
+}
+
+async function loadCatalog() {
+  try {
+    const r = await fetch('/api/vehicles');
+    const data = await r.json();
+    if (!data.ok || !data.isDealer) { window.location.href = '/login'; return; }
+    allVehicles = data.vehicles || [];
+    document.getElementById('total-count').textContent = allVehicles.filter(v=>v.status!=='sold').length + ' active';
+    populateMakeFilter(allVehicles);
+    applyFilters();
+  } catch { window.location.href = '/login'; }
+}
+
+async function logout() {
+  await fetch('/api/auth/logout', { method: 'POST' });
+  window.location.href = '/';
+}
+
+loadCatalog();
+setInterval(applyFilters, 60000);
+</script>
+</body>
+</html>

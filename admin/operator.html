@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Listing — ExportLots Operator</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-brand"><span class="dot"></span>ExportLots</a>
+    <div class="nav-links">
+      <a href="/admin/operator" class="active">Add listing</a>
+      <a href="/catalog">View catalog</a>
+    </div>
+    <div class="nav-cta">
+      <span style="font-size:12px;color:var(--ink-mute);font-family:var(--mono)">OPERATOR</span>
+      <button onclick="logout()" class="btn btn-ghost btn-sm">Sign out</button>
+    </div>
+  </div>
+</nav>
+
+<div style="max-width:1100px;margin:0 auto;padding:32px var(--gap)">
+  <div style="margin-bottom:28px">
+    <div class="eyebrow" style="margin-bottom:8px">Operator panel</div>
+    <h1 style="font-family:var(--serif);font-size:28px;font-weight:400">Add new listing</h1>
+    <p style="font-size:13px;color:var(--ink-soft);margin-top:4px">Paste Manheim copy-paste text and drag & drop the main photo. Review parsed data then submit.</p>
+  </div>
+
+  <div class="op-grid">
+
+    <!-- LEFT: PASTE + PHOTO -->
+    <div style="display:flex;flex-direction:column;gap:20px">
+
+      <div class="op-card">
+        <h2>1. Paste Manheim text</h2>
+        <textarea class="parse-area" id="paste-area" placeholder="Copy the full listing text from Manheim and paste it here...&#10;&#10;Example:&#10;2019 Toyota Camry SE&#10;4T1B11HK6KU710075•275,845mi•FWD•..."></textarea>
+        <button class="btn btn-primary" style="margin-top:12px;width:100%;justify-content:center" onclick="parsePaste()">
+          <i class="ti ti-cpu"></i> Parse listing
+        </button>
+      </div>
+
+      <div class="op-card">
+        <h2>2. Drag & drop main photo</h2>
+        <div class="drop-zone" id="drop-zone" onclick="document.getElementById('photo-input').click()">
+          <i class="ti ti-photo-up"></i>
+          <p>Click or drag & drop photo here<br><small>JPG, PNG · Max 10MB · Background will be removed automatically</small></p>
+        </div>
+        <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handleFile(this.files[0])">
+        <div class="photo-preview" id="photo-preview" style="display:none">
+          <img id="photo-thumb" src="" alt="">
+          <button onclick="clearPhoto()" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">×</button>
+        </div>
+      </div>
+
+      <div class="op-card">
+        <h2>3. Buy Now price (optional)</h2>
+        <div style="display:flex;gap:10px;align-items:center">
+          <div style="position:relative;flex:1">
+            <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--ink-mute);font-family:var(--mono)">$</span>
+            <input type="number" class="form-input" id="buy-now" placeholder="Leave empty if simulcast / no fixed price" style="padding-left:28px">
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--ink-mute);margin-top:8px">If this is a Timed Sale with a Buy Now price, enter it here. For simulcast auctions without a fixed price, leave empty — MMR will be used as the estimate.</p>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: PARSED DATA + MARKETS + SUBMIT -->
+    <div style="display:flex;flex-direction:column;gap:20px">
+
+      <div class="op-card">
+        <h2>Parsed data</h2>
+        <div id="parsed-empty" style="text-align:center;padding:30px;color:var(--ink-mute);font-size:13px;font-family:var(--mono)">
+          Paste text on the left and click "Parse listing"
+        </div>
+        <div id="parsed-data" style="display:none">
+          <div class="parsed-fields" id="parsed-fields"></div>
+        </div>
+      </div>
+
+      <div class="op-card">
+        <h2>Markets / Destinations</h2>
+        <p style="font-size:13px;color:var(--ink-soft);margin-bottom:16px">Select which markets this vehicle is suitable for</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px" id="market-selector">
+          <label class="market-toggle"><input type="checkbox" value="NG"> 🇳🇬 Nigeria</label>
+          <label class="market-toggle"><input type="checkbox" value="AE"> 🇦🇪 UAE</label>
+          <label class="market-toggle"><input type="checkbox" value="GH"> 🇬🇭 Ghana</label>
+          <label class="market-toggle"><input type="checkbox" value="LT"> 🇱🇹 E. Europe</label>
+          <label class="market-toggle"><input type="checkbox" value="DO"> 🇩🇴 Dom. Republic</label>
+          <label class="market-toggle"><input type="checkbox" value="GE"> 🇬🇪 Georgia</label>
+          <label class="market-toggle"><input type="checkbox" value="AM"> 🇦🇲 Armenia</label>
+        </div>
+        <style>
+        .market-toggle { display:flex; align-items:center; gap:6px; padding:8px 12px; background:var(--bg); border:1px solid var(--line); border-radius:var(--radius); cursor:pointer; font-size:13px; transition:border-color 0.15s; }
+        .market-toggle:hover { border-color:var(--accent); }
+        .market-toggle input { accent-color:var(--accent); }
+        .market-toggle:has(input:checked) { border-color:var(--accent); background:var(--accent-s); }
+        </style>
+      </div>
+
+      <div class="op-card">
+        <h2>Sample listing?</h2>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px">
+          <input type="checkbox" id="is-sample" style="width:16px;height:16px;accent-color:var(--accent)">
+          <div>
+            <div style="font-weight:500">Mark as sample listing</div>
+            <div style="font-size:12px;color:var(--ink-mute)">Sample listings are visible to the public (with SAMPLE watermark)</div>
+          </div>
+        </label>
+      </div>
+
+      <button class="btn btn-accent btn-lg" style="width:100%;justify-content:center" onclick="submitListing()" id="submit-btn">
+        <i class="ti ti-plus"></i> Add listing
+      </button>
+      <div id="submit-error" style="display:none;padding:12px 14px;background:#fee2e2;border-radius:var(--radius);font-size:13px;color:var(--red)"></div>
+      <div id="submit-success" style="display:none;padding:14px 16px;background:#dcfce7;border-radius:var(--radius-lg);font-size:13px;color:#166534;line-height:1.6"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let parsedData = {};
+let photoFile = null;
+
+// Drag & drop
+const dropZone = document.getElementById('drop-zone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('over'); const f = e.dataTransfer.files[0]; if (f) handleFile(f); });
+
+function handleFile(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  photoFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('photo-thumb').src = e.target.result;
+    document.getElementById('photo-preview').style.display = 'block';
+    document.getElementById('drop-zone').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearPhoto() {
+  photoFile = null;
+  document.getElementById('photo-preview').style.display = 'none';
+  document.getElementById('drop-zone').style.display = 'block';
+  document.getElementById('photo-input').value = '';
+}
+
+async function parsePaste() {
+  const text = document.getElementById('paste-area').value.trim();
+  if (!text) return;
+  try {
+    const res = await fetch('/api/parse', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ text })
+    });
+    const d = await res.json();
+    if (!d.ok) { alert('Parse error: ' + (d.error || 'Unknown')); return; }
+    parsedData = d.data;
+    displayParsed(parsedData);
+
+    // Auto-suggest markets based on parsed data
+    autoSuggestMarkets(parsedData);
+  } catch(e) {
+    alert('Failed to parse: ' + e.message);
+  }
+}
+
+function autoSuggestMarkets(data) {
+  const year = data.year || 0;
+  const title = (data.title_status || '').toLowerCase();
+  const isClean = title === 'clean' || title === 'not specified';
+  const currentYear = new Date().getFullYear();
+  const age = currentYear - year;
+
+  document.querySelectorAll('.market-toggle input').forEach(cb => {
+    cb.checked = false;
+    const v = cb.value;
+    if (v === 'AE' && !isClean) return; // UAE: clean title only
+    if (v === 'DO' && age > 5) return;  // DR: max 5 years
+    if (v === 'LT' && age > 10) return; // Europe: max 10 years
+    if (v === 'AM' && age > 10) return; // Armenia: max 10 years
+    cb.checked = true;
+  });
+}
+
+function displayParsed(d) {
+  document.getElementById('parsed-empty').style.display = 'none';
+  document.getElementById('parsed-data').style.display = 'block';
+  const fields = [
+    ['VIN (masked)', d.vin_masked || '—'],
+    ['VIN (full — private)', d.vin_full || '—'],
+    ['Year / Make / Model', `${d.year||'?'} ${d.make||'?'} ${d.model||'?'} ${d.trim||''}`],
+    ['Mileage', d.mileage ? d.mileage.toLocaleString() + ' mi' : '—'],
+    ['Engine / Trans', `${d.engine||'—'} · ${d.transmission||'—'}`],
+    ['Drivetrain', d.drivetrain || '—'],
+    ['Color (ext/int)', `${d.color_ext||'—'} / ${d.color_int||'—'}`],
+    ['Sale type', d.sale_type || '—'],
+    ['Time left / Starts', d.time_left_raw || d.starts_raw || '—'],
+    ['MMR avg', d.mmr_avg ? '$' + d.mmr_avg.toLocaleString() : '—'],
+    ['Grade', d.grade || '—'],
+    ['AutoCheck score', d.autocheck || '—'],
+    ['Owners / Accidents', `${d.owners??'—'} / ${d.accidents??'—'}`],
+    ['Title status', d.title_status || '—'],
+    ['Announcements', d.announcements || 'None'],
+    ['Location', d.location || '—'],
+    ['Auction house', d.auction_house || '—'],
+    ['MSRP', d.msrp ? '$' + d.msrp.toLocaleString() : '—'],
+    ['Seller', d.seller || '—'],
+  ];
+  document.getElementById('parsed-fields').innerHTML = fields.map(([k,v]) =>
+    `<div class="parsed-row"><span class="parsed-key">${k}</span><span class="parsed-val">${v}</span></div>`
+  ).join('');
+}
+
+async function submitListing() {
+  const err = document.getElementById('submit-error');
+  const suc = document.getElementById('submit-success');
+  const btn = document.getElementById('submit-btn');
+  err.style.display = 'none'; suc.style.display = 'none';
+
+  if (!parsedData.year) { err.textContent = 'Please parse a listing first.'; err.style.display = 'block'; return; }
+
+  const markets = [...document.querySelectorAll('.market-toggle input:checked')].map(c => c.value);
+  const buyNow = parseFloat(document.getElementById('buy-now').value) || null;
+  const isSample = document.getElementById('is-sample').checked;
+
+  const data = { ...parsedData, buy_now: buyNow, markets, is_sample: isSample };
+
+  btn.innerHTML = '<i class="ti ti-loader"></i> Adding...'; btn.disabled = true;
+
+  try {
+    let res;
+    if (photoFile) {
+      const form = new FormData();
+      form.append('data', JSON.stringify(data));
+      form.append('photo', photoFile, photoFile.name);
+      res = await fetch('/api/vehicles', { method: 'POST', body: form });
+    } else {
+      res = await fetch('/api/vehicles', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(data)
+      });
+    }
+    const result = await res.json();
+    if (result.ok) {
+      suc.innerHTML = `✓ Listing added successfully!<br><strong>Lot number: ${result.lot}</strong><br>The listing is now live in the dealer catalog.`;
+      suc.style.display = 'block';
+      // Reset form
+      document.getElementById('paste-area').value = '';
+      document.getElementById('buy-now').value = '';
+      document.getElementById('is-sample').checked = false;
+      parsedData = {};
+      clearPhoto();
+      document.getElementById('parsed-empty').style.display = 'block';
+      document.getElementById('parsed-data').style.display = 'none';
+      document.querySelectorAll('.market-toggle input').forEach(c => c.checked = false);
+    } else {
+      err.textContent = result.error || 'Failed to add listing.';
+      err.style.display = 'block';
+    }
+  } catch(e) {
+    err.textContent = 'Network error: ' + e.message;
+    err.style.display = 'block';
+  }
+  btn.innerHTML = '<i class="ti ti-plus"></i> Add listing'; btn.disabled = false;
+}
+
+async function logout() {
+  await fetch('/api/auth/logout', { method: 'POST' });
+  window.location.href = '/';
+}
+</script>
+</body>
+</html>

@@ -3,308 +3,313 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ExportLots — US Cars for Export</title>
+<title>ExportLots — US Vehicle Export for Wholesale Dealers</title>
+<meta name="description" content="US dealer auction vehicles shipped to Nigeria, UAE, Ghana, Eastern Europe, Dominican Republic, Georgia and Armenia. Wholesale pricing for registered dealers. FMC NVOCC #022641.">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <nav class="nav">
-  <a href="index.html" class="nav-logo">Export<span>Lots</span></a>
-  <div class="nav-links">
-    <a href="index.html" class="active">Catalog</a>
-    <a href="shipping.html">Shipping</a>
-    <a href="how-it-works.html">How it works</a>
-    <a href="wholesale.html">Wholesale</a>
-    <a href="partners.html">Partners</a>
+  <div class="nav-inner">
+    <a href="/" class="nav-brand"><span class="dot"></span>ExportLots</a>
+    <div class="nav-links">
+      <a href="/" class="active">Home</a>
+      <a href="/shipping">Destinations</a>
+      <a href="/how-it-works">How it works</a>
+      <a href="/partners">Partners</a>
+    </div>
+    <div class="nav-cta">
+      <a href="/login" class="nav-login">Dealer login</a>
+      <a href="/join" class="btn btn-accent btn-sm">Apply for access</a>
+    </div>
   </div>
-  <a class="nav-wa" href="https://wa.me/12127965517?text=Hi+ExportLots.+I+need+a+quote." target="_blank">
-    <i class="ti ti-brand-whatsapp"></i> WhatsApp
-  </a>
 </nav>
 
-<div class="hero">
-  <h1>US cars for export.<br><span>Source. Ship. Arrive.</span></h1>
-  <p class="hero-sub" style="font-size:13px;color:var(--text3);margin-top:-18px;margin-bottom:18px">In business since 1999 · FMC NVOCC #022641</p>
-  <p class="hero-sub">Clean title and salvage vehicles from US dealer auctions. All-in delivery price to Lagos, Jebel Ali, Klaipeda, Tema, and Rio Haina. Shipped by Dapex — FMC NVOCC #022641.</p>
-  <div class="hero-badges">
-    <div class="hero-badge">US Dealer Auction + Copart + IAAI</div>
-    <div class="hero-badge">Clean title available</div>
-    <div class="hero-badge">All-in price to port</div>
-    <div class="hero-badge">WhatsApp · Real photos</div>
-    <div class="hero-badge">FMC NVOCC #022641</div>
-  </div>
-  <div class="cta-row">
-    <a href="#catalog" class="btn-primary">Browse cars</a>
-    <a href="https://wa.me/12127965517?text=Hi+ExportLots.+I+need+a+quote.+Destination%3A+___" class="btn-wa-lg" target="_blank">
-      <i class="ti ti-brand-whatsapp"></i> WhatsApp us
-    </a>
+<div class="trust-strip">
+  <div class="trust-strip-inner">
+    <span>Dapex Inc.</span>
+    <span class="sep">·</span>
+    <span>FMC NVOCC #022641</span>
+    <span class="sep">·</span>
+    <span>In business since 1999</span>
+    <span class="sep">·</span>
+    <span>Shipping to 113 countries</span>
+    <span class="sep">·</span>
+    <span>Direct carrier — not an agent</span>
   </div>
 </div>
 
-<div class="filters" id="catalog">
-  <select class="filter-select" id="filter-dest" onchange="applyFilters()">
-    <option value="">All destinations</option>
-    <option value="Lagos">🇳🇬 Lagos</option>
-    <option value="Tema">🇬🇭 Tema</option>
-    <option value="JebelAli">🇦🇪 Jebel Ali</option>
-    <option value="Klaipeda">🇱🇹 Klaipeda</option>
-    <option value="RioHaina">🇩🇴 Rio Haina</option>
-  </select>
-  <select class="filter-select" id="filter-make" onchange="applyFilters()">
-    <option value="">All makes</option>
-    <option value="Toyota">Toyota</option>
-    <option value="Lexus">Lexus</option>
-    <option value="Honda">Honda</option>
-    <option value="BMW">BMW</option>
-    <option value="Audi">Audi</option>
-    <option value="Mercedes">Mercedes</option>
-    <option value="GMC">GMC</option>
-    <option value="Ford">Ford</option>
-  </select>
-  <select class="filter-select" id="filter-title" onchange="applyFilters()">
-    <option value="">All titles</option>
-    <option value="clean">Clean title</option>
-    <option value="salvage">Salvage</option>
-    <option value="absent">Title absent</option>
-  </select>
-  <select class="filter-select" id="filter-status" onchange="applyFilters()">
-    <option value="">All status</option>
-    <option value="buynow">Available Now</option>
-    <option value="auction">Auction</option>
-  </select>
-  <div class="filter-count" id="filter-count">Loading...</div>
-</div>
-
-<div class="catalog" id="catalog-grid"></div>
-
-<div class="section">
-  <div class="section-label">How it works</div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px">
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px">
-      <div style="font-size:22px;margin-bottom:8px">🔍</div>
-      <div style="font-size:14px;font-weight:500;margin-bottom:4px">1. Browse</div>
-      <div style="font-size:12px;color:var(--text2);line-height:1.6">Find a car. See all-in price to your port. Damage map shows exactly what's there.</div>
+<section class="hero">
+  <div class="container">
+    <div class="eyebrow hero-eyebrow">For wholesale dealers only</div>
+    <h1>US cars.<br>Your market.<br><em>We ship.</em></h1>
+    <div class="hero-meta">
+      <span>Manheim · Copart · IAAI</span>
+      <span class="dot">·</span>
+      <span>Lagos · Jebel Ali · Tema · Klaipeda · Rio Haina · Poti · Yerevan</span>
+      <span class="dot">·</span>
+      <span>Weekly containers from NJ</span>
     </div>
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px">
-      <div style="font-size:22px;margin-bottom:8px">💬</div>
-      <div style="font-size:14px;font-weight:500;margin-bottom:4px">2. WhatsApp</div>
-      <div style="font-size:12px;color:var(--text2);line-height:1.6">Send us VIN. We send real US Dealer Auction photos. You buy yourself or we assist ($250–$550).</div>
-    </div>
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px">
-      <div style="font-size:22px;margin-bottom:8px">🚢</div>
-      <div style="font-size:14px;font-weight:500;margin-bottom:4px">3. Ship</div>
-      <div style="font-size:12px;color:var(--text2);line-height:1.6">Dapex picks up from auction, loads at NJ warehouse, ships weekly. HBL issued in-house.</div>
-    </div>
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px">
-      <div style="font-size:22px;margin-bottom:8px">📦</div>
-      <div style="font-size:14px;font-weight:500;margin-bottom:4px">4. Arrive</div>
-      <div style="font-size:12px;color:var(--text2);line-height:1.6">Pre-alert + HBL to your clearing agent. All docs handled. No surprises on final invoice.</div>
+    <p class="hero-lead">We source clean-title and salvage vehicles from US dealer auctions and ship them to your port — all-in price, HBL included. Built for dealers who move 3+ cars per month.</p>
+    <div class="hero-cta">
+      <a href="/join" class="btn btn-accent btn-lg">Apply for dealer access →</a>
+      <a href="https://wa.me/12127965517?text=Hi+ExportLots.+I+want+to+become+a+dealer." class="btn btn-wa btn-lg" target="_blank"><i class="ti ti-brand-whatsapp"></i> WhatsApp us</a>
     </div>
   </div>
-</div>
+</section>
+
+<section class="block">
+  <div class="container">
+    <div class="eyebrow" style="margin-bottom:20px">Who this is for</div>
+    <h2 style="font-family:var(--serif);font-size:clamp(28px,3vw,40px);font-weight:400;margin-bottom:48px;max-width:22ch;line-height:1.1">Three ways to work with us</h2>
+    <div class="grid-3">
+
+      <div class="who-card">
+        <div class="num">01 — WHOLESALE DEALER</div>
+        <h3>You buy, we ship</h3>
+        <p>You're a dealer or lot owner in your country. You source vehicles from us — we handle auction purchase, export docs, container loading and ocean freight to your port.</p>
+        <ul style="list-style:none;font-size:13px;color:var(--ink-soft);line-height:2.1;margin-bottom:20px">
+          <li>✓ 3+ cars/month minimum</li>
+          <li>✓ Wholesale pricing — $200 service fee/car</li>
+          <li>✓ Full AES / ISF / HBL in-house</li>
+          <li>✓ Weekly container cuts from NJ</li>
+        </ul>
+        <span class="earn-tag">$200/car service fee</span>
+      </div>
+
+      <div class="who-card">
+        <div class="num">02 — WEB PORTAL OWNER</div>
+        <h3>List our inventory, earn commission</h3>
+        <p>You run an auto listing website in your country. Display our inventory to your users — retail or dealer — and earn per transaction.</p>
+        <ul style="list-style:none;font-size:13px;color:var(--ink-soft);line-height:2.1;margin-bottom:20px">
+          <li>✓ Retail clients from your portal → <strong>up to $350/car</strong></li>
+          <li>✓ Your dealer clients buy through us → <strong>$150/car</strong></li>
+          <li>✓ Refer a wholesale dealer → <strong>$50/car passive</strong></li>
+          <li>✓ Shipment tracking access for your clients</li>
+        </ul>
+        <span class="earn-tag">Up to $350/car commission</span>
+      </div>
+
+      <div class="who-card">
+        <div class="num">03 — RESELLER</div>
+        <h3>Refer dealers, earn passive income</h3>
+        <p>You know dealers in your market. Refer them to us — earn $50 per car they ship, forever. Bring 3 active buyers and automatically upgrade to dealer status.</p>
+        <ul style="list-style:none;font-size:13px;color:var(--ink-soft);line-height:2.1;margin-bottom:20px">
+          <li>✓ Unique referral link</li>
+          <li>✓ $50/car as long as your referral stays active</li>
+          <li>✓ Shipment tracking for your referrals</li>
+          <li>✓ 3 active referrals → auto-upgrade to dealer</li>
+        </ul>
+        <span class="earn-tag">$50/car passive income</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section class="block-tight" id="sample">
+  <div class="container" style="margin-bottom:24px">
+    <div class="eyebrow" style="margin-bottom:16px">Live inventory sample</div>
+    <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <h2 style="font-family:var(--serif);font-size:32px;font-weight:400">What's on the floor right now</h2>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:13px;color:var(--ink-mute)">Full catalog available after dealer registration</span>
+        <a href="/join" class="btn btn-accent btn-sm">Get access</a>
+      </div>
+    </div>
+  </div>
+  <div class="catalog-grid" id="sample-grid">
+    <div style="text-align:center;color:var(--ink-mute);padding:40px;grid-column:1/-1;font-family:var(--mono);font-size:12px">Loading...</div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:60px;align-items:start">
+      <div>
+        <div class="eyebrow" style="margin-bottom:20px">Destinations</div>
+        <h2 style="font-family:var(--serif);font-size:clamp(26px,3vw,38px);font-weight:400;margin-bottom:16px;line-height:1.15">7 routes.<br>Weekly sailings.</h2>
+        <p style="font-size:14px;color:var(--ink-soft);line-height:1.7;margin-bottom:28px">All-in price includes inland transport, port fees, container loading, ocean freight, AES, ISF, and house bill of lading.</p>
+        <a href="/shipping" class="btn btn-secondary btn-sm">View all destinations →</a>
+      </div>
+      <div>
+        <div class="market-row"><span class="market-flag">🇳🇬</span><span class="market-name">Nigeria</span><span class="market-meta">Apapa / Tin Can Island</span><span class="market-transit">14–21 days</span></div>
+        <div class="market-row"><span class="market-flag">🇦🇪</span><span class="market-name">UAE</span><span class="market-meta">Jebel Ali — clean title only</span><span class="market-transit">25–35 days</span></div>
+        <div class="market-row"><span class="market-flag">🇬🇭</span><span class="market-name">Ghana</span><span class="market-meta">Tema port</span><span class="market-transit">18–24 days</span></div>
+        <div class="market-row"><span class="market-flag">🇱🇹</span><span class="market-name">Eastern Europe</span><span class="market-meta">Klaipeda, Lithuania</span><span class="market-transit">14–18 days</span></div>
+        <div class="market-row"><span class="market-flag">🇩🇴</span><span class="market-name">Dominican Republic</span><span class="market-meta">Rio Haina / Caucedo</span><span class="market-transit">8–12 days</span></div>
+        <div class="market-row"><span class="market-flag">🇬🇪</span><span class="market-name">Georgia</span><span class="market-meta">Poti — any title accepted</span><span class="market-transit">25–30 days</span></div>
+        <div class="market-row"><span class="market-flag">🇦🇲</span><span class="market-name">Armenia</span><span class="market-meta">Poti → Yerevan by truck</span><span class="market-transit">30–35 days</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="container">
+    <div class="eyebrow" style="margin-bottom:20px">Why Dapex</div>
+    <h2 style="font-family:var(--serif);font-size:clamp(26px,3vw,38px);font-weight:400;margin-bottom:48px;max-width:20ch;line-height:1.1">We are the carrier.<br>Not an agent.</h2>
+    <div class="grid-4" style="gap:16px">
+      <div style="padding:24px;background:var(--bg-elev);border:1px solid var(--line);border-radius:var(--radius-lg)">
+        <div style="font-size:26px;margin-bottom:14px">📋</div>
+        <div style="font-weight:600;margin-bottom:6px;font-size:15px">FMC Licensed NVOCC</div>
+        <div style="font-size:13px;color:var(--ink-soft);line-height:1.6">License #022641. We issue our own HBL and file AES/ISF in-house.</div>
+      </div>
+      <div style="padding:24px;background:var(--bg-elev);border:1px solid var(--line);border-radius:var(--radius-lg)">
+        <div style="font-size:26px;margin-bottom:14px">📦</div>
+        <div style="font-weight:600;margin-bottom:6px;font-size:15px">25 Years Experience</div>
+        <div style="font-size:13px;color:var(--ink-soft);line-height:1.6">In business since 1999. Hundreds of containers shipped to every destination we serve.</div>
+      </div>
+      <div style="padding:24px;background:var(--bg-elev);border:1px solid var(--line);border-radius:var(--radius-lg)">
+        <div style="font-size:26px;margin-bottom:14px">🚢</div>
+        <div style="font-weight:600;margin-bottom:6px;font-size:15px">Weekly Containers</div>
+        <div style="font-size:13px;color:var(--ink-soft);line-height:1.6">40HC containers loaded every week from our NJ facility. RoRo also available on select routes.</div>
+      </div>
+      <div style="padding:24px;background:var(--bg-elev);border:1px solid var(--line);border-radius:var(--radius-lg)">
+        <div style="font-size:26px;margin-bottom:14px">💬</div>
+        <div style="font-weight:600;margin-bottom:6px;font-size:15px">Quote in 4 Hours</div>
+        <div style="font-size:13px;color:var(--ink-soft);line-height:1.6">Send VIN + destination on WhatsApp. Itemized all-in quote back within 4 hours.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block-tight" style="background:var(--bg-deep);border:none">
+  <div class="container" style="text-align:center;max-width:640px">
+    <div class="eyebrow muted" style="justify-content:center;margin-bottom:20px">Ready to start?</div>
+    <h2 style="font-family:var(--serif);font-size:clamp(28px,4vw,48px);font-weight:400;color:var(--bg);margin-bottom:16px;line-height:1.1">Access the full<br>dealer inventory</h2>
+    <p style="font-size:16px;color:rgba(246,242,233,0.6);margin-bottom:32px;line-height:1.6">Register as a wholesale dealer and get access to 100+ live listings with real-time countdowns, all-in prices to your port, and direct WhatsApp ordering.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <a href="/join" class="btn btn-accent btn-lg">Apply for dealer access →</a>
+      <a href="https://wa.me/12127965517" class="btn btn-wa btn-lg" target="_blank"><i class="ti ti-brand-whatsapp"></i> Ask on WhatsApp</a>
+    </div>
+  </div>
+</section>
 
 <footer class="footer">
-  <div class="footer-col">
-    <strong>ExportLots</strong>
-    Powered by Dapex Inc.<br>
-    FMC NVOCC #022641<br>
-    Old Bridge, NJ
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="logo">ExportLots</div>
+      <p>Powered by Dapex Inc.<br>FMC NVOCC #022641<br>Old Bridge, NJ · USA</p>
+    </div>
+    <div class="footer-col">
+      <h4>Platform</h4>
+      <a href="/catalog">Dealer catalog</a>
+      <a href="/join">Apply for access</a>
+      <a href="/login">Dealer login</a>
+      <a href="/partners">Partner program</a>
+    </div>
+    <div class="footer-col">
+      <h4>Destinations</h4>
+      <a href="/shipping">Nigeria</a>
+      <a href="/shipping">UAE</a>
+      <a href="/shipping">Ghana</a>
+      <a href="/shipping">Eastern Europe</a>
+      <a href="/shipping">Dominican Republic</a>
+    </div>
+    <div class="footer-col">
+      <h4>Contact</h4>
+      <a href="mailto:sales@dapex.net">sales@dapex.net</a>
+      <a href="tel:+12127965517">+1 (212) 796-5517</a>
+      <a href="https://wa.me/12127965517" target="_blank">WhatsApp</a>
+    </div>
   </div>
-  <div class="footer-col">
-    <strong>WhatsApp by region</strong>
-    🇳🇬 Lagos: +1 (212) 796-5517<br>
-    🇦🇪 Jebel: +1 (212) 796-5517<br>
-    🇱🇹 Klaipeda: +1 (212) 796-5517
-  </div>
-  <div class="footer-col">
-    <strong>Shipping</strong>
-    <a href="shipping.html">Nigeria</a><br>
-    <a href="shipping.html">UAE</a><br>
-    <a href="shipping.html">Eastern Europe</a>
-  </div>
-  <div class="footer-col">
-    <strong>Contact</strong>
-    sales@dapex.net<br>
-    +1 (212) 796-5517<br>
-    <a href="wholesale.html">Wholesale program</a>
+  <div class="footer-bottom">
+    <span>© 2026 Dapex Inc. All rights reserved.</span>
+    <span>FMC NVOCC #022641 · Old Bridge, NJ</span>
   </div>
 </footer>
 
-<a style="position:fixed;bottom:20px;right:20px;z-index:999;display:flex;align-items:center;gap:7px;background:var(--green);color:#fff;font-size:14px;font-weight:500;padding:12px 20px;border-radius:50px;box-shadow:0 4px 18px rgba(37,211,102,0.3);text-decoration:none" href="https://wa.me/12127965517?text=Hi+ExportLots." target="_blank">
-  <i class="ti ti-brand-whatsapp" style="font-size:20px"></i> WhatsApp
+<a class="wa-float" href="https://wa.me/12127965517?text=Hi+ExportLots.+I+want+to+become+a+dealer." target="_blank">
+  <i class="ti ti-brand-whatsapp"></i> WhatsApp
 </a>
 
-<script src="rates.js"></script>
-<script src="vehicles.js"></script>
 <script>
-function getStatus(v) {
-  if (!v.active) return 'sold';
-  if (v.auctionType === 'buynow') return 'available';
-  if (!v.auctionDate) return 'available';
-  return new Date(v.auctionDate) > new Date() ? 'auction' : 'sold';
+const MARKET_FLAGS = { NG:'🇳🇬', AE:'🇦🇪', GH:'🇬🇭', LT:'🇱🇹', DO:'🇩🇴', GE:'🇬🇪', AM:'🇦🇲' };
+const MARKET_NAMES = { NG:'Nigeria', AE:'UAE', GH:'Ghana', LT:'Eastern Europe', DO:'Dominican Republic', GE:'Georgia', AM:'Armenia' };
+
+function fmtUSD(n) { return n ? '$' + n.toLocaleString() : null; }
+function fmtMi(n) { return n ? n.toLocaleString() + ' mi' : '—'; }
+
+function getCountdown(v) {
+  const now = Date.now();
+  if (v.status === 'sold') return { label:'SOLD', cls:'vs-sold', timer:'Ended', timerCls:'' };
+  if (v.status === 'live') return { label:'LIVE', cls:'vs-live', timer:'🔴 LIVE NOW', timerCls:'v-timer-live' };
+  const target = v.sale_type === 'simulcast' ? v.start_time : v.end_time;
+  if (!target) return { label:'ACTIVE', cls:'vs-active', timer:'', timerCls:'' };
+  const diff = new Date(target).getTime() - now;
+  if (diff <= 0) {
+    if (v.sale_type === 'simulcast') return { label:'LIVE', cls:'vs-live', timer:'🔴 LIVE NOW', timerCls:'v-timer-live' };
+    return { label:'ENDED', cls:'vs-sold', timer:'Ended', timerCls:'' };
+  }
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor((diff % 86400000) / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const timeStr = (d > 0 ? d + 'd ' : '') + h + 'h ' + m + 'm';
+  const prefix = v.sale_type === 'simulcast' ? 'Starts in: ' : 'Ends in: ';
+  const isUrgent = diff < 21600000;
+  return {
+    label: isUrgent ? 'URGENT' : 'ACTIVE',
+    cls: isUrgent ? 'vs-urgent' : 'vs-active',
+    timer: prefix + timeStr,
+    timerCls: isUrgent ? 'v-timer-urgent' : ''
+  };
 }
 
-function getSecondsLeft(v) {
-  if (!v.auctionDate) return Infinity;
-  return Math.max(0, Math.floor((new Date(v.auctionDate) - new Date()) / 1000));
-}
+function buildCard(v) {
+  const cd = getCountdown(v);
+  const price = v.buy_now ? fmtUSD(v.buy_now) : null;
+  const mmr = fmtUSD(v.mmr_avg);
+  const markets = (v.markets||[]).map(m=>`<span class="v-market-flag" title="${MARKET_NAMES[m]||m}">${MARKET_FLAGS[m]||m}</span>`).join('');
+  const tags = [
+    v.grade ? `<span class="vtag vtag-ok">Grade ${v.grade}</span>` : '',
+    v.accidents > 0 ? `<span class="vtag vtag-bad">${v.accidents} accident</span>` : `<span class="vtag vtag-ok">0 accidents</span>`,
+    !v.condition_report ? `<span class="vtag vtag-warn">No CR</span>` : '',
+    v.announcements ? `<span class="vtag vtag-mute">${v.announcements.split('/')[0].trim()}</span>` : '',
+  ].join('');
+  const photo = v.photo ? `<img src="${v.photo}" alt="" loading="lazy">` : `<div class="v-img-placeholder"><i class="ti ti-car"></i><span>${v.color_ext||''}</span></div>`;
+  const waMsg = encodeURIComponent(`Hi ExportLots. Lot: ${v.lot} — ${v.year} ${v.make} ${v.model}`);
 
-function fmtTime(sec) {
-  const d = Math.floor(sec/86400);
-  const h = Math.floor((sec%86400)/3600);
-  const m = Math.floor((sec%3600)/60);
-  const s = sec%60;
-  if(d>0) return `${d}d ${h}h`;
-  if(h>0) return `${h}h ${String(m).padStart(2,'0')}m`;
-  return `${m}m ${String(s).padStart(2,'0')}s`;
-}
-
-function getTimerState(sec) {
-  if (sec > 4*3600)  return 'normal';
-  if (sec > 3600)    return 'soon';
-  if (sec > 0)       return 'urgent';
-  return 'ended';
-}
-
-function getStatusLabel(v) {
-  const s = getStatus(v);
-  if (s === 'sold') return { cls: 'vs-sold', text: 'Sold' };
-  if (s === 'available') return { cls: 'vs-available', text: 'Available Now' };
-  const sec = getSecondsLeft(v);
-  const state = getTimerState(sec);
-  if (state === 'urgent') return { cls: 'vs-urgent', text: 'Ending soon' };
-  if (state === 'soon')   return { cls: 'vs-soon',   text: 'Ending soon' };
-  const d = new Date(v.auctionDate);
-  return { cls: 'vs-auction', text: 'Auction ' + d.toLocaleDateString('en-US', {month:'short',day:'numeric'}) };
-}
-
-function getTitleBadge(t) {
-  if (t === 'clean')   return '<span class="vb vb-ok">Clean title</span>';
-  if (t === 'salvage') return '<span class="vb vb-warn">Salvage</span>';
-  if (t === 'absent')  return '<span class="vb vb-warn">Title Absent</span>';
-  if (t === 'rebuilt') return '<span class="vb vb-warn">Rebuilt</span>';
-  if (t === 'unknown') return '<span class="vb vb-neutral">? Title unknown</span>';
-  return '<span class="vb vb-neutral">? Title unknown</span>';
-}
-
-function isUAEBlocked(v) {
-  return v.titleStatus !== 'clean';
-}
-
-function renderPrices(v, dest = null) {
-  const port = v.originPort || 'NJ';
-  const price = v.buyNow || v.mmr || 0;
-  return DESTINATIONS.map(d => {
-    if (dest && d.key !== dest) return '';
-    const blocked = d.key === 'JebelAli' && isUAEBlocked(v);
-    if (blocked) return `<div class="vp-blocked">${d.flag} <span style="text-decoration:line-through;opacity:0.6">N/A</span></div>`;
-    const r = calculateAllIn(price, d.key, port, false);
-    return `<div class="vp">${d.flag} <span class="vp-val">$${r.total.toLocaleString()}</span></div>`;
-  }).join('');
-}
-
-function renderTimerBar(v) {
-  const status = getStatus(v);
-  const expiryDate = v.expiryDate || v.auctionDate;
-  if (status === 'sold' || !expiryDate) return `<div class="v-timer v-timer-sold">— Sold</div>`;
-  const sec = Math.max(0, Math.floor((new Date(expiryDate) - new Date()) / 1000));
-  if (sec <= 0) return `<div class="v-timer v-timer-sold">— Sold</div>`;
-  const t = `<span class="cd" data-end="${expiryDate}" style="font-size:14px;font-weight:700;font-family:monospace">${fmtTime(sec)}</span>`;
-  if (sec < 3600)      return `<div class="v-timer v-timer-urgent"><i class="ti ti-alert-triangle"></i> Ends in ${t}</div>`;
-  if (sec < 4*3600)    return `<div class="v-timer v-timer-soon"><i class="ti ti-clock-exclamation"></i> Ends in ${t}</div>`;
-  return `<div class="v-timer v-timer-normal"><i class="ti ti-clock"></i> Ends in ${t}</div>`;
-}
-
-function getColorDot(color) {
-  const map = {'white':'#f5f5f0','ice cap':'#f0f0ea','pearl':'#f5f5f0','black':'#1a1a1a','midnight':'#1a1a1a','silver':'#c0c0b8','celestial silver':'#b8b8b2','gray':'#8a8a82','red':'#8B0000','blue':'#1B3A6B','green':'#2C4A1E','brown':'#5C4A2A','beige':'#d4c4a0','gold':'#b8902a'};
-  const c = color.toLowerCase();
-  for (const [k,v2] of Object.entries(map)) { if(c.includes(k)) return v2; }
-  return '#888';
-}
-
-function renderCard(v) {
-  const s = getStatusLabel(v);
-  const vinMasked = v.vin.slice(0,11) + '••••••';
-  const grade = !v.grade ? 'vb-neutral' : v.grade < 3 ? 'vb-warn' : v.grade >= 4 ? 'vb-ok' : 'vb-neutral';
-  const gradeText = v.grade ? `Grade ${v.grade}` : 'No CR';
-  const status = getStatus(v);
-  const lotPrice = v.buyNow || v.startingBid || v.mmr || 0;
-  const priceLabel = v.buyNow ? 'Buy Now' : v.startingBid ? 'Starting bid' : 'MMR';
-  const colorDot = getColorDot(v.color || '');
-  const isUAE = v.titleStatus === 'clean';
-  const redLight = v.interiorWarnings?.some(w => w.includes('Red Light'));
-  const flags = DESTINATIONS.map(d => {
-    if (d.key === 'JebelAli' && !isUAE) return `<span class="v-flag-x">🇦🇪</span>`;
-    return `<a class="v-flag-btn" href="detail.html?vin=${v.vin}&dest=${d.key}" onclick="event.stopPropagation()" title="${d.label}">${d.flag}</a>`;
-  }).join('');
-
-  return `
-  <div class="v-card${status==='sold'?' sold':''}" onclick="window.location='detail.html?vin=${v.vin}'">
+  return `<div class="v-card${v.status==='sold'?' sold':''}">
+    ${v.is_sample ? '<div class="v-sample-badge"></div>' : ''}
     <div class="v-img">
-      <img src="${v.stockPhoto||''}" alt="${v.year} ${v.make} ${v.model}"
-           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-      <div class="v-img-placeholder" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%">📷 Real photos on WhatsApp</div>
-      <div class="v-status ${s.cls}">${s.text}</div>
-      ${v.color ? `<div class="v-color"><div class="v-cdot" style="background:${colorDot}"></div>${v.color}</div>` : ''}
-      <div class="v-vin">${vinMasked}</div>
+      ${photo}
+      <span class="v-status ${cd.cls}">${cd.label}</span>
+      <span class="v-type">${v.sale_type==='simulcast'?'SIMULCAST':'TIMED SALE'}</span>
+      <span class="v-vin">${v.vin_masked}</span>
     </div>
     <div class="v-body">
-      <div class="v-price">$${lotPrice.toLocaleString()} <span style="font-size:13px;font-weight:400;color:var(--text3)">${priceLabel}</span></div>
-      <div class="v-title">${v.year} ${v.make} ${v.model}</div>
-      <div class="v-sub">${v.mileage.toLocaleString()} mi · ${v.engine} · ${v.drive}</div>
-      <div class="v-badges">
-        ${getTitleBadge(v.titleStatus)}
-        <span class="vb ${grade}">${gradeText}</span>
-        ${redLight ? '<span class="vb vb-danger">🔴 Red Light</span>' : ''}
-        ${v.interiorWarnings?.some(w=>w.includes('DTC')) ? '<span class="vb vb-danger">DTC codes</span>' : ''}
-      </div>
+      ${price ? `<div class="v-price">${price}</div><div class="v-price-label">Buy Now · Lot ${v.lot}</div>` : ''}
+      ${!price && mmr ? `<div class="v-price">${mmr}</div><div class="v-price-label">Est. MMR · Lot ${v.lot}</div>` : ''}
+      ${price && mmr ? `<div class="v-mmr">MMR avg: ${mmr}</div>` : ''}
+      <div class="v-title">${v.year} ${v.make} ${v.model} ${v.trim||''}</div>
+      <div class="v-sub">${fmtMi(v.mileage)} · ${v.drivetrain||''} · ${v.engine||''}</div>
+      <div class="v-tags">${tags}</div>
+      <div class="v-markets">${markets}</div>
+      <div class="v-spacer"></div>
     </div>
-    <div class="v-spacer"></div>
-    <div class="v-flags-row">
-      <span class="v-flags-label">Ship to:</span>
-      ${flags}
-    </div>
+    ${cd.timer ? `<div class="v-timer ${cd.timerCls}"><i class="ti ti-clock"></i>${cd.timer}</div>` : ''}
     <div class="v-footer">
-      <a class="v-wa-btn" href="https://wa.me/12127965517?text=Hi+ExportLots.+VIN+${v.vin.slice(0,9)}******.+Destination%3A+___+Send+photos." target="_blank" onclick="event.stopPropagation()">
-        <div class="v-wa-icon"><i class="ti ti-brand-whatsapp"></i></div>
-        Get photos
-      </a>
-      <span class="v-mmr">${priceLabel}<br>${v.originPort} yard</span>
+      <span style="font-size:11px;color:var(--ink-mute);font-family:var(--mono)">${(v.location||'').replace(/^[A-Z]+ - /,'')}</span>
+      <span style="flex:1"></span>
+      <a class="btn btn-wa btn-sm" href="https://wa.me/12127965517?text=${waMsg}" target="_blank"><i class="ti ti-brand-whatsapp"></i></a>
     </div>
-    ${renderTimerBar(v)}
   </div>`;
 }
 
-function applyFilters() {
-  const dest   = document.getElementById('filter-dest').value;
-  const make   = document.getElementById('filter-make').value;
-  const title  = document.getElementById('filter-title').value;
-  const status = document.getElementById('filter-status').value;
-
-  const filtered = VEHICLES.filter(v => {
-    if (make   && v.make !== make) return false;
-    if (title  && v.titleStatus !== title) return false;
-    if (status && v.auctionType !== status) return false;
-    if (dest === 'JebelAli' && isUAEBlocked(v)) return false;
-    return true;
-  });
-
-  document.getElementById('catalog-grid').innerHTML = filtered.map(renderCard).join('') ||
-    '<div style="padding:40px;color:var(--text2);font-size:14px;grid-column:1/-1">No vehicles match your filters.</div>';
-  document.getElementById('filter-count').textContent = filtered.length + ' vehicles';
+async function loadSamples() {
+  const grid = document.getElementById('sample-grid');
+  try {
+    const r = await fetch('/api/vehicles');
+    const d = await r.json();
+    const samples = (d.vehicles||[]).filter(v=>v.is_sample).slice(0,4);
+    grid.innerHTML = samples.length ? samples.map(buildCard).join('') :
+      '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink-mute);font-family:var(--mono);font-size:12px">No sample listings at this time.</div>';
+  } catch { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink-mute)">Could not load listings.</div>'; }
 }
 
-applyFilters();
-
-// Live countdown ticker
-setInterval(() => {
-  document.querySelectorAll('.cd').forEach(el => {
-    const end = new Date(el.dataset.end);
-    const sec = Math.max(0, Math.floor((end - new Date()) / 1000));
-    el.textContent = fmtTime(sec);
-    if (sec === 0) applyFilters(); // re-render when auction ends
-  });
-}, 1000);
+loadSamples();
+setInterval(loadSamples, 60000);
 </script>
 </body>
 </html>

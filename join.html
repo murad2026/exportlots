@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apply for Dealer Access — ExportLots</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-brand"><span class="dot"></span>ExportLots</a>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/partners">Partner program</a>
+    </div>
+    <div class="nav-cta">
+      <a href="/login" class="nav-login">Already a dealer? Sign in</a>
+    </div>
+  </div>
+</nav>
+
+<div style="padding:56px var(--gap) 80px">
+  <div style="max-width:680px;margin:0 auto">
+
+    <div class="eyebrow" style="margin-bottom:16px">Dealer registration</div>
+    <h1 style="font-family:var(--serif);font-size:clamp(32px,4vw,48px);font-weight:400;margin-bottom:12px;line-height:1.1">Apply for dealer access</h1>
+    <p style="font-size:16px;color:var(--ink-soft);margin-bottom:40px;line-height:1.6;max-width:52ch">Each application is reviewed manually. We approve wholesale dealers, web portal owners, and resellers. You'll hear back within 24 hours via the email you provide.</p>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:40px" id="type-selector">
+      <div class="type-card active" data-type="dealer" onclick="selectType('dealer')">
+        <div style="font-size:22px;margin-bottom:10px">🏪</div>
+        <div style="font-weight:600;font-size:14px;margin-bottom:4px">Wholesale Dealer</div>
+        <div style="font-size:12px;color:var(--ink-mute);line-height:1.5">I buy cars and resell in my country. 3+ cars/month.</div>
+      </div>
+      <div class="type-card" data-type="portal" onclick="selectType('portal')">
+        <div style="font-size:22px;margin-bottom:10px">🌐</div>
+        <div style="font-weight:600;font-size:14px;margin-bottom:4px">Web Portal Owner</div>
+        <div style="font-size:12px;color:var(--ink-mute);line-height:1.5">I run an auto listing website and want to display your inventory.</div>
+      </div>
+      <div class="type-card" data-type="reseller" onclick="selectType('reseller')">
+        <div style="font-size:22px;margin-bottom:10px">🤝</div>
+        <div style="font-weight:600;font-size:14px;margin-bottom:4px">Reseller</div>
+        <div style="font-size:12px;color:var(--ink-mute);line-height:1.5">I refer dealers and earn commission per shipment.</div>
+      </div>
+    </div>
+
+    <style>
+    .type-card {
+      background:var(--bg-elev); border:2px solid var(--line);
+      border-radius:var(--radius-lg); padding:20px 18px;
+      cursor:pointer; transition:border-color 0.15s,background 0.15s;
+      text-align:center;
+    }
+    .type-card:hover { border-color:var(--accent); }
+    .type-card.active { border-color:var(--accent); background:var(--accent-s); }
+    </style>
+
+    <form id="join-form" style="background:var(--bg-elev);border:1px solid var(--line);border-radius:var(--radius-lg);padding:32px">
+      <input type="hidden" id="type" value="dealer">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group">
+          <label class="form-label">Full name *</label>
+          <input type="text" class="form-input" id="name" placeholder="John Adeyemi" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Company / Business name *</label>
+          <input type="text" class="form-input" id="company" placeholder="Lagos Auto Dealers Ltd." required>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group">
+          <label class="form-label">Country *</label>
+          <select class="form-select" id="country" required>
+            <option value="">Select country</option>
+            <option>Nigeria</option>
+            <option>UAE</option>
+            <option>Ghana</option>
+            <option>Lithuania</option>
+            <option>Latvia</option>
+            <option>Estonia</option>
+            <option>Poland</option>
+            <option>Dominican Republic</option>
+            <option>Georgia</option>
+            <option>Armenia</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Monthly volume (cars/month)</label>
+          <select class="form-select" id="volume">
+            <option value="">Select range</option>
+            <option value="1-3">1–3 cars</option>
+            <option value="3-10">3–10 cars</option>
+            <option value="10-30">10–30 cars</option>
+            <option value="30+">30+ cars</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group">
+          <label class="form-label">Email address *</label>
+          <input type="email" class="form-input" id="email" placeholder="you@company.com" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">WhatsApp / Phone</label>
+          <input type="tel" class="form-input" id="phone" placeholder="+234 800 000 0000">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password *</label>
+        <input type="password" class="form-input" id="password" placeholder="Choose a password (min 8 chars)" required minlength="8">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Tell us about your business</label>
+        <textarea class="form-textarea" id="message" placeholder="Briefly describe what you sell, where you sell, and how you found us. The more detail, the faster we approve."></textarea>
+      </div>
+
+      <div style="background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:20px;font-size:12px;color:var(--ink-soft);line-height:1.7">
+        <strong style="color:var(--ink)">What happens next:</strong> After you submit, we review your application manually — usually within 24 hours. Once approved, you'll be able to log in and access the full live dealer inventory with real-time countdowns and wholesale pricing.
+      </div>
+
+      <button type="submit" class="btn btn-accent btn-lg" style="width:100%;justify-content:center" id="submit-btn">
+        Submit application →
+      </button>
+      <div class="form-error" id="error-msg"></div>
+      <div class="form-success" id="success-msg"></div>
+    </form>
+
+    <div style="text-align:center;margin-top:24px;font-size:13px;color:var(--ink-mute)">
+      Questions? <a href="https://wa.me/12127965517?text=Hi,+I+want+to+become+a+dealer+on+ExportLots." target="_blank" style="color:var(--accent);font-weight:500">Ask on WhatsApp →</a>
+    </div>
+
+  </div>
+</div>
+
+<a class="wa-float" href="https://wa.me/12127965517" target="_blank"><i class="ti ti-brand-whatsapp"></i> WhatsApp</a>
+
+<script>
+function selectType(t) {
+  document.getElementById('type').value = t;
+  document.querySelectorAll('.type-card').forEach(c => c.classList.toggle('active', c.dataset.type === t));
+}
+
+document.getElementById('join-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('submit-btn');
+  const err = document.getElementById('error-msg');
+  const suc = document.getElementById('success-msg');
+  err.style.display = 'none';
+  suc.style.display = 'none';
+  btn.textContent = 'Submitting...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type:     document.getElementById('type').value,
+        name:     document.getElementById('name').value,
+        company:  document.getElementById('company').value,
+        country:  document.getElementById('country').value,
+        email:    document.getElementById('email').value,
+        phone:    document.getElementById('phone').value,
+        password: document.getElementById('password').value,
+        volume:   document.getElementById('volume').value,
+        message:  document.getElementById('message').value,
+      })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      suc.textContent = '✓ Application received! We will review and contact you within 24 hours.';
+      suc.style.display = 'block';
+      document.getElementById('join-form').reset();
+      btn.textContent = 'Application submitted';
+    } else {
+      err.textContent = data.error || 'Something went wrong. Please try again.';
+      err.style.display = 'block';
+      btn.textContent = 'Submit application →';
+      btn.disabled = false;
+    }
+  } catch {
+    err.textContent = 'Network error. Please try again.';
+    err.style.display = 'block';
+    btn.textContent = 'Submit application →';
+    btn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>

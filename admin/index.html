@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Owner Dashboard — ExportLots</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-brand"><span class="dot"></span>ExportLots</a>
+    <div class="nav-links">
+      <a href="/admin" class="active">Dashboard</a>
+      <a href="/admin/operator">Add listing</a>
+      <a href="/catalog">View catalog</a>
+    </div>
+    <div class="nav-cta">
+      <span style="font-size:12px;color:var(--accent);font-family:var(--mono);font-weight:600">OWNER</span>
+      <button onclick="logout()" class="btn btn-ghost btn-sm">Sign out</button>
+    </div>
+  </div>
+</nav>
+
+<div style="max-width:var(--max);margin:0 auto;padding:32px var(--gap)">
+
+  <div style="margin-bottom:28px">
+    <div class="eyebrow" style="margin-bottom:8px">Owner dashboard</div>
+    <h1 style="font-family:var(--serif);font-size:28px;font-weight:400">ExportLots admin</h1>
+  </div>
+
+  <!-- STATS -->
+  <div class="stat-cards" id="stats">
+    <div class="stat-card"><div class="num" id="s-active">—</div><div class="label">Active listings</div></div>
+    <div class="stat-card"><div class="num" id="s-sold">—</div><div class="label">Sold</div></div>
+    <div class="stat-card"><div class="num" id="s-dealers">—</div><div class="label">Active dealers</div></div>
+    <div class="stat-card"><div class="num" id="s-pending" style="color:var(--accent)">—</div><div class="label">Pending approvals</div></div>
+  </div>
+
+  <!-- PENDING APPROVALS -->
+  <div style="background:var(--bg-elev);border:1px solid var(--line);border-radius:var(--radius-lg);margin-bottom:28px">
+    <div style="padding:20px 24px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between">
+      <h2 style="font-family:var(--serif);font-size:20px;font-weight:500">Pending dealer applications</h2>
+      <span id="pending-badge" style="background:var(--accent);color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;font-family:var(--mono)"></span>
+    </div>
+    <div id="pending-list" style="padding:16px 24px">
+      <div style="text-align:center;padding:20px;color:var(--ink-mute);font-size:13px;font-family:var(--mono)">Loading...</div>
+    </div>
+  </div>
+
+  <!-- INVENTORY TABLE -->
+  <div style="background:var(--bg-elev);border:1px solid var(--line);border-radius:var(--radius-lg)">
+    <div style="padding:20px 24px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <h2 style="font-family:var(--serif);font-size:20px;font-weight:500">All listings</h2>
+      <div style="display:flex;gap:10px">
+        <select class="filter-select" id="inv-filter" onchange="filterInventory()">
+          <option value="">All statuses</option>
+          <option value="active">Active</option>
+          <option value="live">Live</option>
+          <option value="sold">Sold</option>
+        </select>
+        <a href="/admin/operator" class="btn btn-accent btn-sm"><i class="ti ti-plus"></i> Add listing</a>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="data-table" id="inv-table">
+        <thead>
+          <tr>
+            <th>Lot</th>
+            <th>Vehicle</th>
+            <th>Full VIN</th>
+            <th>Mileage</th>
+            <th>Price / MMR</th>
+            <th>Markets</th>
+            <th>Status</th>
+            <th>Countdown</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="inv-body">
+          <tr><td colspan="9" style="text-align:center;padding:30px;color:var(--ink-mute)">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- VIN MODAL -->
+<div id="vin-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:center;justify-content:center">
+  <div style="background:var(--bg-elev);border-radius:var(--radius-lg);padding:32px;max-width:480px;width:90%;position:relative">
+    <button onclick="closeModal()" style="position:absolute;top:16px;right:16px;font-size:20px;color:var(--ink-mute);background:none;border:none;cursor:pointer">×</button>
+    <div class="eyebrow" style="margin-bottom:12px">Private data</div>
+    <h3 style="font-family:var(--serif);font-size:22px;font-weight:400;margin-bottom:20px" id="modal-title">—</h3>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<script>
+let allVehicles = [];
+let allPrivate = {};
+
+const MARKET_FLAGS = { NG:'🇳🇬', AE:'🇦🇪', GH:'🇬🇭', LT:'🇱🇹', DO:'🇩🇴', GE:'🇬🇪', AM:'🇦🇲' };
+
+async function loadDashboard() {
+  try {
+    // Load vehicles
+    const vr = await fetch('/api/vehicles');
+    const vd = await vr.json();
+    if (!vd.ok) { window.location.href = '/admin/login'; return; }
+    allVehicles = vd.vehicles || [];
+
+    // Load pending
+    const pr = await fetch('/api/pending');
+    const pd = await pr.json();
+    const pending = pd.pending || [];
+
+    // Update stats
+    document.getElementById('s-active').textContent = allVehicles.filter(v=>v.status==='active'||v.status==='live').length;
+    document.getElementById('s-sold').textContent = allVehicles.filter(v=>v.status==='sold').length;
+    document.getElementById('s-pending').textContent = pending.length;
+
+    // Load dealers
+    // We'll approximate from session
+    document.getElementById('s-dealers').textContent = '—';
+
+    renderPending(pending);
+    renderInventory(allVehicles);
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+function renderPending(list) {
+  const el = document.getElementById('pending-list');
+  const badge = document.getElementById('pending-badge');
+  badge.textContent = list.length;
+  if (!list.length) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ink-mute);font-size:13px">No pending applications.</div>';
+    return;
+  }
+  el.innerHTML = list.map(p => `
+    <div style="display:flex;align-items:center;gap:16px;padding:14px 0;border-bottom:1px solid var(--line-soft)">
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:14px">${p.name} — ${p.company}</div>
+        <div style="font-size:12px;color:var(--ink-mute);margin-top:3px;font-family:var(--mono)">${p.email} · ${p.country} · ${p.type || 'dealer'} · ${p.volume || '—'}/mo</div>
+        ${p.message ? `<div style="font-size:12px;color:var(--ink-soft);margin-top:4px;font-style:italic">"${p.message.substring(0,120)}${p.message.length>120?'…':''}"</div>` : ''}
+        <div style="font-size:11px;color:var(--ink-mute);margin-top:4px;font-family:var(--mono)">Applied: ${new Date(p.applied).toLocaleString()}</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-shrink:0">
+        <button class="btn btn-accent btn-sm" onclick="approve('${p.id}')"><i class="ti ti-check"></i> Approve</button>
+        <button class="btn btn-ghost btn-sm" onclick="reject('${p.id}')" style="border-color:var(--red);color:var(--red)"><i class="ti ti-x"></i> Reject</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function getTimerText(v) {
+  const now = Date.now();
+  if (v.status === 'sold') return 'Sold';
+  if (v.status === 'live') return '🔴 LIVE';
+  const target = v.sale_type === 'simulcast' ? v.start_time : v.end_time;
+  if (!target) return '—';
+  const diff = new Date(target).getTime() - now;
+  if (diff <= 0) return v.sale_type === 'simulcast' ? '🔴 LIVE' : 'Ended';
+  const d = Math.floor(diff/86400000);
+  const h = Math.floor((diff%86400000)/3600000);
+  const m = Math.floor((diff%3600000)/60000);
+  return (d>0?d+'d ':'') + h+'h '+m+'m';
+}
+
+function filterInventory() {
+  const status = document.getElementById('inv-filter').value;
+  const filtered = status ? allVehicles.filter(v=>v.status===status) : allVehicles;
+  renderInventory(filtered);
+}
+
+function renderInventory(list) {
+  const tbody = document.getElementById('inv-body');
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--ink-mute)">No listings.</td></tr>'; return; }
+
+  tbody.innerHTML = list.map(v => {
+    const price = v.buy_now ? '$'+v.buy_now.toLocaleString() : (v.mmr_avg ? '~$'+v.mmr_avg.toLocaleString() : '—');
+    const statusColor = v.status==='sold'?'#999':v.status==='live'?'var(--red)':v.status==='active'&&getTimerText(v).includes('h')&&parseInt(getTimerText(v))<6?'var(--accent)':'var(--green-d)';
+    return `<tr>
+      <td style="font-family:var(--mono);font-size:12px;font-weight:600;color:var(--accent)">${v.lot}</td>
+      <td>
+        <div style="font-weight:500;font-size:13px">${v.year} ${v.make} ${v.model} ${v.trim||''}</div>
+        <div style="font-size:11px;color:var(--ink-mute);font-family:var(--mono)">${v.vin_masked}</div>
+      </td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="showPrivate('${v.lot}','${v.year} ${v.make} ${v.model}')">
+          <i class="ti ti-eye"></i> View VIN
+        </button>
+      </td>
+      <td style="font-family:var(--mono);font-size:12px">${v.mileage?v.mileage.toLocaleString()+' mi':'—'}</td>
+      <td style="font-family:var(--mono);font-size:12px;font-weight:600">${price}</td>
+      <td>${(v.markets||[]).map(m=>MARKET_FLAGS[m]||m).join(' ')}</td>
+      <td><span style="font-family:var(--mono);font-size:11px;color:${statusColor};font-weight:600;text-transform:uppercase">${v.status}</span></td>
+      <td style="font-family:var(--mono);font-size:11px">${getTimerText(v)}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <select onchange="updateStatus('${v.lot}',this.value)" style="font-size:11px;padding:4px 8px;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg);font-family:var(--mono)">
+            <option value="">Change status</option>
+            <option value="active">Active</option>
+            <option value="live">Live</option>
+            <option value="sold">Sold</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" style="border-color:var(--red);color:var(--red);padding:4px 8px" onclick="deleteLot('${v.lot}')"><i class="ti ti-trash"></i></button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function showPrivate(lot, title) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-content').innerHTML = '<div style="font-family:var(--mono);font-size:12px;color:var(--ink-mute)">Loading...</div>';
+  const modal = document.getElementById('vin-modal');
+  modal.style.display = 'flex';
+
+  const r = await fetch(`/api/vehicles/${lot}/private`);
+  const d = await r.json();
+  if (!d.ok || !d.data) {
+    document.getElementById('modal-content').innerHTML = '<div style="color:var(--red)">No private data found.</div>';
+    return;
+  }
+  const p = d.data;
+  document.getElementById('modal-content').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-lg);padding:16px">
+        <div style="font-size:10px;color:var(--ink-mute);font-family:var(--mono);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px">Full VIN</div>
+        <div style="font-family:var(--mono);font-size:18px;font-weight:600;letter-spacing:0.06em;color:var(--ink)">${p.vin_full}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:12px">
+          <div style="font-size:10px;color:var(--ink-mute);font-family:var(--mono);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px">Manheim lot</div>
+          <div style="font-family:var(--mono);font-weight:600">${p.manheim_lot||'—'}</div>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:12px">
+          <div style="font-size:10px;color:var(--ink-mute);font-family:var(--mono);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px">Buy price</div>
+          <div style="font-family:var(--mono);font-weight:600">${p.buy_price?'$'+p.buy_price.toLocaleString():'—'}</div>
+        </div>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:12px">
+        <div style="font-size:10px;color:var(--ink-mute);font-family:var(--mono);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px">Seller</div>
+        <div style="font-size:14px">${p.seller||'—'}</div>
+      </div>
+      <div style="font-size:11px;color:var(--ink-mute);text-align:center;margin-top:4px">This data is never shown to dealers</div>
+    </div>`;
+}
+
+function closeModal() {
+  document.getElementById('vin-modal').style.display = 'none';
+}
+
+document.getElementById('vin-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+async function approve(id) {
+  if (!confirm('Approve this dealer application?')) return;
+  const r = await fetch(`/api/pending/${id}/approve`, { method: 'POST' });
+  const d = await r.json();
+  if (d.ok) loadDashboard();
+  else alert('Error: ' + d.error);
+}
+
+async function reject(id) {
+  if (!confirm('Reject and delete this application?')) return;
+  const r = await fetch(`/api/pending/${id}/reject`, { method: 'POST' });
+  const d = await r.json();
+  if (d.ok) loadDashboard();
+}
+
+async function updateStatus(lot, status) {
+  if (!status) return;
+  const r = await fetch(`/api/vehicles/${lot}`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ status }) });
+  const d = await r.json();
+  if (d.ok) { allVehicles = allVehicles.map(v => v.lot===lot ? {...v, status} : v); filterInventory(); }
+  else alert('Error: ' + d.error);
+}
+
+async function deleteLot(lot) {
+  if (!confirm(`Delete listing ${lot}? This cannot be undone.`)) return;
+  const r = await fetch(`/api/vehicles/${lot}`, { method: 'DELETE' });
+  const d = await r.json();
+  if (d.ok) { allVehicles = allVehicles.filter(v => v.lot !== lot); filterInventory(); loadDashboard(); }
+  else alert('Error: ' + d.error);
+}
+
+async function logout() {
+  await fetch('/api/auth/logout', { method: 'POST' });
+  window.location.href = '/';
+}
+
+loadDashboard();
+setInterval(loadDashboard, 60000);
+</script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dealer Login — ExportLots</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-brand"><span class="dot"></span>ExportLots</a>
+    <div class="nav-links"></div>
+    <div class="nav-cta">
+      <a href="/join" class="btn btn-accent btn-sm">Apply for access</a>
+    </div>
+  </div>
+</nav>
+
+<div class="auth-wrap">
+  <div style="width:100%;max-width:440px">
+    <div style="text-align:center;margin-bottom:32px">
+      <div class="eyebrow" style="justify-content:center;margin-bottom:12px">Dealer portal</div>
+      <h1 style="font-family:var(--serif);font-size:32px;font-weight:400">Welcome back</h1>
+      <p style="font-size:14px;color:var(--ink-soft);margin-top:6px">Sign in to access the full dealer inventory</p>
+    </div>
+
+    <div class="auth-card">
+      <form id="login-form">
+        <div class="form-group">
+          <label class="form-label">Email address</label>
+          <input type="email" class="form-input" id="email" placeholder="dealer@yourcompany.com" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-input" id="password" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:12px" id="submit-btn">
+          Sign in →
+        </button>
+        <div class="form-error" id="error-msg"></div>
+      </form>
+
+      <div id="pending-msg" style="display:none;margin-top:16px;padding:14px 16px;background:var(--accent-s);border:1px solid rgba(184,65,12,0.3);border-radius:var(--radius-lg)">
+        <div style="font-size:13px;font-weight:500;color:var(--accent);margin-bottom:4px">Application pending review</div>
+        <div style="font-size:12px;color:var(--ink-soft)">Your application has been received and is awaiting manual approval. We will contact you at the email provided.</div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:24px;font-size:13px;color:var(--ink-mute)">
+      Not a dealer yet? <a href="/join" style="color:var(--accent);font-weight:500">Apply for access →</a>
+    </div>
+    <div style="text-align:center;margin-top:10px;font-size:12px;color:var(--ink-mute)">
+      Admin? <a href="/admin/login" style="color:var(--ink-mute);text-decoration:underline">Admin login</a>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('submit-btn');
+  const err = document.getElementById('error-msg');
+  const pending = document.getElementById('pending-msg');
+  err.style.display = 'none';
+  pending.style.display = 'none';
+  btn.textContent = 'Signing in...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value,
+        role: 'dealer'
+      })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      window.location.href = '/catalog';
+    } else if (data.error === 'pending') {
+      pending.style.display = 'block';
+      btn.textContent = 'Sign in →';
+      btn.disabled = false;
+    } else {
+      err.textContent = data.message || 'Invalid credentials. Please try again.';
+      err.style.display = 'block';
+      btn.textContent = 'Sign in →';
+      btn.disabled = false;
+    }
+  } catch {
+    err.textContent = 'Network error. Please try again.';
+    err.style.display = 'block';
+    btn.textContent = 'Sign in →';
+    btn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
