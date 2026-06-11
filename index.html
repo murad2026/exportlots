@@ -286,8 +286,8 @@ function buildCard(v) {
     </div>
     <div class="v-body">
       ${price ? `<div class="v-price">${price}</div><div class="v-price-label">Buy Now · Lot ${v.lot}</div>` : ''}
-      ${!price && mmr ? `<div class="v-price">${mmr}</div><div class="v-price-label">Est. MMR · Lot ${v.lot}</div>` : ''}
-      ${price && mmr ? `<div class="v-mmr">MMR avg: ${mmr}</div>` : ''}
+      ${!price && mmr ? `<div class="v-price">${mmr}</div><div class="v-price-label">Est. price · Lot ${v.lot}</div>` : ''}
+      ${price && mmr ? `<div class="v-mmr">Est. price: ${mmr}</div>` : ''}
       <div class="v-title">${v.year} ${v.make} ${v.model} ${v.trim||''}</div>
       <div class="v-sub">${fmtMi(v.mileage)} · ${v.drivetrain||''} · ${v.engine||''}</div>
       <div class="v-tags">${tags}</div>
