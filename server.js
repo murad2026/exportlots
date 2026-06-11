@@ -354,6 +354,7 @@ const PAGE_ROUTES = {
   '/partners':      'partners.html',
   '/shipping':      'shipping.html',
   '/how-it-works':  'how-it-works.html',
+  '/detail':        'detail.html',
   '/admin':         'admin/index.html',
   '/admin/operator':'admin/operator.html',
   '/admin/login':   'admin/login.html',
