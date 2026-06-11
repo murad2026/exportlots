@@ -52,7 +52,7 @@
     <select class="filter-select" id="f-type" onchange="applyFilters()">
       <option value="">All types</option>
       <option value="timed">Timed sale (Buy Now)</option>
-      <option value="simulcast">Simulcast (Live)</option>
+      <option value="simulcast">Live Auction</option>
     </select>
     <select class="filter-select" id="f-status" onchange="applyFilters()">
       <option value="active">Active only</option>
@@ -162,7 +162,7 @@ function buildCard(v) {
     <div class="v-img">
       ${photo}
       <span class="v-status ${cd.cls}">${cd.label}</span>
-      <span class="v-type">${v.sale_type==='simulcast'?'SIMULCAST':'TIMED SALE'}</span>
+      <span class="v-type">${v.sale_type==='simulcast'?'LIVE AUCTION':'TIMED SALE'}</span>
       <span class="v-vin">${v.vin_masked}</span>
     </div>
     <div class="v-body">
