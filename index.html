@@ -309,16 +309,28 @@ async function loadSamples() {
     const r = await fetch('/api/vehicles');
     const d = await r.json();
     const samples = (d.vehicles||[]).filter(v=>v.is_sample).slice(0,4);
-    const stockCard = `<div class="v-card stock-card" style="background:var(--ink);color:#fff;display:flex;flex-direction:column;justify-content:space-between;min-height:320px;cursor:default">
-      <div>
-        <div style="font-size:11px;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.1em;opacity:0.5;margin-bottom:16px">US Inventory</div>
-        <div style="font-family:var(--serif);font-size:52px;font-weight:400;line-height:1;margin-bottom:8px">1,500+</div>
-        <div style="font-size:16px;font-weight:600;margin-bottom:20px">vehicles available</div>
-        <div style="width:32px;height:2px;background:var(--accent);margin-bottom:20px"></div>
-        <p style="font-size:13px;line-height:1.7;opacity:0.75;margin-bottom:12px">Every listing is hand-selected for our 7 target markets — Nigeria, UAE, Ghana, Lithuania, Dominican Republic, Georgia, Armenia.</p>
-        <p style="font-size:13px;line-height:1.7;opacity:0.75">LHD only. Clean and salvage. Sedan, SUV, pickup. All sourced from US dealer auctions.</p>
+    const stockCard = `<div class="v-card" style="cursor:default">
+      <div class="v-img" style="background:var(--accent-s);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+        <div style="font-family:var(--serif);font-size:56px;font-weight:400;color:var(--accent);line-height:1">1,500+</div>
+        <div style="font-size:12px;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.1em;color:var(--accent);opacity:0.7">vehicles in stock</div>
       </div>
-      <a href="/join" class="btn btn-accent btn-sm" style="align-self:flex-start;margin-top:24px">Get full access →</a>
+      <div class="v-body">
+        <div class="v-price" style="color:var(--ink)">Full catalog</div>
+        <div class="v-price-label">Available after dealer registration</div>
+        <div class="v-title">Hand-picked for your market</div>
+        <div class="v-sub">Nigeria · UAE · Ghana · Lithuania · DR · Georgia · Armenia</div>
+        <div class="v-tags">
+          <span class="v-tag">LHD only</span>
+          <span class="v-tag">Clean &amp; salvage</span>
+          <span class="v-tag">Sedan · SUV · Pickup</span>
+        </div>
+        <div class="v-spacer"></div>
+      </div>
+      <div class="v-footer">
+        <span style="font-size:11px;color:var(--ink-mute);font-family:var(--mono)">US dealer auctions</span>
+        <span style="flex:1"></span>
+        <a href="/join" class="btn btn-accent btn-sm">Get access →</a>
+      </div>
     </div>`;
     grid.innerHTML = samples.length ? samples.map(buildCard).join('') + stockCard :
       '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink-mute);font-family:var(--mono);font-size:12px">No sample listings at this time.</div>';
