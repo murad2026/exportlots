@@ -93,7 +93,8 @@ const initialDest = params.get('dest') || 'Lagos';
 async function initDetail() {
   try {
     const res = await fetch('/api/vehicles');
-    const vehicles = await res.json();
+    const data = await res.json();
+    const vehicles = data.vehicles || data;
     const v = vehicles.find(x => x.lot === lot);
     renderDetail(v);
   } catch(e) {
