@@ -621,3 +621,11 @@ section.block:last-of-type, section.block-tight:last-of-type { border-bottom: no
   .auth-card { padding: 28px 20px; }
   .footer-inner { grid-template-columns: 1fr; }
 }
+
+/* ---- MARKETS LIST ---- */
+.market-row { display:flex; align-items:center; gap:10px; padding:11px 0; border-bottom:1px solid var(--line); }
+.market-row:last-child { border-bottom:none; }
+.market-flag { font-size:18px; flex-shrink:0; }
+.market-name { font-weight:600; font-size:14px; color:var(--ink); flex:1; min-width:0; }
+.market-meta { font-size:12px; color:var(--ink-soft); font-family:var(--mono); flex:1.5; min-width:0; }
+.market-transit { font-size:12px; font-weight:600; color:var(--accent); white-space:nowrap; flex-shrink:0; }
