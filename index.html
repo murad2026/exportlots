@@ -276,7 +276,7 @@ function buildCard(v) {
   const photo = v.photo ? `<img src="${v.photo}" alt="" loading="lazy">` : `<div class="v-img-placeholder"><i class="ti ti-car"></i><span>${v.color_ext||''}</span></div>`;
   const waMsg = encodeURIComponent(`Hi ExportLots. Lot: ${v.lot} — ${v.year} ${v.make} ${v.model}`);
 
-  return `<div class="v-card${v.status==='sold'?' sold':''}">
+  return `<a class="v-card${v.status==='sold'?' sold':''}" href="/detail?lot=${v.lot}" style="text-decoration:none;color:inherit;display:block">
     ${v.is_sample ? '<div class="v-sample-badge"></div>' : ''}
     <div class="v-img">
       ${photo}
@@ -298,9 +298,9 @@ function buildCard(v) {
     <div class="v-footer">
       <span style="font-size:11px;color:var(--ink-mute);font-family:var(--mono)">${(v.location||'').replace(/^[A-Z]+ - /,'')}</span>
       <span style="flex:1"></span>
-      <a class="btn btn-wa btn-sm" href="https://wa.me/12127965517?text=${waMsg}" target="_blank"><i class="ti ti-brand-whatsapp"></i></a>
+      <a class="btn btn-wa btn-sm" href="https://wa.me/12127965517?text=${waMsg}" target="_blank" onclick="event.stopPropagation()"><i class="ti ti-brand-whatsapp"></i></a>
     </div>
-  </div>`;
+  </a>`;
 }
 
 async function loadSamples() {

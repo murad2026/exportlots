@@ -235,6 +235,7 @@ section.block:last-of-type, section.block-tight:last-of-type { border-bottom: no
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   overflow: hidden;
+  cursor: pointer;
   transition: transform 0.12s, box-shadow 0.15s, border-color 0.15s;
   cursor: pointer;
   display: flex; flex-direction: column;

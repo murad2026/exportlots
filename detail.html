@@ -80,12 +80,26 @@
 </a>
 
 <script src="rates.js"></script>
-<script src="vehicles.js"></script>
 <script>
 const params = new URLSearchParams(window.location.search);
 const vin = params.get('vin');
+const lot = params.get('lot');
 const initialDest = params.get('dest') || 'Lagos';
-const v = VEHICLES.find(x => x.vin === vin);
+
+async function initDetail() {
+  let v;
+  try {
+    const res = await fetch('/api/vehicles');
+    const vehicles = await res.json();
+    v = vehicles.find(x => x.lot === lot || x.vin === vin);
+  } catch(e) {}
+  if (typeof VEHICLES !== 'undefined' && !v) {
+    v = VEHICLES.find(x => x.vin === vin || x.lot === lot);
+  }
+  renderDetail(v);
+}
+
+function renderDetail(v) {
 
 if (!v) {
   document.getElementById('dcard').innerHTML = '<div style="padding:40px;text-align:center">Vehicle not found. <a href="index.html">Back</a></div>';
@@ -218,6 +232,8 @@ if (!v) {
     }, 1000);
   }
 }
+
+initDetail();
 </script>
 </body>
 </html>
