@@ -396,7 +396,7 @@ async function loadSamples() {
   try {
     const r = await fetch('/api/vehicles');
     const d = await r.json();
-    allSamples = (d.vehicles||[]).filter(v=>v.is_sample);
+    allSamples = (d.vehicles||[]).filter(v=>v.status === 'active' || v.status === 'live');
     renderGrid(currentTab);
   } catch {
     document.getElementById('sample-grid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink-mute)">Could not load listings.</div>';

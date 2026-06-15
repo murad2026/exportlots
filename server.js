@@ -449,7 +449,8 @@ http.createServer(async (req, res) => {
       const s = getSession(req);
       const vehicles = readJSON('vehicles.json');
       const isDealer = s && ['dealer', 'owner', 'operator'].includes(s.role);
-      const list = isDealer ? vehicles : vehicles.filter(v => v.is_sample);
+      const active = vehicles.filter(v => v.status === 'active' || v.status === 'live');
+      const list = isDealer ? active : active.slice(0, 6);
       return res.end(JSON.stringify({ ok: true, vehicles: list, isDealer }));
     }
 
