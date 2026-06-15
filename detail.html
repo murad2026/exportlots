@@ -72,7 +72,7 @@
 </nav>
 
 <div style="max-width:900px;margin:0 auto;padding:20px var(--gap)">
-  <a id="back-link" href="/catalog" style="font-size:13px;color:var(--ink-soft);display:inline-flex;align-items:center;gap:5px;margin-bottom:16px;text-decoration:none">
+  <a id="back-link" href="/" style="font-size:13px;color:var(--ink-soft);display:inline-flex;align-items:center;gap:5px;margin-bottom:16px;text-decoration:none">
     <i class="ti ti-arrow-left"></i> Back to catalog
   </a>
   <div class="dcard" id="dcard">
@@ -97,10 +97,12 @@ async function initNav() {
       document.getElementById('nav-cta').innerHTML = `
         <a href="/admin/operator" class="btn btn-ghost btn-sm">← Operator panel</a>
         <button onclick="fetch('/api/auth/logout',{method:'POST'}).then(()=>location.href='/')" class="btn btn-ghost btn-sm">Sign out</button>`;
+      document.getElementById('back-link').href = '/catalog';
     } else if (s.ok && (s.role === 'dealer' || s.role === 'owner')) {
       document.getElementById('nav-cta').innerHTML = `
         <a href="/catalog" class="btn btn-ghost btn-sm">← Catalog</a>
         <button onclick="fetch('/api/auth/logout',{method:'POST'}).then(()=>location.href='/')" class="btn btn-ghost btn-sm">Sign out</button>`;
+      document.getElementById('back-link').href = '/catalog';
     }
   } catch {}
 }
