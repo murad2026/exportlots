@@ -19,6 +19,7 @@
     </div>
     <div class="nav-cta">
       <span id="dealer-name" style="font-size:13px;color:var(--ink-mute);font-family:var(--mono)"></span>
+      <a id="op-link" href="/admin/operator" class="btn btn-ghost btn-sm" style="display:none">← Operator panel</a>
       <button onclick="logout()" class="btn btn-ghost btn-sm">Sign out</button>
     </div>
   </div>
@@ -239,6 +240,11 @@ async function loadCatalog() {
     const r = await fetch('/api/vehicles');
     const data = await r.json();
     if (!data.ok || !data.isDealer) { window.location.href = '/login'; return; }
+    // Show operator back-link if role is operator/owner
+    const sess = await fetch('/api/session').then(r=>r.json());
+    if (sess.role === 'operator' || sess.role === 'owner') {
+      document.getElementById('op-link').style.display = '';
+    }
     allVehicles = data.vehicles || [];
     document.getElementById('total-count').textContent = allVehicles.filter(v=>v.status!=='sold').length + ' active';
     populateMakeFilter(allVehicles);
