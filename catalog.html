@@ -158,7 +158,7 @@ function buildCard(v) {
   const photo = v.photo ? `<img src="${v.photo}" alt="" loading="lazy">` : `<div class="v-img-placeholder"><i class="ti ti-car"></i><span>${v.color_ext||'No photo'}</span></div>`;
   const waMsg = encodeURIComponent(`Hi ExportLots. Dealer inquiry.\nLot: ${v.lot}\n${v.year} ${v.make} ${v.model} ${v.trim||''}\nMileage: ${fmtMi(v.mileage)}\nLocation: ${v.location||''}`);
 
-  return `<div class="v-card${v.status==='sold'?' sold':''}">
+  return `<div class="v-card${v.status==='sold'?' sold':''}" onclick="window.location='/detail?lot=${v.lot}'" style="cursor:pointer">
     <div class="v-img">
       ${photo}
       <span class="v-status ${cd.cls}">${cd.label}</span>
@@ -186,7 +186,7 @@ function buildCard(v) {
         <div style="font-size:10px;color:var(--ink-mute);font-family:var(--mono)">${(v.location||'').replace(/^[A-Z]+ - /,'')}</div>
         <div style="font-size:10px;color:var(--ink-mute);font-family:var(--mono)">Added: ${new Date(v.added).toLocaleDateString()}</div>
       </div>
-      <a class="btn btn-wa btn-sm" href="https://wa.me/12127965517?text=${waMsg}" target="_blank"><i class="ti ti-brand-whatsapp"></i> Inquire</a>
+      <a class="btn btn-wa btn-sm" href="https://wa.me/12127965517?text=${waMsg}" target="_blank" onclick="event.stopPropagation()"><i class="ti ti-brand-whatsapp"></i> Inquire</a>
     </div>
   </div>`;
 }
