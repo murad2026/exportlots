@@ -69,6 +69,10 @@
         <a href="/join" class="btn btn-accent btn-sm">Get access</a>
       </div>
     </div>
+    <div style="display:flex;gap:4px;margin-top:20px;border-bottom:1px solid var(--line);padding-bottom:0">
+      <button id="tab-ev" onclick="switchTab('ev')" style="padding:10px 20px;font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600;background:none;border:none;border-bottom:2px solid var(--accent);color:var(--accent);cursor:pointer;margin-bottom:-1px">⚡ Electric</button>
+      <button id="tab-all" onclick="switchTab('all')" style="padding:10px 20px;font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600;background:none;border:none;border-bottom:2px solid transparent;color:var(--ink-mute);cursor:pointer;margin-bottom:-1px">All vehicles</button>
+    </div>
   </div>
   <div class="catalog-grid" id="sample-grid">
     <div style="text-align:center;color:var(--ink-mute);padding:40px;grid-column:1/-1;font-family:var(--mono);font-size:12px">Loading...</div>
@@ -303,38 +307,100 @@ function buildCard(v) {
   </div>`;
 }
 
-async function loadSamples() {
+const EV_MAKES = ['Tesla','Chevrolet Bolt','Nissan','BMW i','Audi e-tron','Hyundai Ioniq','Kia EV','Rivian','Ford Mustang Mach-E','Volkswagen ID','Lucid','Polestar','Genesis GV60'];
+function isEV(v) {
+  if (v.fuel && v.fuel.toLowerCase().includes('electric')) return true;
+  return EV_MAKES.some(m => (v.make+' '+v.model).toLowerCase().includes(m.toLowerCase()) || v.make.toLowerCase().includes(m.toLowerCase()));
+}
+
+const stockCardEV = `<div class="v-card" style="cursor:default">
+  <div class="v-img" style="background:#ecfdf5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+    <div style="font-size:36px;margin-bottom:4px">⚡</div>
+    <div style="font-family:var(--serif);font-size:48px;font-weight:400;color:#16a34a;line-height:1">500+</div>
+    <div style="font-size:11px;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.1em;color:#16a34a;opacity:0.8">EV in stock</div>
+  </div>
+  <div class="v-body">
+    <div class="v-price" style="color:var(--ink)">Electric catalog</div>
+    <div class="v-price-label">Available after dealer registration</div>
+    <div class="v-title">Tesla · Bolt · Ioniq · Leaf and more</div>
+    <div class="v-sub">Clean title · UAE · Georgia · Lithuania</div>
+    <div class="v-tags">
+      <span class="v-tag">Clean title only</span>
+      <span class="v-tag">LHD</span>
+      <span class="v-tag">US stock</span>
+    </div>
+    <div class="v-spacer"></div>
+  </div>
+  <div class="v-footer">
+    <span style="font-size:11px;color:var(--ink-mute);font-family:var(--mono)">US dealer auctions</span>
+    <span style="flex:1"></span>
+    <a href="/join" class="btn btn-accent btn-sm">Get access →</a>
+  </div>
+</div>`;
+
+const stockCardAll = `<div class="v-card" style="cursor:default">
+  <div class="v-img" style="background:var(--accent-s);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+    <div style="font-family:var(--serif);font-size:56px;font-weight:400;color:var(--accent);line-height:1">1,500+</div>
+    <div style="font-size:12px;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.1em;color:var(--accent);opacity:0.7">vehicles in stock</div>
+  </div>
+  <div class="v-body">
+    <div class="v-price" style="color:var(--ink)">Full catalog</div>
+    <div class="v-price-label">Available after dealer registration</div>
+    <div class="v-title">Hand-picked for your market</div>
+    <div class="v-sub">Nigeria · UAE · Ghana · Lithuania · DR · Georgia · Armenia</div>
+    <div class="v-tags">
+      <span class="v-tag">LHD only</span>
+      <span class="v-tag">Clean &amp; salvage</span>
+      <span class="v-tag">Sedan · SUV · Pickup</span>
+    </div>
+    <div class="v-spacer"></div>
+  </div>
+  <div class="v-footer">
+    <span style="font-size:11px;color:var(--ink-mute);font-family:var(--mono)">US dealer auctions</span>
+    <span style="flex:1"></span>
+    <a href="/join" class="btn btn-accent btn-sm">Get access →</a>
+  </div>
+</div>`;
+
+let allSamples = [];
+let currentTab = 'ev';
+
+function renderGrid(tab) {
   const grid = document.getElementById('sample-grid');
+  const ev = allSamples.filter(isEV).slice(0,4);
+  const all = allSamples.slice(0,4);
+  const items = tab === 'ev' ? ev : all;
+  const card = tab === 'ev' ? stockCardEV : stockCardAll;
+  grid.innerHTML = items.length ? items.map(buildCard).join('') + card : card;
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  const tabEv = document.getElementById('tab-ev');
+  const tabAll = document.getElementById('tab-all');
+  if (tab === 'ev') {
+    tabEv.style.borderBottomColor = 'var(--accent)';
+    tabEv.style.color = 'var(--accent)';
+    tabAll.style.borderBottomColor = 'transparent';
+    tabAll.style.color = 'var(--ink-mute)';
+  } else {
+    tabAll.style.borderBottomColor = 'var(--accent)';
+    tabAll.style.color = 'var(--accent)';
+    tabEv.style.borderBottomColor = 'transparent';
+    tabEv.style.color = 'var(--ink-mute)';
+  }
+  renderGrid(tab);
+}
+
+async function loadSamples() {
   try {
     const r = await fetch('/api/vehicles');
     const d = await r.json();
-    const samples = (d.vehicles||[]).filter(v=>v.is_sample).slice(0,4);
-    const stockCard = `<div class="v-card" style="cursor:default">
-      <div class="v-img" style="background:var(--accent-s);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
-        <div style="font-family:var(--serif);font-size:56px;font-weight:400;color:var(--accent);line-height:1">1,500+</div>
-        <div style="font-size:12px;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.1em;color:var(--accent);opacity:0.7">vehicles in stock</div>
-      </div>
-      <div class="v-body">
-        <div class="v-price" style="color:var(--ink)">Full catalog</div>
-        <div class="v-price-label">Available after dealer registration</div>
-        <div class="v-title">Hand-picked for your market</div>
-        <div class="v-sub">Nigeria · UAE · Ghana · Lithuania · DR · Georgia · Armenia</div>
-        <div class="v-tags">
-          <span class="v-tag">LHD only</span>
-          <span class="v-tag">Clean &amp; salvage</span>
-          <span class="v-tag">Sedan · SUV · Pickup</span>
-        </div>
-        <div class="v-spacer"></div>
-      </div>
-      <div class="v-footer">
-        <span style="font-size:11px;color:var(--ink-mute);font-family:var(--mono)">US dealer auctions</span>
-        <span style="flex:1"></span>
-        <a href="/join" class="btn btn-accent btn-sm">Get access →</a>
-      </div>
-    </div>`;
-    grid.innerHTML = samples.length ? samples.map(buildCard).join('') + stockCard :
-      '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink-mute);font-family:var(--mono);font-size:12px">No sample listings at this time.</div>';
-  } catch { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink-mute)">Could not load listings.</div>'; }
+    allSamples = (d.vehicles||[]).filter(v=>v.is_sample);
+    renderGrid(currentTab);
+  } catch {
+    document.getElementById('sample-grid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink-mute)">Could not load listings.</div>';
+  }
 }
 
 loadSamples();
