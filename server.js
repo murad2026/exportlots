@@ -11,13 +11,16 @@ try { sharp = require('sharp'); } catch(e) { sharp = null; }
 try { nodemailer = require('nodemailer'); } catch(e) { nodemailer = null; }
 
 async function sendNotification(subject, html) {
-  if (!nodemailer) return;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  if (!user || !pass) return;
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) return;
   try {
-    const t = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 465, secure: true, auth: { user, pass } });
-    await t.sendMail({ from: `ExportLots <${user}>`, to: 'murad@dapex.net', subject, html });
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: 'ExportLots <onboarding@resend.dev>', to: 'murad@dapex.net', subject, html })
+    });
+    const d = await res.json();
+    console.log('Email sent:', d.id || JSON.stringify(d));
   } catch(e) { console.log('Email error:', e.message); }
 }
 
