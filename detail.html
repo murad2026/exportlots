@@ -59,10 +59,10 @@
   <div class="nav-inner">
     <a href="/" class="nav-brand"><span class="dot"></span>ExportLots</a>
     <div class="nav-links" id="nav-links">
-      <a href="/">Home</a>
-      <a href="/shipping">Destinations</a>
-      <a href="/how-it-works">How it works</a>
-      <a href="/partners">Partners</a>
+      <a href="/" id="nl-home">Home</a>
+      <a href="/shipping" id="nl-dest">Destinations</a>
+      <a href="/how-it-works" id="nl-hiw">How it works</a>
+      <a href="/partners" id="nl-part">Partners</a>
     </div>
     <div class="nav-cta" id="nav-cta">
       <a href="/login" class="nav-login">Dealer login</a>
@@ -93,16 +93,18 @@ const initialDest = params.get('dest') || 'Lagos';
 async function initNav() {
   try {
     const s = await fetch('/api/session').then(r => r.json());
+    if (s.ok && (s.role === 'operator' || s.role === 'owner' || s.role === 'dealer')) {
+      ['nl-home','nl-dest','nl-hiw','nl-part'].forEach(id => document.getElementById(id).style.display = 'none');
+      document.getElementById('back-link').href = '/catalog';
+    }
     if (s.ok && s.role === 'operator') {
       document.getElementById('nav-cta').innerHTML = `
         <a href="/admin/operator" class="btn btn-ghost btn-sm">← Operator panel</a>
-        <button onclick="fetch('/api/auth/logout',{method:'POST'}).then(()=>location.href='/')" class="btn btn-ghost btn-sm">Sign out</button>`;
-      document.getElementById('back-link').href = '/catalog';
+        <button onclick="fetch('/api/auth/logout',{method:'POST'}).then(()=>location.href='/admin/login')" class="btn btn-ghost btn-sm">Sign out</button>`;
     } else if (s.ok && (s.role === 'dealer' || s.role === 'owner')) {
       document.getElementById('nav-cta').innerHTML = `
         <a href="/catalog" class="btn btn-ghost btn-sm">← Catalog</a>
         <button onclick="fetch('/api/auth/logout',{method:'POST'}).then(()=>location.href='/')" class="btn btn-ghost btn-sm">Sign out</button>`;
-      document.getElementById('back-link').href = '/catalog';
     }
   } catch {}
 }
