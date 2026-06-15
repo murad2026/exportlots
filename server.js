@@ -4,10 +4,10 @@ const path = require('path');
 const url = require('url');
 const crypto = require('crypto');
 
-let bcrypt, multer, sharp, uuid, nodemailer;
+let bcrypt, multer, Jimp, uuid, nodemailer;
 try { bcrypt = require('bcryptjs'); } catch(e) { bcrypt = null; }
 try { uuid = require('uuid'); } catch(e) { uuid = { v4: () => crypto.randomUUID() }; }
-try { sharp = require('sharp'); } catch(e) { sharp = null; }
+try { Jimp = require('jimp'); } catch(e) { Jimp = null; }
 try { nodemailer = require('nodemailer'); } catch(e) { nodemailer = null; }
 
 async function sendNotification(subject, html) {
@@ -340,16 +340,20 @@ function parseStartTime(raw) {
 
 // ---- IMAGE PROCESSING ----
 async function processImage(buffer, outputPath) {
-  if (!sharp) {
+  if (!Jimp) {
     fs.writeFileSync(outputPath, buffer);
     return;
   }
-  await sharp(buffer)
-    .resize(1200, 900, { fit: 'inside', withoutEnlargement: true })
-    .flatten({ background: { r: 255, g: 255, b: 255 } })
-    .jpeg({ quality: 85, mozjpeg: true })
-    .withMetadata(false)
-    .toFile(outputPath);
+  const img = await Jimp.read(buffer);
+  // Flatten onto white background (handles transparent PNGs)
+  const bg = new Jimp(img.bitmap.width, img.bitmap.height, 0xFFFFFFFF);
+  bg.composite(img, 0, 0);
+  // Resize to max 1200x900 keeping aspect ratio
+  if (bg.bitmap.width > 1200 || bg.bitmap.height > 900) {
+    bg.scaleToFit(1200, 900);
+  }
+  // Save as JPEG quality 85 — EXIF is stripped automatically on re-encode
+  await bg.quality(85).writeAsync(outputPath);
 }
 
 // ---- PASSWORD CHECK ----
