@@ -444,9 +444,6 @@ http.createServer(async (req, res) => {
 
     // POST /api/auth/logout
     if (pathname === '/api/auth/logout' && req.method === 'POST') {
-      const cookieHeader = req.headers.cookie || '';
-      const match = cookieHeader.match(/sid=([a-f0-9]+)/);
-      if (match) sessions.delete(match[1]);
       res.writeHead(200, { 'Set-Cookie': 'sid=; Path=/; Max-Age=0' });
       return res.end(JSON.stringify({ ok: true }));
     }
