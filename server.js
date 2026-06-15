@@ -35,44 +35,37 @@ if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 const OWNER_PASSWORD = process.env.OWNER_PASS || 'DapexOwner2026!';
 const OPERATOR_PASSWORD = process.env.OPERATOR_PASS || 'DapexOp2026!';
 
-// ---- SESSION STORE (in-memory + file backup) ----
-const sessionCache = new Map();
+// ---- SESSION STORE (signed cookie — stateless, survives restarts) ----
+const SESSION_SECRET = process.env.SESSION_SECRET || 'exportlots-secret-2026';
 
-function persistSessions() {
-  try {
-    const obj = {};
-    sessionCache.forEach((v, k) => { obj[k] = v; });
-    fs.writeFileSync(path.join(DATA_DIR, 'sessions.json'), JSON.stringify(obj));
-  } catch {}
+function signSession(payload) {
+  const data = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const sig = crypto.createHmac('sha256', SESSION_SECRET).update(data).digest('base64url');
+  return data + '.' + sig;
 }
 
-function loadSessions() {
+function verifySession(token) {
+  if (!token) return null;
+  const [data, sig] = token.split('.');
+  if (!data || !sig) return null;
+  const expected = crypto.createHmac('sha256', SESSION_SECRET).update(data).digest('base64url');
+  if (sig !== expected) return null;
   try {
-    const obj = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'sessions.json'), 'utf8'));
-    Object.entries(obj).forEach(([k, v]) => sessionCache.set(k, v));
-  } catch {}
+    const payload = JSON.parse(Buffer.from(data, 'base64url').toString());
+    if (Date.now() - payload.created > 7 * 86400000) return null;
+    return payload;
+  } catch { return null; }
 }
-loadSessions();
 
 function createSession(role, userId) {
-  const id = crypto.randomBytes(32).toString('hex');
-  sessionCache.set(id, { role, userId, created: Date.now() });
-  persistSessions();
-  return id;
+  return signSession({ role, userId, created: Date.now() });
 }
 
 function getSession(req) {
   const cookieHeader = req.headers.cookie || '';
-  const match = cookieHeader.match(/sid=([a-f0-9]+)/);
+  const match = cookieHeader.match(/sid=([A-Za-z0-9_\-\.]+)/);
   if (!match) return null;
-  const s = sessionCache.get(match[1]);
-  if (!s) return null;
-  if (Date.now() - s.created > 7 * 86400000) {
-    sessionCache.delete(match[1]);
-    persistSessions();
-    return null;
-  }
-  return s;
+  return verifySession(match[1]);
 }
 
 function requireAuth(roles, req, res, next) {
