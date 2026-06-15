@@ -345,14 +345,16 @@ async function processImage(buffer, outputPath) {
     return;
   }
   const img = await Jimp.read(buffer);
-  // Flatten onto white background (handles transparent PNGs)
-  const bg = new Jimp(img.bitmap.width, img.bitmap.height, 0xFFFFFFFF);
+  const w = img.bitmap.width;
+  const h = img.bitmap.height;
+  // Create white background and composite image on top
+  const bg = await Jimp.create(w, h, 0xFFFFFFFF);
   bg.composite(img, 0, 0);
   // Resize to max 1200x900 keeping aspect ratio
-  if (bg.bitmap.width > 1200 || bg.bitmap.height > 900) {
+  if (w > 1200 || h > 900) {
     bg.scaleToFit(1200, 900);
   }
-  // Save as JPEG quality 85 — EXIF is stripped automatically on re-encode
+  // Save as JPEG quality 85 — EXIF stripped on re-encode
   await bg.quality(85).writeAsync(outputPath);
 }
 
