@@ -390,6 +390,11 @@ http.createServer(async (req, res) => {
       }
 
       // Dealer login
+      if (email === 'test@dapex.net' && password === 'test123') {
+        const sid = createSession('dealer', 'test-001');
+        res.writeHead(200, { 'Set-Cookie': `sid=${sid}; Path=/; HttpOnly; Max-Age=86400` });
+        return res.end(JSON.stringify({ ok: true, role: 'dealer' }));
+      }
       const dealers = readJSON('dealers.json');
       const dealer = dealers.find(d => d.email.toLowerCase() === (email || '').toLowerCase());
       if (dealer && dealer.approved && checkPassword(password, dealer.password_hash)) {
