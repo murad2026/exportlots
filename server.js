@@ -4,10 +4,22 @@ const path = require('path');
 const url = require('url');
 const crypto = require('crypto');
 
-let bcrypt, multer, sharp, uuid;
+let bcrypt, multer, sharp, uuid, nodemailer;
 try { bcrypt = require('bcryptjs'); } catch(e) { bcrypt = null; }
 try { uuid = require('uuid'); } catch(e) { uuid = { v4: () => crypto.randomUUID() }; }
 try { sharp = require('sharp'); } catch(e) { sharp = null; }
+try { nodemailer = require('nodemailer'); } catch(e) { nodemailer = null; }
+
+async function sendNotification(subject, html) {
+  if (!nodemailer) return;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  if (!user || !pass) return;
+  try {
+    const t = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 465, secure: true, auth: { user, pass } });
+    await t.sendMail({ from: `ExportLots <${user}>`, to: 'murad@dapex.net', subject, html });
+  } catch(e) { console.log('Email error:', e.message); }
+}
 
 const PORT = process.env.PORT || 3002;
 const DATA_DIR = path.join(__dirname, 'data');
@@ -435,6 +447,19 @@ http.createServer(async (req, res) => {
       const application = { id, name, company, country, email, phone, type, volume, message, password_hash: hash, applied: new Date().toISOString(), approved: false };
       pending.push(application);
       writeJSON('pending.json', pending);
+      sendNotification(
+        `New dealer application — ${company} (${country})`,
+        `<h2>New dealer application</h2>
+        <p><b>Name:</b> ${name}</p>
+        <p><b>Company:</b> ${company}</p>
+        <p><b>Country:</b> ${country}</p>
+        <p><b>Email:</b> ${email}</p>
+        <p><b>Phone:</b> ${phone || '—'}</p>
+        <p><b>Type:</b> ${type}</p>
+        <p><b>Volume:</b> ${volume}</p>
+        <p><b>Message:</b> ${message || '—'}</p>
+        <br><a href="https://exportlots.com/admin">Open admin panel →</a>`
+      );
       return res.end(JSON.stringify({ ok: true }));
     }
 
