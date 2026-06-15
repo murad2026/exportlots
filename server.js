@@ -35,21 +35,29 @@ if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 const OWNER_PASSWORD = process.env.OWNER_PASS || 'DapexOwner2026!';
 const OPERATOR_PASSWORD = process.env.OPERATOR_PASS || 'DapexOp2026!';
 
-// ---- SESSION STORE (file-based, persists across restarts) ----
-const SESSIONS_FILE = 'sessions.json';
+// ---- SESSION STORE (in-memory + file backup) ----
+const sessionCache = new Map();
 
-function readSessions() {
-  try { return JSON.parse(fs.readFileSync(path.join(DATA_DIR, SESSIONS_FILE), 'utf8')); } catch { return {}; }
+function persistSessions() {
+  try {
+    const obj = {};
+    sessionCache.forEach((v, k) => { obj[k] = v; });
+    fs.writeFileSync(path.join(DATA_DIR, 'sessions.json'), JSON.stringify(obj));
+  } catch {}
 }
-function writeSessions(data) {
-  try { fs.writeFileSync(path.join(DATA_DIR, SESSIONS_FILE), JSON.stringify(data)); } catch {}
+
+function loadSessions() {
+  try {
+    const obj = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'sessions.json'), 'utf8'));
+    Object.entries(obj).forEach(([k, v]) => sessionCache.set(k, v));
+  } catch {}
 }
+loadSessions();
 
 function createSession(role, userId) {
   const id = crypto.randomBytes(32).toString('hex');
-  const sessions = readSessions();
-  sessions[id] = { role, userId, created: Date.now() };
-  writeSessions(sessions);
+  sessionCache.set(id, { role, userId, created: Date.now() });
+  persistSessions();
   return id;
 }
 
@@ -57,13 +65,11 @@ function getSession(req) {
   const cookieHeader = req.headers.cookie || '';
   const match = cookieHeader.match(/sid=([a-f0-9]+)/);
   if (!match) return null;
-  const sessions = readSessions();
-  const s = sessions[match[1]];
+  const s = sessionCache.get(match[1]);
   if (!s) return null;
-  // 7-day expiry
   if (Date.now() - s.created > 7 * 86400000) {
-    delete sessions[match[1]];
-    writeSessions(sessions);
+    sessionCache.delete(match[1]);
+    persistSessions();
     return null;
   }
   return s;
@@ -354,22 +360,19 @@ function parseStartTime(raw) {
 
 // ---- IMAGE PROCESSING ----
 async function processImage(buffer, outputPath) {
-  if (!Jimp) {
+  try {
+    if (!Jimp) throw new Error('no jimp');
+    const img = await Jimp.read(buffer);
+    // White background, resize, strip EXIF via JPEG re-encode
+    img.background(0xFFFFFFFF);
+    if (img.bitmap.width > 1200 || img.bitmap.height > 900) {
+      img.scaleToFit(1200, 900);
+    }
+    await img.quality(85).writeAsync(outputPath);
+  } catch(e) {
+    console.log('Image processing error:', e.message, '— saving raw');
     fs.writeFileSync(outputPath, buffer);
-    return;
   }
-  const img = await Jimp.read(buffer);
-  const w = img.bitmap.width;
-  const h = img.bitmap.height;
-  // Create white background and composite image on top
-  const bg = await Jimp.create(w, h, 0xFFFFFFFF);
-  bg.composite(img, 0, 0);
-  // Resize to max 1200x900 keeping aspect ratio
-  if (w > 1200 || h > 900) {
-    bg.scaleToFit(1200, 900);
-  }
-  // Save as JPEG quality 85 — EXIF stripped on re-encode
-  await bg.quality(85).writeAsync(outputPath);
 }
 
 // ---- PASSWORD CHECK ----
