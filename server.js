@@ -26,21 +26,30 @@ async function sendNotification(subject, html) {
 
 const PORT = process.env.PORT || 3002;
 const DATA_DIR = path.join(__dirname, 'data');
-const UPLOADS_DIR = path.join(__dirname, 'uploads');
+const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
 
-if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
 // ---- CONFIG ----
 const OWNER_PASSWORD = process.env.OWNER_PASS || 'DapexOwner2026!';
 const OPERATOR_PASSWORD = process.env.OPERATOR_PASS || 'DapexOp2026!';
 
-// ---- SESSION STORE (in-memory) ----
-const sessions = new Map();
+// ---- SESSION STORE (file-based, persists across restarts) ----
+const SESSIONS_FILE = 'sessions.json';
+
+function readSessions() {
+  try { return JSON.parse(fs.readFileSync(path.join(DATA_DIR, SESSIONS_FILE), 'utf8')); } catch { return {}; }
+}
+function writeSessions(data) {
+  try { fs.writeFileSync(path.join(DATA_DIR, SESSIONS_FILE), JSON.stringify(data)); } catch {}
+}
 
 function createSession(role, userId) {
   const id = crypto.randomBytes(32).toString('hex');
-  sessions.set(id, { role, userId, created: Date.now() });
+  const sessions = readSessions();
+  sessions[id] = { role, userId, created: Date.now() };
+  writeSessions(sessions);
   return id;
 }
 
@@ -48,10 +57,15 @@ function getSession(req) {
   const cookieHeader = req.headers.cookie || '';
   const match = cookieHeader.match(/sid=([a-f0-9]+)/);
   if (!match) return null;
-  const s = sessions.get(match[1]);
+  const sessions = readSessions();
+  const s = sessions[match[1]];
   if (!s) return null;
-  // 24h expiry
-  if (Date.now() - s.created > 86400000) { sessions.delete(match[1]); return null; }
+  // 7-day expiry
+  if (Date.now() - s.created > 7 * 86400000) {
+    delete sessions[match[1]];
+    writeSessions(sessions);
+    return null;
+  }
   return s;
 }
 
@@ -386,7 +400,10 @@ http.createServer(async (req, res) => {
   let pathname = parsed.pathname.replace(/\/$/, '') || '/';
 
   // Static files
-  if (pathname.startsWith('/uploads/') || pathname.startsWith('/style') || pathname.endsWith('.css') || pathname.endsWith('.js') || pathname.endsWith('.ico') || pathname.endsWith('.png') || pathname.endsWith('.jpg') || pathname.endsWith('.webp')) {
+  if (pathname.startsWith('/uploads/')) {
+    return serveFile(path.join(DATA_DIR, pathname), res);
+  }
+  if (pathname.startsWith('/style') || pathname.endsWith('.css') || pathname.endsWith('.js') || pathname.endsWith('.ico') || pathname.endsWith('.png') || pathname.endsWith('.jpg') || pathname.endsWith('.webp')) {
     return serveFile(path.join(__dirname, pathname), res);
   }
 
