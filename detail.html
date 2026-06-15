@@ -58,13 +58,13 @@
 <nav class="nav">
   <div class="nav-inner">
     <a href="/" class="nav-brand"><span class="dot"></span>ExportLots</a>
-    <div class="nav-links">
+    <div class="nav-links" id="nav-links">
       <a href="/">Home</a>
       <a href="/shipping">Destinations</a>
       <a href="/how-it-works">How it works</a>
       <a href="/partners">Partners</a>
     </div>
-    <div class="nav-cta">
+    <div class="nav-cta" id="nav-cta">
       <a href="/login" class="nav-login">Dealer login</a>
       <a href="/join" class="btn btn-accent btn-sm">Apply for access</a>
     </div>
@@ -72,7 +72,7 @@
 </nav>
 
 <div style="max-width:900px;margin:0 auto;padding:20px var(--gap)">
-  <a href="/" style="font-size:13px;color:var(--ink-soft);display:inline-flex;align-items:center;gap:5px;margin-bottom:16px;text-decoration:none">
+  <a id="back-link" href="/catalog" style="font-size:13px;color:var(--ink-soft);display:inline-flex;align-items:center;gap:5px;margin-bottom:16px;text-decoration:none">
     <i class="ti ti-arrow-left"></i> Back to catalog
   </a>
   <div class="dcard" id="dcard">
@@ -89,6 +89,21 @@
 const params = new URLSearchParams(window.location.search);
 const lot = params.get('lot');
 const initialDest = params.get('dest') || 'Lagos';
+
+async function initNav() {
+  try {
+    const s = await fetch('/api/session').then(r => r.json());
+    if (s.ok && s.role === 'operator') {
+      document.getElementById('nav-cta').innerHTML = `
+        <a href="/admin/operator" class="btn btn-ghost btn-sm">← Operator panel</a>
+        <button onclick="fetch('/api/auth/logout',{method:'POST'}).then(()=>location.href='/')" class="btn btn-ghost btn-sm">Sign out</button>`;
+    } else if (s.ok && (s.role === 'dealer' || s.role === 'owner')) {
+      document.getElementById('nav-cta').innerHTML = `
+        <a href="/catalog" class="btn btn-ghost btn-sm">← Catalog</a>
+        <button onclick="fetch('/api/auth/logout',{method:'POST'}).then(()=>location.href='/')" class="btn btn-ghost btn-sm">Sign out</button>`;
+    }
+  } catch {}
+}
 
 async function initDetail() {
   try {
@@ -237,6 +252,7 @@ function renderDetail(v) {
   }
 }
 
+initNav();
 initDetail();
 </script>
 </body>
