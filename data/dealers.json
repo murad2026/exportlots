@@ -1,1 +1,13 @@
-[]
+[
+  {
+    "id": "test-001",
+    "name": "Test Dealer",
+    "company": "Test Co",
+    "country": "United States",
+    "email": "test@dapex.net",
+    "password_hash": "test123",
+    "approved": true,
+    "role": "dealer",
+    "applied": "2026-06-15T15:53:15.691Z"
+  }
+]
