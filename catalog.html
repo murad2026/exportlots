@@ -12,11 +12,11 @@
 <nav class="nav">
   <div class="nav-inner">
     <a href="/" class="nav-brand"><span class="dot"></span>ExportLots</a>
-    <div class="nav-links">
+    <div class="nav-links" id="nav-links">
       <a href="/catalog" class="active">Inventory</a>
-      <a href="/shipping">Destinations</a>
-      <a href="/how-it-works">How it works</a>
-      <a href="/partners">Partners</a>
+      <a href="/shipping" id="nl-dest">Destinations</a>
+      <a href="/how-it-works" id="nl-hiw">How it works</a>
+      <a href="/partners" id="nl-part">Partners</a>
     </div>
     <div class="nav-cta">
       <span id="dealer-name" style="font-size:13px;color:var(--ink-mute);font-family:var(--mono)"></span>
@@ -245,6 +245,9 @@ async function loadCatalog() {
     const sess = await fetch('/api/session').then(r=>r.json());
     if (sess.role === 'operator' || sess.role === 'owner') {
       document.getElementById('op-link').style.display = '';
+      document.getElementById('nl-dest').style.display = 'none';
+      document.getElementById('nl-hiw').style.display = 'none';
+      document.getElementById('nl-part').style.display = 'none';
     }
     allVehicles = data.vehicles || [];
     document.getElementById('total-count').textContent = allVehicles.filter(v=>v.status!=='sold').length + ' active';
