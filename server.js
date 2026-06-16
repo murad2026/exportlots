@@ -108,6 +108,17 @@ function readJSON(file) {
     throw e;
   }
 }
+// Serializes read-modify-write sequences per file so two overlapping
+// requests (e.g. two photo uploads processing at once) can't clobber
+// each other's writes to vehicles.json.
+const fileLocks = new Map();
+function withFileLock(file, fn) {
+  const prev = fileLocks.get(file) || Promise.resolve();
+  const next = prev.then(fn, fn);
+  fileLocks.set(file, next.catch(() => {}));
+  return next;
+}
+
 function writeJSON(file, data) {
   const fp = path.join(DATA_DIR, file);
   // Keep a rolling backup so a bad write never loses the previous good state.
@@ -499,6 +510,10 @@ async function handleRequest(req, res) {
   // ---- API ROUTES ----
   if (pathname.startsWith('/api/')) {
     res.setHeader('Content-Type', 'application/json');
+    // Prevent CDN/browser caching of API responses (e.g. Cloudflare edge cache
+    // serving stale vehicle lists to different visitors).
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.setHeader('Pragma', 'no-cache');
 
     // POST /api/auth/login
     if (pathname === '/api/auth/login' && req.method === 'POST') {
@@ -612,25 +627,33 @@ async function handleRequest(req, res) {
         parsed_data = await readBody(req);
       }
 
-      const vehicles = readJSON('vehicles.json');
-      const privateVehicles = readJSON('vehicles-private.json');
-
-      const lot = nextLotNumber();
-      const vin_full = parsed_data.vin_full || '';
-      const vin_masked = vin_full ? vin_full.substring(0, 9) + '••••••••' : '';
-
-      let photoPath = null;
+      // Process the photo into a temp file first (slow, async) so the
+      // vehicles.json read-modify-write below stays short — minimizes the
+      // window where a second overlapping request could race with it.
+      let tempPhotoPath = null;
       if (photoBuffer) {
-        const filename = `${lot}.jpg`;
-        const outPath = path.join(UPLOADS_DIR, filename);
-        await processImage(photoBuffer, outPath);
-        photoPath = `/uploads/${filename}`;
+        tempPhotoPath = path.join(UPLOADS_DIR, `tmp-${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`);
+        await processImage(photoBuffer, tempPhotoPath);
       }
 
+      const vin_full = parsed_data.vin_full || '';
+      const vin_masked = vin_full ? vin_full.substring(0, 9) + '••••••••' : '';
       const end_time = parsed_data.time_left_raw ? parseTimeLeft(parsed_data.time_left_raw) :
                        parsed_data.end_time || null;
       const start_time = parsed_data.starts_raw ? parseStartTime(parsed_data.starts_raw) :
                          parsed_data.start_time || null;
+
+      const { lot, vehicle } = await withFileLock('vehicles.json', () => {
+      const vehicles = readJSON('vehicles.json');
+      const privateVehicles = readJSON('vehicles-private.json');
+
+      const lot = nextLotNumber();
+      let photoPath = null;
+      if (tempPhotoPath) {
+        const finalPath = path.join(UPLOADS_DIR, `${lot}.jpg`);
+        fs.renameSync(tempPhotoPath, finalPath);
+        photoPath = `/uploads/${lot}.jpg`;
+      }
 
       const vehicle = {
         lot,
@@ -684,6 +707,9 @@ async function handleRequest(req, res) {
       privateVehicles.unshift(priv);
       writeJSON('vehicles-private.json', privateVehicles);
 
+      return { lot, vehicle };
+      });
+
       return res.end(JSON.stringify({ ok: true, lot }));
     }
 
@@ -695,11 +721,15 @@ async function handleRequest(req, res) {
       }
       const lot = pathname.split('/').pop();
       const body = await readBody(req);
-      const vehicles = readJSON('vehicles.json');
-      const idx = vehicles.findIndex(v => v.lot === lot);
-      if (idx < 0) return res.end(JSON.stringify({ ok: false, error: 'Not found' }));
-      Object.assign(vehicles[idx], body);
-      writeJSON('vehicles.json', vehicles);
+      const found = await withFileLock('vehicles.json', () => {
+        const vehicles = readJSON('vehicles.json');
+        const idx = vehicles.findIndex(v => v.lot === lot);
+        if (idx < 0) return false;
+        Object.assign(vehicles[idx], body);
+        writeJSON('vehicles.json', vehicles);
+        return true;
+      });
+      if (!found) return res.end(JSON.stringify({ ok: false, error: 'Not found' }));
       return res.end(JSON.stringify({ ok: true }));
     }
 
@@ -708,12 +738,14 @@ async function handleRequest(req, res) {
       const s = getSession(req);
       if (!s || s.role !== 'owner') return res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
       const lot = pathname.split('/').pop();
-      let vehicles = readJSON('vehicles.json');
-      vehicles = vehicles.filter(v => v.lot !== lot);
-      writeJSON('vehicles.json', vehicles);
-      let priv = readJSON('vehicles-private.json');
-      priv = priv.filter(v => v.lot !== lot);
-      writeJSON('vehicles-private.json', priv);
+      await withFileLock('vehicles.json', () => {
+        const vehicles = readJSON('vehicles.json').filter(v => v.lot !== lot);
+        writeJSON('vehicles.json', vehicles);
+      });
+      await withFileLock('vehicles-private.json', () => {
+        const priv = readJSON('vehicles-private.json').filter(v => v.lot !== lot);
+        writeJSON('vehicles-private.json', priv);
+      });
       return res.end(JSON.stringify({ ok: true }));
     }
 
