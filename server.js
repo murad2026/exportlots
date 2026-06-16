@@ -83,10 +83,25 @@ function requireAuth(roles, req, res, next) {
 
 // ---- DATA HELPERS ----
 function readJSON(file) {
-  try { return JSON.parse(fs.readFileSync(path.join(DATA_DIR, file), 'utf8')); } catch { return []; }
+  const fp = path.join(DATA_DIR, file);
+  if (!fs.existsSync(fp)) return [];
+  try {
+    return JSON.parse(fs.readFileSync(fp, 'utf8'));
+  } catch (e) {
+    // File exists but failed to parse (corrupt/partial write) — do NOT
+    // silently return [] here, that would cause callers to overwrite
+    // real data with an empty array. Surface the error instead.
+    console.error(`readJSON: failed to parse ${file}:`, e.message);
+    throw e;
+  }
 }
 function writeJSON(file, data) {
-  fs.writeFileSync(path.join(DATA_DIR, file), JSON.stringify(data, null, 2));
+  const fp = path.join(DATA_DIR, file);
+  // Keep a rolling backup so a bad write never loses the previous good state.
+  if (fs.existsSync(fp)) {
+    try { fs.copyFileSync(fp, fp + '.bak'); } catch {}
+  }
+  fs.writeFileSync(fp, JSON.stringify(data, null, 2));
 }
 
 function nextLotNumber() {
@@ -424,6 +439,18 @@ const PAGE_ROUTES = {
 };
 
 http.createServer(async (req, res) => {
+  try {
+    return await handleRequest(req, res);
+  } catch (e) {
+    console.error('Unhandled request error:', e);
+    if (!res.headersSent) res.writeHead(500, { 'Content-Type': 'application/json' });
+    if (!res.writableEnded) res.end(JSON.stringify({ ok: false, error: 'Internal error' }));
+  }
+}).listen(PORT, () => {
+  console.log(`ExportLots running on port ${PORT}`);
+});
+
+async function handleRequest(req, res) {
   const parsed = url.parse(req.url, true);
   let pathname = parsed.pathname.replace(/\/$/, '') || '/';
 
@@ -739,9 +766,4 @@ http.createServer(async (req, res) => {
   // Fallback: try to serve file directly
   const directPath = path.join(__dirname, pathname);
   serveFile(directPath, res);
-
-}).listen(PORT, () => {
-  console.log(`ExportLots running on port ${PORT}`);
-  console.log(`Owner login: admin / ${OWNER_PASSWORD}`);
-  console.log(`Operator login: operator / ${OPERATOR_PASSWORD}`);
-});
+}
