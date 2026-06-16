@@ -168,14 +168,14 @@ function buildCard(v) {
       <span class="v-vin">${v.vin_masked}</span>
     </div>
     <div class="v-body">
-      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:2px">
+      <div class="v-title" style="text-transform:uppercase;font-size:16px;font-weight:700;letter-spacing:0.01em;margin:0 0 6px">${v.year} ${v.make} ${v.model} ${v.trim||''}</div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:10px">
         <div>
-          ${price ? `<div class="v-price v-price-buynow">${price}</div><div class="v-price-label">Buy Now · <span style="color:var(--accent)">${v.lot}</span></div>` : ''}
-          ${!price && mmr ? `<div class="v-price">${mmr}</div><div class="v-price-label">Historical Low · <span style="color:var(--accent)">${v.lot}</span></div>` : ''}
+          ${price ? `<div class="v-price v-price-buynow">${price}</div><div class="v-price-label">FIXED PRICE · <span style="color:var(--accent)">${v.lot}</span></div>` : ''}
+          ${!price && mmr ? `<div class="v-price">${mmr}</div><div class="v-price-label">ESTIMATED PRICE · <span style="color:var(--accent)">${v.lot}</span></div>` : ''}
         </div>
         ${price && mmr ? `<div class="v-mmr">Historical Low: <span class="v-mmr-value">${mmr}</span></div>` : ''}
       </div>
-      <div class="v-title">${v.year} ${v.make} ${v.model} ${v.trim||''}</div>
       <div class="v-sub">${fmtMi(v.mileage)} · ${v.drivetrain||''} · ${v.engine||''} · ${v.color_ext||''}</div>
       <div class="v-tags" style="margin-bottom:8px">${tags}</div>
       <div class="v-markets" style="margin-bottom:8px">${markets}</div>

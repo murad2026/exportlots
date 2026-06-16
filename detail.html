@@ -183,7 +183,11 @@ function renderDetail(v) {
     <div class="dhead">
       <div>
         <div class="dh-lot">Lot ${v.lot}</div>
-        <div class="dh-title">${v.year} ${v.make} ${v.model}${v.trim ? ' ' + v.trim : ''}</div>
+        <div class="dh-title" style="text-transform:uppercase">${v.year} ${v.make} ${v.model}${v.trim ? ' ' + v.trim : ''}</div>
+        <div style="font-size:18px;font-weight:800;color:${v.buy_now ? 'var(--accent)' : 'var(--ink)'};margin:2px 0 4px">
+          ${v.buy_now ? '$' + v.buy_now.toLocaleString() : (v.mmr_avg ? '$' + v.mmr_avg.toLocaleString() : '—')}
+          <span style="font-size:11px;font-family:var(--mono);font-weight:700;color:var(--ink-mute);letter-spacing:0.04em;margin-left:6px">${v.buy_now ? 'FIXED PRICE' : 'ESTIMATED PRICE'}</span>
+        </div>
         <div class="dh-sub">${(v.mileage||0).toLocaleString()} mi &nbsp;·&nbsp; ${v.drivetrain||''} &nbsp;·&nbsp; ${v.engine||''} &nbsp;·&nbsp; ${v.color_ext||''}</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
           <span class="vb" style="background:var(--bg);border:1px solid var(--line);padding:3px 8px;border-radius:4px;font-size:11px;font-family:var(--mono)">${v.sale_type === 'simulcast' ? 'LIVE AUCTION' : 'TIMED SALE'}</span>

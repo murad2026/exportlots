@@ -289,11 +289,11 @@ function buildCard(v) {
       <span class="v-vin">${v.vin_masked}</span>
     </div>
     <div class="v-body">
-      ${price ? `<div class="v-price">${price}</div><div class="v-price-label">Buy Now · Lot ${v.lot}</div>` : ''}
-      ${!price && mmr ? `<div class="v-price">${mmr}</div><div class="v-price-label">Est. price · Lot ${v.lot}</div>` : ''}
-      ${price && mmr ? `<div class="v-mmr">Est. price: ${mmr}</div>` : ''}
-      <div class="v-title">${v.year} ${v.make} ${v.model} ${v.trim||''}</div>
-      <div class="v-sub">${fmtMi(v.mileage)} · ${v.drivetrain||''} · ${v.engine||''}</div>
+      <div class="v-title" style="text-transform:uppercase;font-size:16px;font-weight:700;letter-spacing:0.01em;margin:0 0 6px">${v.year} ${v.make} ${v.model} ${v.trim||''}</div>
+      ${price ? `<div class="v-price v-price-buynow">${price}</div><div class="v-price-label">FIXED PRICE · Lot ${v.lot}</div>` : ''}
+      ${!price && mmr ? `<div class="v-price">${mmr}</div><div class="v-price-label">ESTIMATED PRICE · Lot ${v.lot}</div>` : ''}
+      ${price && mmr ? `<div class="v-mmr">Historical Low: <span class="v-mmr-value">${mmr}</span></div>` : ''}
+      <div class="v-sub" style="margin-top:8px">${fmtMi(v.mileage)} · ${v.drivetrain||''} · ${v.engine||''}</div>
       <div class="v-tags">${tags}</div>
       <div class="v-markets">${markets}</div>
       <div class="v-spacer"></div>
