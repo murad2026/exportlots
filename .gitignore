@@ -3,3 +3,4 @@ uploads/
 *.log
 .env
 /tmp
+data/
