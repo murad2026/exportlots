@@ -76,6 +76,7 @@
             <th>Markets</th>
             <th>Status</th>
             <th>Countdown</th>
+            <th>Sample</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -179,7 +180,7 @@ function filterInventory() {
 
 function renderInventory(list) {
   const tbody = document.getElementById('inv-body');
-  if (!list.length) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--ink-mute)">No listings.</td></tr>'; return; }
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--ink-mute)">No listings.</td></tr>'; return; }
 
   tbody.innerHTML = list.map(v => {
     const price = v.buy_now ? '$'+v.buy_now.toLocaleString() : (v.mmr_avg ? '~$'+v.mmr_avg.toLocaleString() : '—');
@@ -200,6 +201,9 @@ function renderInventory(list) {
       <td>${(v.markets||[]).map(m=>MARKET_FLAGS[m]||m).join(' ')}</td>
       <td><span style="font-family:var(--mono);font-size:11px;color:${statusColor};font-weight:600;text-transform:uppercase">${v.status}</span></td>
       <td style="font-family:var(--mono);font-size:11px">${getTimerText(v)}</td>
+      <td style="text-align:center">
+        <input type="checkbox" ${v.is_sample?'checked':''} onchange="toggleSample('${v.lot}',this.checked)" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer">
+      </td>
       <td>
         <div style="display:flex;gap:6px">
           <select onchange="updateStatus('${v.lot}',this.value)" style="font-size:11px;padding:4px 8px;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg);font-family:var(--mono)">
@@ -280,6 +284,13 @@ async function updateStatus(lot, status) {
   const r = await fetch(`/api/vehicles/${lot}`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ status }) });
   const d = await r.json();
   if (d.ok) { allVehicles = allVehicles.map(v => v.lot===lot ? {...v, status} : v); filterInventory(); }
+  else alert('Error: ' + d.error);
+}
+
+async function toggleSample(lot, is_sample) {
+  const r = await fetch(`/api/vehicles/${lot}`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ is_sample }) });
+  const d = await r.json();
+  if (d.ok) { allVehicles = allVehicles.map(v => v.lot===lot ? {...v, is_sample} : v); }
   else alert('Error: ' + d.error);
 }
 
