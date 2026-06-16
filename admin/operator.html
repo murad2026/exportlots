@@ -204,6 +204,7 @@ function displayParsed(d) {
     ['Sale type', d.sale_type || '—'],
     ['Time left / Starts', d.time_left_raw || d.starts_raw || '—'],
     ['MMR avg', d.mmr_avg ? '$' + d.mmr_avg.toLocaleString() : '—'],
+    ['Buy Now (parsed)', d.buy_now ? '$' + d.buy_now.toLocaleString() : '—'],
     ['Grade', d.grade || '—'],
     ['AutoCheck score', d.autocheck || '—'],
     ['Owners / Accidents', `${d.owners??'—'} / ${d.accidents??'—'}`],
@@ -228,7 +229,9 @@ async function submitListing() {
   if (!parsedData.year) { err.textContent = 'Please parse a listing first.'; err.style.display = 'block'; return; }
 
   const markets = [...document.querySelectorAll('.market-toggle input:checked')].map(c => c.value);
-  const buyNow = parseFloat(document.getElementById('buy-now').value) || null;
+  // Manual field wins if filled in; otherwise keep whatever was parsed from the paste (e.g. Buy Now price detected after the MMR range).
+  const buyNowInput = parseFloat(document.getElementById('buy-now').value) || null;
+  const buyNow = buyNowInput != null ? buyNowInput : (parsedData.buy_now || null);
   const isSample = document.getElementById('is-sample').checked;
 
   const data = { ...parsedData, buy_now: buyNow, markets, is_sample: isSample };

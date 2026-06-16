@@ -268,11 +268,32 @@ function parseManheim(text) {
   const startsIdx = lines.findIndex(l => l === 'Starts');
   if (startsIdx >= 0) result.starts_raw = lines[startsIdx + 1];
 
-  // MMR
+  // MMR (detail page format: "Avg MMR" followed by a single $ value)
   const mmrIdx = lines.findIndex(l => l === 'Avg MMR');
   if (mmrIdx >= 0) {
     const m = lines[mmrIdx + 1]?.match(/\$([\d,]+)/);
     if (m) result.mmr_avg = parseInt(m[1].replace(/,/g, ''));
+  }
+
+  // MMR (search/title-block format: "MMR" line, then "$X,XXX - $Y,YYY" range,
+  // then sometimes a separate "$Z,ZZZ" line right after — that extra line is
+  // the Buy Now price, since it's not part of the MMR range itself)
+  const mmrLabelIdx = lines.findIndex(l => l === 'MMR');
+  if (mmrLabelIdx >= 0) {
+    const rangeLine = lines[mmrLabelIdx + 1] || '';
+    const rangeMatch = rangeLine.match(/\$([\d,]+)\s*-\s*\$([\d,]+)/);
+    if (rangeMatch) {
+      if (result.mmr_avg == null) {
+        const lo = parseInt(rangeMatch[1].replace(/,/g, ''));
+        const hi = parseInt(rangeMatch[2].replace(/,/g, ''));
+        result.mmr_avg = Math.round((lo + hi) / 2);
+      }
+      const nextLine = lines[mmrLabelIdx + 2] || '';
+      const priceMatch = nextLine.match(/^\$([\d,]+)$/);
+      if (priceMatch) {
+        result.buy_now = parseInt(priceMatch[1].replace(/,/g, ''));
+      }
+    }
   }
 
   // Location
