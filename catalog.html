@@ -170,9 +170,9 @@ function buildCard(v) {
     </div>
     <div class="v-body">
       <div class="v-title">${v.year} ${v.make} ${v.model} ${v.trim||''}</div>
-      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
         <div>
-          <div style="display:flex;align-items:baseline;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px">
             ${price ? `<span class="v-price v-price-buynow">${price}</span><span class="v-price-tag v-price-tag-fixed">FIXED PRICE</span>` : ''}
             ${!price && mmr ? `<span class="v-price">${mmr}</span><span class="v-price-tag v-price-tag-est">EXPECTED PRICE</span>` : ''}
           </div>
