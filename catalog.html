@@ -169,8 +169,8 @@ function buildCard(v) {
       <span class="v-vin">${v.vin_masked}</span>
     </div>
     <div class="v-body">
-      <div class="v-title" style="text-transform:uppercase;font-size:16px;font-weight:700;letter-spacing:0.01em;margin:0 0 6px">${v.year} ${v.make} ${v.model} ${v.trim||''}</div>
-      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:10px">
+      <div class="v-title">${v.year} ${v.make} ${v.model} ${v.trim||''}</div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">
         <div>
           <div style="display:flex;align-items:baseline;gap:8px">
             ${price ? `<span class="v-price v-price-buynow">${price}</span><span class="v-price-tag v-price-tag-fixed">FIXED PRICE</span>` : ''}
@@ -178,13 +178,13 @@ function buildCard(v) {
           </div>
           <div class="v-price-label">${v.lot}</div>
         </div>
-        ${price && mmr ? `<div class="v-mmr">Historical Low: <span class="v-mmr-value">${mmr}</span></div>` : ''}
+        ${price && mmr ? `<div class="v-mmr" style="margin:0">Historical Low: <span class="v-mmr-value">${mmr}</span></div>` : ''}
       </div>
       <div class="v-secondary">
         <div class="v-sub">${fmtMi(v.mileage)} · ${v.drivetrain||''} · ${v.engine||''} · ${v.color_ext||''}</div>
-        <div class="v-tags" style="margin-bottom:8px">${tags}</div>
-        <div class="v-markets" style="margin-bottom:8px">${markets}</div>
-        ${v.autocheck ? `<div style="font-size:11px;color:var(--ink-mute);font-family:var(--mono);margin-bottom:6px">AutoCheck: ${v.autocheck}/100</div>` : ''}
+        <div class="v-tags">${tags}</div>
+        <div class="v-markets">${markets}</div>
+        ${v.autocheck ? `<div style="font-size:11px;color:var(--ink-mute);font-family:var(--mono)">AutoCheck: ${v.autocheck}/100</div>` : ''}
       </div>
       <div class="v-spacer"></div>
     </div>
