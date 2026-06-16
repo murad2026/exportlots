@@ -351,7 +351,7 @@ section.block:last-of-type, section.block-tight:last-of-type { border-bottom: no
 .vtag-mute   { background: var(--line-soft); color: var(--ink-soft); border: 1px solid var(--line); }
 .vtag-accent { background: #fff0e8; color: var(--accent); border: 1px solid #f4cdb5; }
 .v-markets { display: flex; gap: 5px; flex-wrap: wrap; }
-.v-market-flag { font-size: 16px; opacity: 0.85; cursor: pointer; }
+.v-market-flag { font-size: 22px; opacity: 0.9; cursor: pointer; }
 .v-market-flag:hover { opacity: 1; transform: scale(1.1); }
 .v-spacer { flex: 1; }
 
