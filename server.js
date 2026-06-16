@@ -261,9 +261,10 @@ function parseManheim(text) {
     }
   }
 
-  // Location
+  // Location — Manheim's pickup field looks like "MD - Manheim Baltimore-Washington";
+  // strip the auction-house branding so we don't expose the source on the card.
   const pickupIdx = lines.findIndex(l => l === 'Pickup');
-  if (pickupIdx >= 0) result.location = lines[pickupIdx + 1];
+  if (pickupIdx >= 0) result.location = lines[pickupIdx + 1].replace(/\bManheim\s*/i, '').trim();
 
   // AutoCheck
   const scoreIdx = lines.findIndex(l => l === 'Score');
