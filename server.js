@@ -10,6 +10,8 @@ try { uuid = require('uuid'); } catch(e) { uuid = { v4: () => crypto.randomUUID(
 try { Jimp = require('jimp'); } catch(e) { Jimp = null; }
 try { nodemailer = require('nodemailer'); } catch(e) { nodemailer = null; }
 
+const { initDb, allDocs, getDoc, insertDoc, updateDoc, deleteDoc, withNextLotInsert } = require('./db');
+
 async function sendNotification(subject, html) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return;
@@ -30,19 +32,6 @@ const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-
-console.log(`DATA_DIR resolved to: ${DATA_DIR}`);
-try {
-  const vFile = path.join(DATA_DIR, 'vehicles.json');
-  if (fs.existsSync(vFile)) {
-    const count = JSON.parse(fs.readFileSync(vFile, 'utf8')).length;
-    console.log(`vehicles.json found on startup with ${count} vehicle(s)`);
-  } else {
-    console.log('vehicles.json does NOT exist on startup — fresh/empty volume or volume not mounted');
-  }
-} catch (e) {
-  console.log('vehicles.json exists but failed to parse on startup:', e.message);
-}
 
 // ---- CONFIG ----
 const OWNER_PASSWORD = process.env.OWNER_PASS || 'DapexOwner2026!';
@@ -92,52 +81,6 @@ function requireAuth(roles, req, res, next) {
     return;
   }
   next(s);
-}
-
-// ---- DATA HELPERS ----
-function readJSON(file) {
-  const fp = path.join(DATA_DIR, file);
-  if (!fs.existsSync(fp)) return [];
-  try {
-    return JSON.parse(fs.readFileSync(fp, 'utf8'));
-  } catch (e) {
-    // File exists but failed to parse (corrupt/partial write) — do NOT
-    // silently return [] here, that would cause callers to overwrite
-    // real data with an empty array. Surface the error instead.
-    console.error(`readJSON: failed to parse ${file}:`, e.message);
-    throw e;
-  }
-}
-// Serializes read-modify-write sequences per file so two overlapping
-// requests (e.g. two photo uploads processing at once) can't clobber
-// each other's writes to vehicles.json.
-const fileLocks = new Map();
-function withFileLock(file, fn) {
-  const prev = fileLocks.get(file) || Promise.resolve();
-  const next = prev.then(fn, fn);
-  fileLocks.set(file, next.catch(() => {}));
-  return next;
-}
-
-function writeJSON(file, data) {
-  const fp = path.join(DATA_DIR, file);
-  // Keep a rolling backup so a bad write never loses the previous good state.
-  if (fs.existsSync(fp)) {
-    try { fs.copyFileSync(fp, fp + '.bak'); } catch {}
-  }
-  fs.writeFileSync(fp, JSON.stringify(data, null, 2));
-}
-
-function nextLotNumber() {
-  const vehicles = readJSON('vehicles.json');
-  const year = new Date().getFullYear();
-  const nums = vehicles
-    .map(v => v.lot)
-    .filter(l => l && l.startsWith(`EL-${year}-`))
-    .map(l => parseInt(l.split('-')[2]))
-    .filter(n => !isNaN(n));
-  const next = nums.length ? Math.max(...nums) + 1 : 1;
-  return `EL-${year}-${String(next).padStart(4, '0')}`;
 }
 
 // ---- MIME ----
@@ -483,7 +426,7 @@ const PAGE_ROUTES = {
   '/admin/login':   'admin/login.html',
 };
 
-http.createServer(async (req, res) => {
+const server = http.createServer(async (req, res) => {
   try {
     return await handleRequest(req, res);
   } catch (e) {
@@ -491,9 +434,18 @@ http.createServer(async (req, res) => {
     if (!res.headersSent) res.writeHead(500, { 'Content-Type': 'application/json' });
     if (!res.writableEnded) res.end(JSON.stringify({ ok: false, error: 'Internal error' }));
   }
-}).listen(PORT, () => {
-  console.log(`ExportLots running on port ${PORT}`);
 });
+
+initDb()
+  .then(() => {
+    server.listen(PORT, () => {
+      console.log(`ExportLots running on port ${PORT}`);
+    });
+  })
+  .catch((e) => {
+    console.error('Failed to initialize Postgres — server not started:', e.message);
+    process.exit(1);
+  });
 
 async function handleRequest(req, res) {
   const parsed = url.parse(req.url, true);
@@ -537,7 +489,7 @@ async function handleRequest(req, res) {
         res.writeHead(200, { 'Set-Cookie': `sid=${sid}; Path=/; HttpOnly; Max-Age=86400` });
         return res.end(JSON.stringify({ ok: true, role: 'dealer' }));
       }
-      const dealers = readJSON('dealers.json');
+      const dealers = await allDocs('dealers');
       const dealer = dealers.find(d => d.email.toLowerCase() === (email || '').toLowerCase());
       if (dealer && dealer.approved && checkPassword(password, dealer.password_hash)) {
         const sid = createSession('dealer', dealer.id);
@@ -563,8 +515,8 @@ async function handleRequest(req, res) {
       if (!email || !name || !company) {
         return res.end(JSON.stringify({ ok: false, error: 'Missing required fields' }));
       }
-      const dealers = readJSON('dealers.json');
-      const pending = readJSON('pending.json');
+      const dealers = await allDocs('dealers');
+      const pending = await allDocs('pending');
       const all = [...dealers, ...pending];
       if (all.find(d => d.email.toLowerCase() === email.toLowerCase())) {
         return res.end(JSON.stringify({ ok: false, error: 'Email already registered' }));
@@ -572,8 +524,7 @@ async function handleRequest(req, res) {
       const id = 'D' + Date.now();
       const hash = bcrypt ? bcrypt.hashSync(password || 'changeme123', 10) : (password || 'changeme123');
       const application = { id, name, company, country, email, phone, type, volume, message, password_hash: hash, applied: new Date().toISOString(), approved: false };
-      pending.push(application);
-      writeJSON('pending.json', pending);
+      await insertDoc('pending', 'id', id, application);
       sendNotification(
         `New dealer application — ${company} (${country})`,
         `<h2>New dealer application</h2>
@@ -599,7 +550,7 @@ async function handleRequest(req, res) {
     // GET /api/vehicles
     if (pathname === '/api/vehicles' && req.method === 'GET') {
       const s = getSession(req);
-      const vehicles = readJSON('vehicles.json');
+      const vehicles = await allDocs('vehicles');
       const isDealer = s && ['dealer', 'owner', 'operator'].includes(s.role);
       const active = vehicles.filter(v => v.status === 'active' || v.status === 'live');
       const list = isDealer ? active : active.slice(0, 6);
@@ -643,72 +594,63 @@ async function handleRequest(req, res) {
       const start_time = parsed_data.starts_raw ? parseStartTime(parsed_data.starts_raw) :
                          parsed_data.start_time || null;
 
-      const { lot, vehicle } = await withFileLock('vehicles.json', () => {
-      const vehicles = readJSON('vehicles.json');
-      const privateVehicles = readJSON('vehicles-private.json');
-
-      const lot = nextLotNumber();
-      let photoPath = null;
-      if (tempPhotoPath) {
-        const finalPath = path.join(UPLOADS_DIR, `${lot}.jpg`);
-        fs.renameSync(tempPhotoPath, finalPath);
-        photoPath = `/uploads/${lot}.jpg`;
-      }
-
-      const vehicle = {
-        lot,
-        vin_masked,
-        year: parsed_data.year,
-        make: parsed_data.make,
-        model: parsed_data.model,
-        trim: parsed_data.trim || '',
-        mileage: parsed_data.mileage,
-        engine: parsed_data.engine || '',
-        transmission: parsed_data.transmission || '',
-        drivetrain: parsed_data.drivetrain || '',
-        fuel: parsed_data.fuel || 'Gasoline',
-        color_ext: parsed_data.color_ext || '',
-        color_int: parsed_data.color_int || '',
-        body: parsed_data.body || 'Sedan',
-        grade: parsed_data.grade || null,
-        autocheck: parsed_data.autocheck || null,
-        owners: parsed_data.owners || null,
-        accidents: parsed_data.accidents || null,
-        title_status: parsed_data.title_status || 'Not Specified',
-        announcements: parsed_data.announcements || null,
-        remarks: parsed_data.remarks || null,
-        seller_comments: null,
-        condition_report: false,
-        sale_type: parsed_data.sale_type || 'timed',
-        end_time,
-        start_time,
-        mmr_avg: parsed_data.mmr_avg || null,
-        buy_now: parsed_data.buy_now || null,
-        location: parsed_data.location || '',
-        auction_house: parsed_data.auction_house || '',
-        msrp: parsed_data.msrp || null,
-        photo: photoPath,
-        markets: parsed_data.markets || [],
-        status: 'active',
-        is_sample: parsed_data.is_sample || false,
-        added: new Date().toISOString(),
-      };
-
-      vehicles.unshift(vehicle);
-      writeJSON('vehicles.json', vehicles);
-
-      const priv = {
-        lot,
-        vin_full,
-        manheim_lot: parsed_data.manheim_lot || '',
-        buy_price: parsed_data.buy_price || null,
-        seller: parsed_data.seller || '',
-      };
-      privateVehicles.unshift(priv);
-      writeJSON('vehicles-private.json', privateVehicles);
-
-      return { lot, vehicle };
-      });
+      const year = new Date().getFullYear();
+      const { lot } = await withNextLotInsert(
+        year,
+        (lot) => {
+          let photoPath = null;
+          if (tempPhotoPath) {
+            const finalPath = path.join(UPLOADS_DIR, `${lot}.jpg`);
+            fs.renameSync(tempPhotoPath, finalPath);
+            photoPath = `/uploads/${lot}.jpg`;
+          }
+          return {
+            lot,
+            vin_masked,
+            year: parsed_data.year,
+            make: parsed_data.make,
+            model: parsed_data.model,
+            trim: parsed_data.trim || '',
+            mileage: parsed_data.mileage,
+            engine: parsed_data.engine || '',
+            transmission: parsed_data.transmission || '',
+            drivetrain: parsed_data.drivetrain || '',
+            fuel: parsed_data.fuel || 'Gasoline',
+            color_ext: parsed_data.color_ext || '',
+            color_int: parsed_data.color_int || '',
+            body: parsed_data.body || 'Sedan',
+            grade: parsed_data.grade || null,
+            autocheck: parsed_data.autocheck || null,
+            owners: parsed_data.owners || null,
+            accidents: parsed_data.accidents || null,
+            title_status: parsed_data.title_status || 'Not Specified',
+            announcements: parsed_data.announcements || null,
+            remarks: parsed_data.remarks || null,
+            seller_comments: null,
+            condition_report: false,
+            sale_type: parsed_data.sale_type || 'timed',
+            end_time,
+            start_time,
+            mmr_avg: parsed_data.mmr_avg || null,
+            buy_now: parsed_data.buy_now || null,
+            location: parsed_data.location || '',
+            auction_house: parsed_data.auction_house || '',
+            msrp: parsed_data.msrp || null,
+            photo: photoPath,
+            markets: parsed_data.markets || [],
+            status: 'active',
+            is_sample: parsed_data.is_sample || false,
+            added: new Date().toISOString(),
+          };
+        },
+        (lot) => ({
+          lot,
+          vin_full,
+          manheim_lot: parsed_data.manheim_lot || '',
+          buy_price: parsed_data.buy_price || null,
+          seller: parsed_data.seller || '',
+        })
+      );
 
       return res.end(JSON.stringify({ ok: true, lot }));
     }
@@ -721,15 +663,10 @@ async function handleRequest(req, res) {
       }
       const lot = pathname.split('/').pop();
       const body = await readBody(req);
-      const found = await withFileLock('vehicles.json', () => {
-        const vehicles = readJSON('vehicles.json');
-        const idx = vehicles.findIndex(v => v.lot === lot);
-        if (idx < 0) return false;
-        Object.assign(vehicles[idx], body);
-        writeJSON('vehicles.json', vehicles);
-        return true;
-      });
-      if (!found) return res.end(JSON.stringify({ ok: false, error: 'Not found' }));
+      const existing = await getDoc('vehicles', 'lot', lot);
+      if (!existing) return res.end(JSON.stringify({ ok: false, error: 'Not found' }));
+      const updated = Object.assign({}, existing, body);
+      await updateDoc('vehicles', 'lot', lot, updated);
       return res.end(JSON.stringify({ ok: true }));
     }
 
@@ -738,14 +675,8 @@ async function handleRequest(req, res) {
       const s = getSession(req);
       if (!s || s.role !== 'owner') return res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
       const lot = pathname.split('/').pop();
-      await withFileLock('vehicles.json', () => {
-        const vehicles = readJSON('vehicles.json').filter(v => v.lot !== lot);
-        writeJSON('vehicles.json', vehicles);
-      });
-      await withFileLock('vehicles-private.json', () => {
-        const priv = readJSON('vehicles-private.json').filter(v => v.lot !== lot);
-        writeJSON('vehicles-private.json', priv);
-      });
+      await deleteDoc('vehicles', 'lot', lot);
+      await deleteDoc('vehicles_private', 'lot', lot);
       return res.end(JSON.stringify({ ok: true }));
     }
 
@@ -754,8 +685,7 @@ async function handleRequest(req, res) {
       const s = getSession(req);
       if (!s || s.role !== 'owner') return res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
       const lot = pathname.split('/')[3];
-      const priv = readJSON('vehicles-private.json');
-      const entry = priv.find(v => v.lot === lot);
+      const entry = await getDoc('vehicles_private', 'lot', lot);
       return res.end(JSON.stringify({ ok: !!entry, data: entry || null }));
     }
 
@@ -763,7 +693,7 @@ async function handleRequest(req, res) {
     if (pathname === '/api/pending' && req.method === 'GET') {
       const s = getSession(req);
       if (!s || s.role !== 'owner') return res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
-      return res.end(JSON.stringify({ ok: true, pending: readJSON('pending.json') }));
+      return res.end(JSON.stringify({ ok: true, pending: await allDocs('pending') }));
     }
 
     // POST /api/pending/:id/approve
@@ -771,15 +701,11 @@ async function handleRequest(req, res) {
       const s = getSession(req);
       if (!s || s.role !== 'owner') return res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
       const id = pathname.split('/')[3];
-      const pending = readJSON('pending.json');
-      const idx = pending.findIndex(p => p.id === id);
-      if (idx < 0) return res.end(JSON.stringify({ ok: false, error: 'Not found' }));
-      const dealer = { ...pending[idx], approved: true, approved_at: new Date().toISOString() };
-      const dealers = readJSON('dealers.json');
-      dealers.push(dealer);
-      writeJSON('dealers.json', dealers);
-      pending.splice(idx, 1);
-      writeJSON('pending.json', pending);
+      const app = await getDoc('pending', 'id', id);
+      if (!app) return res.end(JSON.stringify({ ok: false, error: 'Not found' }));
+      const dealer = { ...app, approved: true, approved_at: new Date().toISOString() };
+      await insertDoc('dealers', 'id', id, dealer);
+      await deleteDoc('pending', 'id', id);
       return res.end(JSON.stringify({ ok: true }));
     }
 
@@ -788,9 +714,7 @@ async function handleRequest(req, res) {
       const s = getSession(req);
       if (!s || s.role !== 'owner') return res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
       const id = pathname.split('/')[3];
-      let pending = readJSON('pending.json');
-      pending = pending.filter(p => p.id !== id);
-      writeJSON('pending.json', pending);
+      await deleteDoc('pending', 'id', id);
       return res.end(JSON.stringify({ ok: true }));
     }
 
