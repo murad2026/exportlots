@@ -286,6 +286,7 @@ function buildCard(v) {
       ${photo}
       <span class="v-status ${cd.cls}">${cd.label}</span>
       <span class="v-type">${v.sale_type==='simulcast'?'LIVE AUCTION':'TIMED SALE'}</span>
+      ${cd.timer ? `<span class="v-timer-overlay ${cd.timerCls}"><i class="ti ti-clock"></i>${cd.timer}</span>` : ''}
       <span class="v-vin">${v.vin_masked}</span>
     </div>
     <div class="v-body">
@@ -296,12 +297,13 @@ function buildCard(v) {
       </div>
       <div class="v-price-label">Lot ${v.lot}</div>
       ${price && mmr ? `<div class="v-mmr">Historical Low: <span class="v-mmr-value">${mmr}</span></div>` : ''}
-      <div class="v-sub" style="margin-top:8px">${fmtMi(v.mileage)} · ${v.drivetrain||''} · ${v.engine||''}</div>
-      <div class="v-tags">${tags}</div>
-      <div class="v-markets">${markets}</div>
+      <div class="v-secondary">
+        <div class="v-sub" style="margin-top:8px">${fmtMi(v.mileage)} · ${v.drivetrain||''} · ${v.engine||''}</div>
+        <div class="v-tags">${tags}</div>
+        <div class="v-markets">${markets}</div>
+      </div>
       <div class="v-spacer"></div>
     </div>
-    ${cd.timer ? `<div class="v-timer ${cd.timerCls}"><i class="ti ti-clock"></i>${cd.timer}</div>` : ''}
     <div class="v-footer">
       <span style="font-size:11px;color:var(--ink-mute);font-family:var(--mono)">${(v.location||'').replace(/^[A-Z]+ - /,'')}</span>
       <span style="flex:1"></span>

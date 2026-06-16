@@ -165,6 +165,7 @@ function buildCard(v) {
       ${photo}
       <span class="v-status ${cd.cls}">${cd.label}</span>
       <span class="v-type">${v.sale_type==='simulcast'?'LIVE AUCTION':'TIMED SALE'}</span>
+      ${cd.timer ? `<span class="v-timer-overlay ${cd.timerCls}"><i class="ti ti-clock"></i>${cd.timer}</span>` : ''}
       <span class="v-vin">${v.vin_masked}</span>
     </div>
     <div class="v-body">
@@ -179,13 +180,14 @@ function buildCard(v) {
         </div>
         ${price && mmr ? `<div class="v-mmr">Historical Low: <span class="v-mmr-value">${mmr}</span></div>` : ''}
       </div>
-      <div class="v-sub">${fmtMi(v.mileage)} · ${v.drivetrain||''} · ${v.engine||''} · ${v.color_ext||''}</div>
-      <div class="v-tags" style="margin-bottom:8px">${tags}</div>
-      <div class="v-markets" style="margin-bottom:8px">${markets}</div>
-      ${v.autocheck ? `<div style="font-size:11px;color:var(--ink-mute);font-family:var(--mono);margin-bottom:6px">AutoCheck: ${v.autocheck}/100</div>` : ''}
+      <div class="v-secondary">
+        <div class="v-sub">${fmtMi(v.mileage)} · ${v.drivetrain||''} · ${v.engine||''} · ${v.color_ext||''}</div>
+        <div class="v-tags" style="margin-bottom:8px">${tags}</div>
+        <div class="v-markets" style="margin-bottom:8px">${markets}</div>
+        ${v.autocheck ? `<div style="font-size:11px;color:var(--ink-mute);font-family:var(--mono);margin-bottom:6px">AutoCheck: ${v.autocheck}/100</div>` : ''}
+      </div>
       <div class="v-spacer"></div>
     </div>
-    ${cd.timer ? `<div class="v-timer ${cd.timerCls}"><i class="ti ti-clock"></i>${cd.timer}</div>` : ''}
     <div class="v-footer">
       <div style="flex:1">
         <div style="font-size:10px;color:var(--ink-mute);font-family:var(--mono)">${(v.location||'').replace(/^[A-Z]+ - /,'')}</div>
@@ -265,7 +267,7 @@ async function logout() {
 }
 
 loadCatalog();
-setInterval(applyFilters, 60000);
+setInterval(applyFilters, 15000);
 </script>
 </body>
 </html>

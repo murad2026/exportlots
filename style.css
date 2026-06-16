@@ -290,6 +290,21 @@ section.block:last-of-type, section.block-tight:last-of-type { border-bottom: no
   background: rgba(0,0,0,0.55); color: #fff;
   padding: 2px 7px; border-radius: 2px; letter-spacing: 0.04em;
 }
+.v-timer-overlay {
+  position: absolute; bottom: 8px; right: 10px;
+  font-family: var(--mono); font-size: 12px; font-weight: 700;
+  background: rgba(26,24,22,0.82); color: #fff;
+  padding: 4px 9px; border-radius: 2px; letter-spacing: 0.02em;
+  display: flex; align-items: center; gap: 5px;
+}
+.v-timer-overlay i { font-size: 13px; animation: tick-pulse 1s steps(2, jump-none) infinite; }
+.v-timer-overlay.v-timer-urgent { background: var(--accent); color: #fff; }
+.v-timer-overlay.v-timer-live { background: var(--red); color: #fff; }
+.v-secondary { opacity: 0.85; }
+@keyframes tick-pulse {
+  0%, 50% { opacity: 1; }
+  50.01%, 100% { opacity: 0.35; }
+}
 .v-body { padding: 14px 16px 12px; flex: 1; display: flex; flex-direction: column; }
 .v-price {
   font-size: 24px; font-weight: 700; letter-spacing: -0.6px;
@@ -322,16 +337,6 @@ section.block:last-of-type, section.block-tight:last-of-type { border-bottom: no
 .v-market-flag { font-size: 16px; opacity: 0.85; cursor: pointer; }
 .v-market-flag:hover { opacity: 1; transform: scale(1.1); }
 .v-spacer { flex: 1; }
-.v-timer {
-  padding: 8px 16px;
-  border-top: 1px solid var(--line-soft);
-  font-family: var(--mono); font-size: 11px;
-  display: flex; align-items: center; gap: 8px;
-  color: var(--ink-mute);
-}
-.v-timer-urgent { color: var(--accent); background: var(--accent-s); }
-.v-timer-live { color: #fff; background: var(--red); }
-.v-timer i { font-size: 13px; }
 .v-footer {
   padding: 10px 16px;
   border-top: 1px solid var(--line-soft);
