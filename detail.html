@@ -221,7 +221,7 @@ function renderDetail(v) {
         </div>
         <div style="margin-top:14px">
           <div class="sec-label">Location</div>
-          <div style="font-size:13px;color:var(--ink)">${v.location||'—'}</div>
+          <div style="font-size:13px;color:var(--ink)">${(v.location||'—').replace(/\bManheim\s*/gi, '').trim() || '—'}</div>
         </div>
         ${v.announcements ? `<div class="announce-box"><strong>Announcements:</strong> ${v.announcements}</div>` : ''}
         ${v.remarks ? `<div class="announce-box" style="margin-top:6px">${v.remarks}</div>` : ''}

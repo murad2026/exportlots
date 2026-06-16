@@ -305,7 +305,7 @@ function buildCard(v) {
       <div class="v-spacer"></div>
     </div>
     <div class="v-footer">
-      <span style="font-size:11px;color:var(--ink-mute);font-family:var(--mono)">${(v.location||'').replace(/^[A-Z]+ - /,'')}</span>
+      <span style="font-size:11px;color:var(--ink-mute);font-family:var(--mono)">${(v.location||'').replace(/^[A-Z]+ - /,'').replace(/\bManheim\s*/gi, '').trim()}</span>
       <span style="flex:1"></span>
       <a class="btn btn-wa btn-sm" href="https://wa.me/12127965517?text=${waMsg}" target="_blank" onclick="event.stopPropagation()"><i class="ti ti-brand-whatsapp"></i></a>
     </div>
