@@ -49,9 +49,15 @@
         <a href="/join" class="btn btn-accent btn-sm">Get access</a>
       </div>
     </div>
-    <div style="display:flex;gap:4px;margin-top:16px;border-bottom:1px solid var(--line);padding-bottom:0">
-      <button id="tab-ev" onclick="switchTab('ev')" style="padding:10px 20px;font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600;background:none;border:none;border-bottom:2px solid var(--green);color:var(--green-d);cursor:pointer;margin-bottom:-1px">⚡ Electric</button>
-      <button id="tab-all" onclick="switchTab('all')" style="padding:10px 20px;font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600;background:none;border:none;border-bottom:2px solid transparent;color:var(--ink-mute);cursor:pointer;margin-bottom:-1px">⛽ Gasoline</button>
+    <div class="inv-tabs">
+      <button id="tab-ev" class="inv-tab inv-tab-ev inv-tab-active" onclick="switchTab('ev')">
+        <span class="inv-tab-icon">⚡</span>
+        <span class="inv-tab-label">Electric</span>
+      </button>
+      <button id="tab-all" class="inv-tab inv-tab-gas" onclick="switchTab('all')">
+        <span class="inv-tab-icon">⛽</span>
+        <span class="inv-tab-label">Gasoline</span>
+      </button>
     </div>
   </div>
   <div class="catalog-grid catalog-grid-4" id="sample-grid">
@@ -361,19 +367,8 @@ function renderGrid(tab) {
 
 function switchTab(tab) {
   currentTab = tab;
-  const tabEv = document.getElementById('tab-ev');
-  const tabAll = document.getElementById('tab-all');
-  if (tab === 'ev') {
-    tabEv.style.borderBottomColor = 'var(--green)';
-    tabEv.style.color = 'var(--green-d)';
-    tabAll.style.borderBottomColor = 'transparent';
-    tabAll.style.color = 'var(--ink-mute)';
-  } else {
-    tabAll.style.borderBottomColor = 'var(--accent)';
-    tabAll.style.color = 'var(--accent)';
-    tabEv.style.borderBottomColor = 'transparent';
-    tabEv.style.color = 'var(--ink-mute)';
-  }
+  document.getElementById('tab-ev').classList.toggle('inv-tab-active', tab === 'ev');
+  document.getElementById('tab-all').classList.toggle('inv-tab-active', tab === 'all');
   renderGrid(tab);
 }
 

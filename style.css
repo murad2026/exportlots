@@ -354,6 +354,35 @@ section.block:last-of-type, section.block-tight:last-of-type { border-bottom: no
 .v-market-flag { font-size: 16px; opacity: 0.85; cursor: pointer; }
 .v-market-flag:hover { opacity: 1; transform: scale(1.1); }
 .v-spacer { flex: 1; }
+
+/* ---- INVENTORY TABS (bookmark style) ---- */
+.inv-tabs {
+  display: flex; gap: 6px; margin-top: 20px; align-items: flex-end;
+  border-bottom: 2px solid var(--line);
+}
+.inv-tab {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 24px 14px;
+  font-family: var(--mono); font-size: 13px; font-weight: 700;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  border: 2px solid var(--line); border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  background: var(--bg); color: var(--ink-mute);
+  cursor: pointer; transition: all 0.15s;
+  position: relative; bottom: -2px;
+}
+.inv-tab:hover { color: var(--ink); background: var(--bg-elev); }
+.inv-tab-icon { font-size: 18px; }
+.inv-tab-ev.inv-tab-active {
+  background: var(--bg-elev); color: #15803d;
+  border-color: var(--line); border-bottom-color: var(--bg-elev);
+  box-shadow: 0 -2px 0 0 #15803d inset;
+}
+.inv-tab-gas.inv-tab-active {
+  background: var(--bg-elev); color: var(--accent);
+  border-color: var(--line); border-bottom-color: var(--bg-elev);
+  box-shadow: 0 -2px 0 0 var(--accent) inset;
+}
 .v-footer {
   padding: 10px 16px;
   border-top: 1px solid var(--line-soft);
