@@ -31,6 +31,19 @@ const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
+console.log(`DATA_DIR resolved to: ${DATA_DIR}`);
+try {
+  const vFile = path.join(DATA_DIR, 'vehicles.json');
+  if (fs.existsSync(vFile)) {
+    const count = JSON.parse(fs.readFileSync(vFile, 'utf8')).length;
+    console.log(`vehicles.json found on startup with ${count} vehicle(s)`);
+  } else {
+    console.log('vehicles.json does NOT exist on startup — fresh/empty volume or volume not mounted');
+  }
+} catch (e) {
+  console.log('vehicles.json exists but failed to parse on startup:', e.message);
+}
+
 // ---- CONFIG ----
 const OWNER_PASSWORD = process.env.OWNER_PASS || 'DapexOwner2026!';
 const OPERATOR_PASSWORD = process.env.OPERATOR_PASS || 'DapexOp2026!';

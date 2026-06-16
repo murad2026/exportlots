@@ -213,7 +213,7 @@ function renderDetail(v) {
           <div class="spec-item"><span class="spec-key">Owners</span><span class="spec-val">${v.owners != null ? v.owners : '—'}</span></div>
           <div class="spec-item"><span class="spec-key">Accidents</span><span class="spec-val">${v.accidents != null ? v.accidents : '—'}</span></div>
           <div class="spec-item"><span class="spec-key">MSRP</span><span class="spec-val">${v.msrp ? '$' + v.msrp.toLocaleString() : '—'}</span></div>
-          <div class="spec-item"><span class="spec-key">Est. price</span><span class="spec-val">${v.mmr_avg ? '$' + v.mmr_avg.toLocaleString() : '—'}</span></div>
+          <div class="spec-item"><span class="spec-key">Historical Low</span><span class="spec-val" style="font-weight:700">${v.mmr_avg ? '$' + v.mmr_avg.toLocaleString() : '—'}</span></div>
         </div>
         <div style="margin-top:14px">
           <div class="sec-label">Location</div>
