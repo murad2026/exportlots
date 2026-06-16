@@ -10,7 +10,7 @@ try { uuid = require('uuid'); } catch(e) { uuid = { v4: () => crypto.randomUUID(
 try { Jimp = require('jimp'); } catch(e) { Jimp = null; }
 try { nodemailer = require('nodemailer'); } catch(e) { nodemailer = null; }
 
-const { initDb, allDocs, getDoc, insertDoc, updateDoc, deleteDoc, withNextLotInsert } = require('./db');
+const { initDb, allDocs, getDoc, insertDoc, updateDoc, deleteDoc, withNextLotInsert, getPhoto } = require('./db');
 
 async function sendNotification(subject, html) {
   const apiKey = process.env.RESEND_API_KEY;
@@ -27,11 +27,6 @@ async function sendNotification(subject, html) {
 }
 
 const PORT = process.env.PORT || 3002;
-const DATA_DIR = path.join(__dirname, 'data');
-const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
-
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
 // ---- CONFIG ----
 const OWNER_PASSWORD = process.env.OWNER_PASS || 'DapexOwner2026!';
@@ -389,7 +384,7 @@ async function applyEdgeBlur(img) {
   return img;
 }
 
-async function processImage(buffer, outputPath) {
+async function processImage(buffer) {
   try {
     if (!Jimp) throw new Error('no jimp');
     const img = await Jimp.read(buffer);
@@ -399,10 +394,10 @@ async function processImage(buffer, outputPath) {
       img.scaleToFit(1200, 900);
     }
     await applyEdgeBlur(img);
-    await img.quality(85).writeAsync(outputPath);
+    return await img.quality(85).getBufferAsync(Jimp.MIME_JPEG);
   } catch(e) {
     console.log('Image processing error:', e.message, '— saving raw');
-    fs.writeFileSync(outputPath, buffer);
+    return buffer;
   }
 }
 
@@ -455,8 +450,14 @@ async function handleRequest(req, res) {
   let pathname = parsed.pathname.replace(/\/$/, '') || '/';
 
   // Static files
+  // Vehicle photos are stored in Postgres (not on disk/Volume) so they
+  // survive redeploys reliably.
   if (pathname.startsWith('/uploads/')) {
-    return serveFile(path.join(DATA_DIR, pathname), res);
+    const lot = path.basename(pathname, '.jpg');
+    const data = await getPhoto(lot);
+    if (!data) { res.writeHead(404); return res.end('Not found'); }
+    res.writeHead(200, { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public, max-age=31536000, immutable' });
+    return res.end(data);
   }
   if (pathname.startsWith('/style') || pathname.endsWith('.css') || pathname.endsWith('.js') || pathname.endsWith('.ico') || pathname.endsWith('.png') || pathname.endsWith('.jpg') || pathname.endsWith('.webp')) {
     return serveFile(path.join(__dirname, pathname), res);
@@ -581,13 +582,11 @@ async function handleRequest(req, res) {
         parsed_data = await readBody(req);
       }
 
-      // Process the photo into a temp file first (slow, async) so the
-      // vehicles.json read-modify-write below stays short — minimizes the
-      // window where a second overlapping request could race with it.
-      let tempPhotoPath = null;
+      // Process the photo (slow, async) before the DB transaction below so
+      // the transaction itself stays short.
+      let processedPhoto = null;
       if (photoBuffer) {
-        tempPhotoPath = path.join(UPLOADS_DIR, `tmp-${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`);
-        await processImage(photoBuffer, tempPhotoPath);
+        processedPhoto = await processImage(photoBuffer);
       }
 
       const vin_full = parsed_data.vin_full || '';
@@ -601,12 +600,7 @@ async function handleRequest(req, res) {
       const { lot } = await withNextLotInsert(
         year,
         (lot) => {
-          let photoPath = null;
-          if (tempPhotoPath) {
-            const finalPath = path.join(UPLOADS_DIR, `${lot}.jpg`);
-            fs.renameSync(tempPhotoPath, finalPath);
-            photoPath = `/uploads/${lot}.jpg`;
-          }
+          const photoPath = processedPhoto ? `/uploads/${lot}.jpg` : null;
           return {
             lot,
             vin_masked,
@@ -652,7 +646,8 @@ async function handleRequest(req, res) {
           manheim_lot: parsed_data.manheim_lot || '',
           buy_price: parsed_data.buy_price || null,
           seller: parsed_data.seller || '',
-        })
+        }),
+        processedPhoto
       );
 
       return res.end(JSON.stringify({ ok: true, lot }));

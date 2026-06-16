@@ -34,6 +34,10 @@ async function initDb() {
       data JSONB NOT NULL,
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
+    CREATE TABLE IF NOT EXISTS photos (
+      lot TEXT PRIMARY KEY,
+      data BYTEA NOT NULL
+    );
   `);
   const { rows } = await pool.query('SELECT count(*) FROM vehicles');
   console.log(`Postgres connected. vehicles table has ${rows[0].count} row(s).`);
@@ -70,7 +74,7 @@ async function deleteDoc(table, idCol, id) {
 // transaction lock so two concurrent inserts can never compute the same
 // number, then inserts the vehicle (and private record) in the same
 // transaction. Replaces the old in-process file-lock + JSON array rewrite.
-async function withNextLotInsert(year, vehicleFn, privateFn) {
+async function withNextLotInsert(year, vehicleFn, privateFn, photoBuffer) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -89,6 +93,9 @@ async function withNextLotInsert(year, vehicleFn, privateFn) {
     await client.query('INSERT INTO vehicles (lot, data) VALUES ($1, $2)', [lot, vehicle]);
     const priv = privateFn(lot);
     await client.query('INSERT INTO vehicles_private (lot, data) VALUES ($1, $2)', [lot, priv]);
+    if (photoBuffer) {
+      await client.query('INSERT INTO photos (lot, data) VALUES ($1, $2)', [lot, photoBuffer]);
+    }
 
     await client.query('COMMIT');
     return { lot, vehicle };
@@ -100,4 +107,9 @@ async function withNextLotInsert(year, vehicleFn, privateFn) {
   }
 }
 
-module.exports = { pool, initDb, allDocs, getDoc, insertDoc, updateDoc, deleteDoc, withNextLotInsert };
+async function getPhoto(lot) {
+  const { rows } = await pool.query('SELECT data FROM photos WHERE lot = $1', [lot]);
+  return rows[0] ? rows[0].data : null;
+}
+
+module.exports = { pool, initDb, allDocs, getDoc, insertDoc, updateDoc, deleteDoc, withNextLotInsert, getPhoto };
