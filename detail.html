@@ -13,7 +13,11 @@
 .dh-lot{font-size:10px;font-family:var(--mono);color:var(--ink-mute);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px}
 .dh-title{font-size:22px;font-weight:600;color:var(--ink);letter-spacing:-0.4px;margin-bottom:4px}
 .dh-sub{font-size:13px;color:var(--ink-soft);margin-bottom:10px}
-.dh-timer{text-align:right;flex-shrink:0}
+.dh-timer{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+.dh-photo{width:260px;height:174px;border-radius:var(--radius);overflow:hidden;background:var(--line-soft);flex-shrink:0;position:relative}
+.dh-photo img{width:100%;height:100%;object-fit:cover}
+.dh-photo-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--ink-mute);font-size:12px;font-family:var(--mono)}
+.dh-status-row{text-align:right}
 .dht-label{font-size:10px;color:var(--ink-mute);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px}
 .dht-time{font-size:24px;font-weight:700;font-family:var(--mono);color:var(--accent);line-height:1.1}
 .dht-sub{font-size:11px;color:var(--ink-mute);margin-top:3px}
@@ -196,7 +200,12 @@ function renderDetail(v) {
           ${v.autocheck ? `<span class="vb" style="background:var(--bg);border:1px solid var(--line);padding:3px 8px;border-radius:4px;font-size:11px;font-family:var(--mono)">AutoCheck ${v.autocheck}</span>` : ''}
         </div>
       </div>
-      <div class="dh-timer">${getTimerHtml()}</div>
+      <div class="dh-timer">
+        <div class="dh-photo">
+          ${v.photo ? `<img src="${v.photo}" alt="">` : `<div class="dh-photo-placeholder"><i class="ti ti-car" style="font-size:32px;opacity:0.3"></i></div>`}
+        </div>
+        <div class="dh-status-row">${getTimerHtml()}</div>
+      </div>
     </div>
 
     <div class="dflag-row">
