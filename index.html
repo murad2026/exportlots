@@ -70,8 +70,8 @@
       </div>
     </div>
     <div style="display:flex;gap:4px;margin-top:20px;border-bottom:1px solid var(--line);padding-bottom:0">
-      <button id="tab-ev" onclick="switchTab('ev')" style="padding:10px 20px;font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600;background:none;border:none;border-bottom:2px solid var(--accent);color:var(--accent);cursor:pointer;margin-bottom:-1px">⚡ Electric</button>
-      <button id="tab-all" onclick="switchTab('all')" style="padding:10px 20px;font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600;background:none;border:none;border-bottom:2px solid transparent;color:var(--ink-mute);cursor:pointer;margin-bottom:-1px">All vehicles</button>
+      <button id="tab-ev" onclick="switchTab('ev')" style="padding:10px 20px;font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600;background:none;border:none;border-bottom:2px solid var(--green);color:var(--green-d);cursor:pointer;margin-bottom:-1px">⚡ Electric</button>
+      <button id="tab-all" onclick="switchTab('all')" style="padding:10px 20px;font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600;background:none;border:none;border-bottom:2px solid transparent;color:var(--ink-mute);cursor:pointer;margin-bottom:-1px">⛽ Gasoline</button>
     </div>
   </div>
   <div class="catalog-grid" id="sample-grid">
@@ -368,8 +368,8 @@ let currentTab = 'ev';
 function renderGrid(tab) {
   const grid = document.getElementById('sample-grid');
   const ev = allSamples.filter(isEV).slice(0,4);
-  const all = allSamples.slice(0,4);
-  const items = tab === 'ev' ? ev : all;
+  const gas = allSamples.filter(v => !isEV(v)).slice(0,4);
+  const items = tab === 'ev' ? ev : gas;
   const card = tab === 'ev' ? stockCardEV : stockCardAll;
   grid.innerHTML = items.length ? items.map(buildCard).join('') + card : card;
 }
@@ -379,8 +379,8 @@ function switchTab(tab) {
   const tabEv = document.getElementById('tab-ev');
   const tabAll = document.getElementById('tab-all');
   if (tab === 'ev') {
-    tabEv.style.borderBottomColor = 'var(--accent)';
-    tabEv.style.color = 'var(--accent)';
+    tabEv.style.borderBottomColor = 'var(--green)';
+    tabEv.style.color = 'var(--green-d)';
     tabAll.style.borderBottomColor = 'transparent';
     tabAll.style.color = 'var(--ink-mute)';
   } else {
