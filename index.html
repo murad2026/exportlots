@@ -250,7 +250,7 @@ function getCountdown(v) {
   const diff = new Date(target).getTime() - now;
   if (diff <= 0) {
     if (v.sale_type === 'simulcast') return { label:'LIVE', cls:'vs-live', timer:'🔴 LIVE NOW', timerCls:'v-timer-live' };
-    return { label:'ENDED', cls:'vs-sold', timer:'Ended', timerCls:'' };
+    return { label:'SOLD', cls:'vs-sold', timer:'Sold', timerCls:'' };
   }
   const d = Math.floor(diff / 86400000);
   const h = Math.floor((diff % 86400000) / 3600000);
