@@ -330,14 +330,16 @@ function parseManheim(text) {
   return result;
 }
 
-// Parse time_left_raw like "23h 20m" into end_time ISO string
+// Parse time_left_raw like "23h 20m" or "1d 10h 24m" into end_time ISO string
 function parseTimeLeft(raw) {
   if (!raw) return null;
+  const dMatch = raw.match(/(\d+)d/);
   const hMatch = raw.match(/(\d+)h/);
   const mMatch = raw.match(/(\d+)m/);
+  const d = dMatch ? parseInt(dMatch[1]) : 0;
   const h = hMatch ? parseInt(hMatch[1]) : 0;
   const m = mMatch ? parseInt(mMatch[1]) : 0;
-  return new Date(Date.now() + (h * 3600 + m * 60) * 1000).toISOString();
+  return new Date(Date.now() + (d * 86400 + h * 3600 + m * 60) * 1000).toISOString();
 }
 
 // Parse starts_raw like "06/10 - 1:00pm" into start_time ISO string
