@@ -352,6 +352,37 @@ function parseStartTime(raw) {
 }
 
 // ---- IMAGE PROCESSING ----
+// No segmentation model available (no external API), so we approximate a
+// "blurred background" by radially blending a heavily blurred copy under a
+// sharp copy: center (where the car usually is) stays sharp, edges fade
+// into the blurred version. Pure Jimp, no external calls.
+async function applyEdgeBlur(img) {
+  const w = img.bitmap.width, h = img.bitmap.height;
+  const blurred = img.clone().blur(18);
+  const cx = w / 2, cy = h / 2;
+  const innerR = Math.min(w, h) * 0.30; // fully sharp radius
+  const outerR = Math.min(w, h) * 0.62; // fully blurred radius
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const dx = x - cx, dy = y - cy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist <= innerR) continue;
+      let t = (dist - innerR) / (outerR - innerR);
+      if (t > 1) t = 1;
+      const sharpColor = Jimp.intToRGBA(img.getPixelColor(x, y));
+      const blurColor = Jimp.intToRGBA(blurred.getPixelColor(x, y));
+      const mix = (a, b) => Math.round(a + (b - a) * t);
+      img.setPixelColor(Jimp.rgbaToInt(
+        mix(sharpColor.r, blurColor.r),
+        mix(sharpColor.g, blurColor.g),
+        mix(sharpColor.b, blurColor.b),
+        255
+      ), x, y);
+    }
+  }
+  return img;
+}
+
 async function processImage(buffer, outputPath) {
   try {
     if (!Jimp) throw new Error('no jimp');
@@ -361,6 +392,7 @@ async function processImage(buffer, outputPath) {
     if (img.bitmap.width > 1200 || img.bitmap.height > 900) {
       img.scaleToFit(1200, 900);
     }
+    await applyEdgeBlur(img);
     await img.quality(85).writeAsync(outputPath);
   } catch(e) {
     console.log('Image processing error:', e.message, '— saving raw');
