@@ -182,8 +182,11 @@ function parseManheim(text) {
   const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
   const result = {};
 
-  // Year Make Model Trim from first line
-  const titleMatch = lines[0].match(/^(\d{4})\s+(.+)$/);
+  // Year Make Model Trim — search for the first line that looks like a
+  // title ("2022 Tesla Model 3 Standard Range"), since pasted text can have
+  // unrelated UI chrome (e.g. "360_icon_card_view") before the real title.
+  const titleLine = lines.find(l => /^\d{4}\s+[A-Za-z].+$/.test(l));
+  const titleMatch = titleLine ? titleLine.match(/^(\d{4})\s+(.+)$/) : null;
   if (titleMatch) {
     result.year = parseInt(titleMatch[1]);
     const parts = titleMatch[2].split(/\s+/);
