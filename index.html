@@ -40,7 +40,26 @@
   </div>
 </div>
 
-<section class="hero">
+<section class="block-tight" id="sample">
+  <div class="container" style="margin-bottom:24px">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-top:24px">
+      <h2 style="font-family:var(--serif);font-size:28px;font-weight:400">What's on the floor right now</h2>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:13px;color:var(--ink-mute)">Full catalog available after dealer registration</span>
+        <a href="/join" class="btn btn-accent btn-sm">Get access</a>
+      </div>
+    </div>
+    <div style="display:flex;gap:4px;margin-top:16px;border-bottom:1px solid var(--line);padding-bottom:0">
+      <button id="tab-ev" onclick="switchTab('ev')" style="padding:10px 20px;font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600;background:none;border:none;border-bottom:2px solid var(--green);color:var(--green-d);cursor:pointer;margin-bottom:-1px">⚡ Electric</button>
+      <button id="tab-all" onclick="switchTab('all')" style="padding:10px 20px;font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600;background:none;border:none;border-bottom:2px solid transparent;color:var(--ink-mute);cursor:pointer;margin-bottom:-1px">⛽ Gasoline</button>
+    </div>
+  </div>
+  <div class="catalog-grid catalog-grid-4" id="sample-grid">
+    <div style="text-align:center;color:var(--ink-mute);padding:40px;grid-column:1/-1;font-family:var(--mono);font-size:12px">Loading...</div>
+  </div>
+</section>
+
+<section class="hero" style="margin-top:0;border-top:1px solid var(--line)">
   <div class="container">
     <div class="eyebrow hero-eyebrow">For wholesale dealers only</div>
     <h1>Clean title<br>US cars.<br><em>We ship.</em></h1>
@@ -56,26 +75,6 @@
       <a href="/join" class="btn btn-accent btn-lg">Apply for dealer access →</a>
       <a href="https://wa.me/12127965517?text=Hi+ExportLots.+I+want+to+become+a+dealer." class="btn btn-wa btn-lg" target="_blank"><i class="ti ti-brand-whatsapp"></i> WhatsApp us</a>
     </div>
-  </div>
-</section>
-
-<section class="block-tight" id="sample">
-  <div class="container" style="margin-bottom:24px">
-    <div class="eyebrow" style="margin-bottom:16px">Live inventory sample</div>
-    <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px">
-      <h2 style="font-family:var(--serif);font-size:32px;font-weight:400">What's on the floor right now</h2>
-      <div style="display:flex;align-items:center;gap:12px">
-        <span style="font-size:13px;color:var(--ink-mute)">Full catalog available after dealer registration</span>
-        <a href="/join" class="btn btn-accent btn-sm">Get access</a>
-      </div>
-    </div>
-    <div style="display:flex;gap:4px;margin-top:20px;border-bottom:1px solid var(--line);padding-bottom:0">
-      <button id="tab-ev" onclick="switchTab('ev')" style="padding:10px 20px;font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600;background:none;border:none;border-bottom:2px solid var(--green);color:var(--green-d);cursor:pointer;margin-bottom:-1px">⚡ Electric</button>
-      <button id="tab-all" onclick="switchTab('all')" style="padding:10px 20px;font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600;background:none;border:none;border-bottom:2px solid transparent;color:var(--ink-mute);cursor:pointer;margin-bottom:-1px">⛽ Gasoline</button>
-    </div>
-  </div>
-  <div class="catalog-grid" id="sample-grid">
-    <div style="text-align:center;color:var(--ink-mute);padding:40px;grid-column:1/-1;font-family:var(--mono);font-size:12px">Loading...</div>
   </div>
 </section>
 

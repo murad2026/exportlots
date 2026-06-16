@@ -230,6 +230,13 @@ section.block:last-of-type, section.block-tight:last-of-type { border-bottom: no
   max-width: var(--max);
   margin: 0 auto;
 }
+.catalog-grid-4 {
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 12px;
+}
+.catalog-grid-4 .v-img { height: 150px; }
+.catalog-grid-4 .v-price { font-size: 20px; }
+.catalog-grid-4 .v-title { font-size: 13px; min-height: 2.6em; }
 .v-card {
   background: var(--bg-elev);
   border: 1px solid var(--line);
