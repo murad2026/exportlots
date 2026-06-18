@@ -10,7 +10,7 @@ try { uuid = require('uuid'); } catch(e) { uuid = { v4: () => crypto.randomUUID(
 try { Jimp = require('jimp'); } catch(e) { Jimp = null; }
 try { nodemailer = require('nodemailer'); } catch(e) { nodemailer = null; }
 
-const { initDb, allDocs, getDoc, insertDoc, updateDoc, deleteDoc, withNextLotInsert, getPhoto } = require('./db');
+const { initDb, allDocs, getDoc, insertDoc, updateDoc, deleteDoc, withNextLotInsert, getPhoto, findLotByVin } = require('./db');
 
 async function sendNotification(subject, html) {
   const apiKey = process.env.RESEND_API_KEY;
@@ -598,6 +598,27 @@ async function handleRequest(req, res) {
                        parsed_data.end_time || null;
       const start_time = parsed_data.starts_raw ? parseStartTime(parsed_data.starts_raw) :
                          parsed_data.start_time || null;
+
+      // If this VIN already exists, just refresh its countdown and status
+      // instead of creating a duplicate lot.
+      if (vin_full) {
+        const existingLot = await findLotByVin(vin_full);
+        if (existingLot) {
+          const existing = await getDoc('vehicles', 'lot', existingLot);
+          const updated = Object.assign({}, existing, {
+            end_time,
+            start_time,
+            status: 'active',
+            ...(processedPhoto ? { photo: `/uploads/${existingLot}.jpg` } : {}),
+          });
+          await updateDoc('vehicles', 'lot', existingLot, updated);
+          if (processedPhoto) {
+            const { pool } = require('./db');
+            await pool.query('INSERT INTO photos (lot, data) VALUES ($1, $2) ON CONFLICT (lot) DO UPDATE SET data = $2', [existingLot, processedPhoto]);
+          }
+          return res.end(JSON.stringify({ ok: true, lot: existingLot, reused: true }));
+        }
+      }
 
       const year = new Date().getFullYear();
       const { lot } = await withNextLotInsert(

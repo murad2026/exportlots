@@ -254,7 +254,9 @@ async function submitListing() {
     }
     const result = await res.json();
     if (result.ok) {
-      suc.innerHTML = `✓ Listing added successfully!<br><strong>Lot number: ${result.lot}</strong><br>The listing is now live in the dealer catalog.`;
+      suc.innerHTML = result.reused
+        ? `✓ Listing refreshed!<br><strong>Lot ${result.lot}</strong> — VIN уже был в базе, каунтдаун обновлён.`
+        : `✓ Listing added!<br><strong>Lot ${result.lot}</strong> — листинг добавлен в каталог.`;
       suc.style.display = 'block';
       // Reset form
       document.getElementById('paste-area').value = '';

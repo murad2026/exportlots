@@ -112,4 +112,12 @@ async function getPhoto(lot) {
   return rows[0] ? rows[0].data : null;
 }
 
-module.exports = { pool, initDb, allDocs, getDoc, insertDoc, updateDoc, deleteDoc, withNextLotInsert, getPhoto };
+async function findLotByVin(vin_full) {
+  const { rows } = await pool.query(
+    `SELECT lot FROM vehicles_private WHERE data->>'vin_full' = $1 LIMIT 1`,
+    [vin_full]
+  );
+  return rows[0] ? rows[0].lot : null;
+}
+
+module.exports = { pool, initDb, allDocs, getDoc, insertDoc, updateDoc, deleteDoc, withNextLotInsert, getPhoto, findLotByVin };
