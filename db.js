@@ -94,7 +94,7 @@ async function withNextLotInsert(year, vehicleFn, privateFn, photoBuffer) {
     const priv = privateFn(lot);
     await client.query('INSERT INTO vehicles_private (lot, data) VALUES ($1, $2)', [lot, priv]);
     if (photoBuffer) {
-      await client.query('INSERT INTO photos (lot, data) VALUES ($1, $2)', [lot, photoBuffer]);
+      await client.query('INSERT INTO photos (lot, data) VALUES ($1, $2) ON CONFLICT (lot) DO UPDATE SET data = $2', [lot, photoBuffer]);
     }
 
     await client.query('COMMIT');

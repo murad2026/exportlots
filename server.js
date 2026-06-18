@@ -678,6 +678,7 @@ async function handleRequest(req, res) {
       const lot = pathname.split('/').pop();
       await deleteDoc('vehicles', 'lot', lot);
       await deleteDoc('vehicles_private', 'lot', lot);
+      await deleteDoc('photos', 'lot', lot);
       return res.end(JSON.stringify({ ok: true }));
     }
 
