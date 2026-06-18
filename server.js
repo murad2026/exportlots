@@ -433,7 +433,7 @@ const server = http.createServer(async (req, res) => {
   } catch (e) {
     console.error('Unhandled request error:', e);
     if (!res.headersSent) res.writeHead(500, { 'Content-Type': 'application/json' });
-    if (!res.writableEnded) res.end(JSON.stringify({ ok: false, error: 'Internal error' }));
+    if (!res.writableEnded) res.end(JSON.stringify({ ok: false, error: 'Internal error: ' + e.message }));
   }
 });
 
