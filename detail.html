@@ -190,7 +190,7 @@ function renderDetail(v) {
         <div class="dh-title" style="text-transform:uppercase">${v.year} ${v.make} ${v.model}${v.trim ? ' ' + v.trim : ''}</div>
         <div style="font-size:18px;font-weight:800;color:${v.buy_now ? 'var(--accent)' : 'var(--ink)'};margin:2px 0 4px">
           ${v.buy_now ? '$' + v.buy_now.toLocaleString() : (v.mmr_avg ? '$' + v.mmr_avg.toLocaleString() : '—')}
-          <span class="v-price-tag ${v.buy_now ? 'v-price-tag-fixed' : 'v-price-tag-est'}" style="margin-left:6px">${v.buy_now ? 'FIXED PRICE' : 'EXPECTED PRICE'}</span>
+          <span class="v-price-tag ${v.buy_now ? 'v-price-tag-fixed' : 'v-price-tag-est'}" style="margin-left:6px">${v.buy_now ? 'FIXED PRICE' : 'STARTING PRICE'}</span>
         </div>
         <div class="dh-sub">${(v.mileage||0).toLocaleString()} mi &nbsp;·&nbsp; ${v.drivetrain||''} &nbsp;·&nbsp; ${v.engine||''} &nbsp;·&nbsp; ${v.color_ext||''}</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
