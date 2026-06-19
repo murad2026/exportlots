@@ -189,11 +189,8 @@ function buildCard(v) {
       <div class="v-spacer"></div>
     </div>
     <div class="v-footer">
-      <div style="flex:1">
-        <div style="font-size:10px;color:var(--ink-mute);font-family:var(--mono)">${(v.location||'').replace(/^[A-Z]+ - /,'').replace(/\bManheim\s*/gi, '').trim()}</div>
-        <div style="font-size:10px;color:var(--ink-mute);font-family:var(--mono)">Added: ${new Date(v.added).toLocaleDateString()}</div>
-      </div>
-      <a class="btn btn-wa btn-sm" href="https://wa.me/12127965517?text=${waMsg}" target="_blank" onclick="event.stopPropagation()"><i class="ti ti-brand-whatsapp"></i> Inquire</a>
+      <div style="font-size:10px;color:var(--ink-mute);font-family:var(--mono)">${(v.location||'').replace(/^[A-Z]+ - /,'').replace(/\bManheim\s*/gi, '').trim()}</div>
+      <div style="font-size:10px;color:var(--ink-mute);font-family:var(--mono)">Added: ${new Date(v.added).toLocaleDateString()}</div>
     </div>
   </div>`;
 }
