@@ -188,7 +188,7 @@ function buildCard(v) {
       <div class="v-spacer"></div>
     </div>
     <div class="v-footer">
-      <div style="font-size:10px;color:var(--ink-mute);font-family:var(--mono)">${(v.location||'').replace(/^[A-Z]+ - /,'').replace(/\bManheim\s*/gi, '').trim()}</div>
+      <div style="font-size:10px;color:var(--ink-mute);font-family:var(--mono)">${(v.location||'').match(/^([A-Z]+)\s*-/)?.[1] || (v.location||'').replace(/\bManheim\s*/gi,'').trim()}</div>
       <div style="font-size:10px;color:var(--ink-mute);font-family:var(--mono)">Added: ${new Date(v.added).toLocaleDateString()}</div>
     </div>
   </div>`;
