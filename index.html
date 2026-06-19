@@ -273,7 +273,6 @@ function buildCard(v) {
       <span class="v-status ${cd.cls}">${cd.label}</span>
       <span class="v-type">${v.sale_type==='simulcast'?'LIVE AUCTION':'TIMED SALE'}</span>
       ${cd.timer ? `<span class="v-timer-overlay ${cd.timerCls}"><i class="ti ti-clock"></i>${cd.timer}</span>` : ''}
-      <span class="v-vin">${v.vin_masked}</span>
     </div>
     <div class="v-body">
       <div class="v-title">${v.year} ${v.make} ${v.model} ${v.trim||''}</div>

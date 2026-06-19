@@ -230,14 +230,10 @@ function renderDetail(v) {
         </div>
         <div style="margin-top:14px">
           <div class="sec-label">Location</div>
-          <div style="font-size:13px;color:var(--ink)">${(v.location||'—').replace(/\bManheim\s*/gi, '').trim() || '—'}</div>
+          <div style="font-size:13px;color:var(--ink)">${(v.location||'—').replace(/\bManheim\s*/gi, '').replace(/^[A-Z]+\s*-\s*/,'').trim() || '—'}</div>
         </div>
-        ${v.announcements ? `<div class="announce-box"><strong>Announcements:</strong> ${v.announcements}</div>` : ''}
+        ${v.announcements && !v.announcements.toLowerCase().includes('no announcements') ? `<div class="announce-box"><strong>Announcements:</strong> ${v.announcements}</div>` : ''}
         ${v.remarks ? `<div class="announce-box" style="margin-top:6px">${v.remarks}</div>` : ''}
-        <div style="margin-top:16px">
-          <div class="sec-label">VIN</div>
-          <div style="font-size:13px;font-family:var(--mono);color:var(--ink)">${v.vin_masked} <span style="font-size:11px;color:var(--ink-mute)">(full VIN on WhatsApp)</span></div>
-        </div>
       </div>
       <div class="dright" id="price-panel">
         ${renderPricePanel(initialDest)}
@@ -247,7 +243,7 @@ function renderDetail(v) {
     <div class="dfoot">
       <a class="dwa" href="https://wa.me/12127965517?text=${waText}" target="_blank">
         <i class="ti ti-brand-whatsapp" style="font-size:18px"></i>
-        Get real photos + full VIN
+        Get a quote on WhatsApp
       </a>
       <div class="dnote">Rates valid this week · FMC NVOCC #022641</div>
     </div>
