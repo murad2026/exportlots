@@ -196,8 +196,8 @@ function renderDetail(v) {
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
           <span class="vb" style="background:var(--bg);border:1px solid var(--line);padding:3px 8px;border-radius:4px;font-size:11px;font-family:var(--mono)">${v.sale_type === 'simulcast' ? 'LIVE AUCTION' : 'TIMED SALE'}</span>
           <span class="vb" style="background:var(--bg);border:1px solid ${titleCls};color:${titleCls};padding:3px 8px;border-radius:4px;font-size:11px;font-family:var(--mono)">${titleStatus}</span>
-          ${v.grade ? `<span class="vb" style="background:var(--bg);border:1px solid var(--line);padding:3px 8px;border-radius:4px;font-size:11px;font-family:var(--mono)">Grade ${v.grade}</span>` : ''}
-          ${v.autocheck ? `<span class="vb" style="background:var(--bg);border:1px solid var(--line);padding:3px 8px;border-radius:4px;font-size:11px;font-family:var(--mono)">AutoCheck ${v.autocheck}</span>` : ''}
+          ${v.grade ? `<span class="vb" style="background:var(--bg);border:1px solid var(--line);padding:3px 8px;border-radius:4px;font-size:11px;font-family:var(--mono)">Score ${v.grade}</span>` : ''}
+          ${v.autocheck ? `<span class="vb" style="background:var(--bg);border:1px solid var(--line);padding:3px 8px;border-radius:4px;font-size:11px;font-family:var(--mono)">History ${v.autocheck}/100</span>` : ''}
         </div>
       </div>
       <div class="dh-timer">
@@ -225,14 +225,13 @@ function renderDetail(v) {
           <div class="spec-item"><span class="spec-key">Int. color</span><span class="spec-val">${v.color_int||'—'}</span></div>
           <div class="spec-item"><span class="spec-key">Owners</span><span class="spec-val">${v.owners != null ? v.owners : '—'}</span></div>
           <div class="spec-item"><span class="spec-key">Accidents</span><span class="spec-val">${v.accidents != null ? v.accidents : '—'}</span></div>
-          <div class="spec-item"><span class="spec-key">MSRP</span><span class="spec-val">${v.msrp ? '$' + v.msrp.toLocaleString() : '—'}</span></div>
-          <div class="spec-item"><span class="spec-key">Historical Low</span><span class="spec-val" style="font-weight:700">${v.mmr_avg ? '$' + v.mmr_avg.toLocaleString() : '—'}</span></div>
+          <div class="spec-item"><span class="spec-key">Market Low</span><span class="spec-val" style="font-weight:700">${v.mmr_avg ? '$' + v.mmr_avg.toLocaleString() : '—'}</span></div>
         </div>
         <div style="margin-top:14px">
           <div class="sec-label">Location</div>
           <div style="font-size:13px;color:var(--ink)">${(v.location||'—').replace(/\bManheim\s*/gi, '').match(/^([A-Z]+)\s*-/)?.[1] || (v.location||'—').replace(/\bManheim\s*/gi,'').trim()}</div>
         </div>
-        ${v.announcements && !v.announcements.toLowerCase().includes('no announcements') ? `<div class="announce-box"><strong>Announcements:</strong> ${v.announcements}</div>` : ''}
+        ${v.announcements && !v.announcements.toLowerCase().includes('no announcements') ? `<div class="announce-box"><strong>Notes:</strong> ${v.announcements}</div>` : ''}
         ${v.remarks ? `<div class="announce-box" style="margin-top:6px">${v.remarks}</div>` : ''}
       </div>
       <div class="dright" id="price-panel">

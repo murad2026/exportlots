@@ -150,11 +150,11 @@ function buildCard(v) {
 
   const markets = (v.markets||[]).map(m=>`<span class="v-market-flag" title="${MARKET_NAMES[m]||m}">${MARKET_FLAGS[m]||m}</span>`).join('');
   const tags = [
-    v.grade ? `<span class="vtag vtag-ok">Grade ${v.grade}</span>` : '',
+    v.grade ? `<span class="vtag vtag-ok">Score ${v.grade}</span>` : '',
     v.accidents > 0 ? `<span class="vtag vtag-bad">${v.accidents} accident</span>` : `<span class="vtag vtag-ok">0 accidents</span>`,
     v.owners ? `<span class="vtag vtag-mute">${v.owners} owner</span>` : '',
-    !v.condition_report ? `<span class="vtag vtag-warn">No CR</span>` : `<span class="vtag vtag-ok">CR available</span>`,
-    v.announcements ? `<span class="vtag vtag-accent">${v.announcements.split('/')[0].trim()}</span>` : '',
+    !v.condition_report ? `<span class="vtag vtag-warn">No Inspection</span>` : `<span class="vtag vtag-ok">Inspected</span>`,
+    v.announcements && !v.announcements.toLowerCase().includes('no announcements') ? `<span class="vtag vtag-accent">${v.announcements.split('/')[0].trim()}</span>` : '',
     v.title_status && v.title_status !== 'Not Specified' ? `<span class="vtag ${v.title_status.toLowerCase()==='clean'?'vtag-ok':'vtag-warn'}">${v.title_status}</span>` : '',
   ].join('');
   const photo = v.photo ? `<img src="${v.photo}" alt="" loading="lazy">` : `<div class="v-img-placeholder"><i class="ti ti-car"></i><span>${v.color_ext||'No photo'}</span></div>`;
@@ -177,13 +177,13 @@ function buildCard(v) {
           </div>
           <div class="v-price-label">${v.lot}</div>
         </div>
-        ${price && mmr ? `<div class="v-mmr" style="margin:0">Historical Low: <span class="v-mmr-value">${mmr}</span></div>` : ''}
+        ${price && mmr ? `<div class="v-mmr" style="margin:0">Market Low: <span class="v-mmr-value">${mmr}</span></div>` : ''}
       </div>
       <div class="v-secondary">
         <div class="v-sub">${fmtMi(v.mileage)} · ${v.drivetrain||''} · ${v.engine||''} · ${v.color_ext||''}</div>
         <div class="v-tags">${tags}</div>
         <div class="v-markets">${markets}</div>
-        ${v.autocheck ? `<div style="font-size:11px;color:var(--ink-mute);font-family:var(--mono)">AutoCheck: ${v.autocheck}/100</div>` : ''}
+        ${v.autocheck ? `<div style="font-size:11px;color:var(--ink-mute);font-family:var(--mono)">Vehicle History: ${v.autocheck}/100</div>` : ''}
       </div>
       <div class="v-spacer"></div>
     </div>

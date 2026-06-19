@@ -258,10 +258,10 @@ function buildCard(v) {
   const mmr = fmtUSD(v.mmr_avg);
   const markets = (v.markets||[]).map(m=>`<span class="v-market-flag" title="${MARKET_NAMES[m]||m}">${MARKET_FLAGS[m]||m}</span>`).join('');
   const tags = [
-    v.grade ? `<span class="vtag vtag-ok">Grade ${v.grade}</span>` : '',
+    v.grade ? `<span class="vtag vtag-ok">Score ${v.grade}</span>` : '',
     v.accidents > 0 ? `<span class="vtag vtag-bad">${v.accidents} accident</span>` : `<span class="vtag vtag-ok">0 accidents</span>`,
-    !v.condition_report ? `<span class="vtag vtag-warn">No CR</span>` : '',
-    v.announcements ? `<span class="vtag vtag-mute">${v.announcements.split('/')[0].trim()}</span>` : '',
+    !v.condition_report ? `<span class="vtag vtag-warn">No Inspection</span>` : '',
+    v.announcements && !v.announcements.toLowerCase().includes('no announcements') ? `<span class="vtag vtag-mute">${v.announcements.split('/')[0].trim()}</span>` : '',
   ].join('');
   const photo = v.photo ? `<img src="${v.photo}" alt="" loading="lazy">` : `<div class="v-img-placeholder"><i class="ti ti-car"></i><span>${v.color_ext||''}</span></div>`;
   const waMsg = encodeURIComponent(`Hi ExportLots. Lot: ${v.lot} — ${v.year} ${v.make} ${v.model}`);
