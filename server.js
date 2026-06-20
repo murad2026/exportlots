@@ -803,7 +803,6 @@ For each card extract:
 - sale_date (the date shown like "6/23" or "6/24", as a string)
 - cr_score (Condition Report score like "3.8", "4.4" — number or null)
 - title_ok (true if no salvage/rebuild badge visible, false if red "Salvage" tag shown)
-- photo_box: the bounding box of the CAR PHOTO IMAGE within this card (not the whole card) as { x, y, w, h } in pixels. This is the image area at the top of each card showing the vehicle photo. Be precise — measure where the actual photo pixels start and end.
 
 Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON array.`;
 
@@ -862,23 +861,30 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
         };
       });
 
-      // Crop individual car photos using bounding boxes returned by Claude
+      // Crop individual car photos from clean Manheim grid screenshot
+      // Format: 6 cols x 2 rows, no browser chrome, card = H/2, photo starts after ~28px header
       const croppedPhotos = [];
       if (Jimp && rawVehicles.length > 0) {
         try {
           const img = await Jimp.read(screenshotBuf);
           const W = img.bitmap.width;
           const H = img.bitmap.height;
+          const COLS = 6;
+          const ROWS = 2;
+          const CARD_W = Math.floor(W / COLS);
+          const CARD_H = Math.floor(H / ROWS);
+          // Manheim card: blue header ~28px, then car photo ~45% of card height
+          const HEADER_H = Math.round(CARD_H * 0.065);
+          const PHOTO_H = Math.round(CARD_H * 0.445);
 
-          for (let i = 0; i < rawVehicles.length; i++) {
-            const box = rawVehicles[i].photo_box;
-            if (!box || !box.w || !box.h) { croppedPhotos.push(null); continue; }
-            // Clamp to image bounds
-            const x = Math.max(0, Math.round(box.x));
-            const y = Math.max(0, Math.round(box.y));
-            const w = Math.min(Math.round(box.w), W - x);
-            const h = Math.min(Math.round(box.h), H - y);
-            if (w < 20 || h < 20) { croppedPhotos.push(null); continue; }
+          for (let i = 0; i < Math.min(rawVehicles.length, 12); i++) {
+            const col = i % COLS;
+            const row = Math.floor(i / COLS);
+            const x = col * CARD_W + 1;
+            const y = row * CARD_H + HEADER_H;
+            const w = CARD_W - 2;
+            const h = PHOTO_H;
+            if (x + w > W || y + h > H) { croppedPhotos.push(null); continue; }
             const cropped = img.clone().crop(x, y, w, h);
             await applyEdgeBlur(cropped);
             const jpgBuf = await cropped.quality(82).getBufferAsync(Jimp.MIME_JPEG);
