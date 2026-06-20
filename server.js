@@ -809,7 +809,7 @@ For each card extract:
 - bid_price (the "Bid $X,XXX" or "Starting Bid" price as a number, null if not shown)
 - buy_now_price (the "Buy Now $X,XXX" price as a number, null if not shown)
 - manheim_id (the 8-digit number shown on each card, e.g. "13501227" — this is the last 8 chars of the VIN)
-- sale_date (the date shown like "6/23" or "6/24", as a string)
+- sale_date: some cards show a small calendar badge in the TOP-RIGHT corner like "6/24 3-158" or "6/25 5-73" (date followed by lane-run). Extract ONLY the M/D date part (e.g. "6/24"). Return null if there is no such date badge (e.g. plain "Timed Sale" cards).
 - cr_score (Condition Report score like "3.8", "4.4" — number or null)
 - title_ok (true if no salvage/rebuild badge visible, false if red "Salvage" tag shown)
 
@@ -871,10 +871,12 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
       });
 
       // Crop individual car photos from a clean Manheim grid screenshot.
-      // The photo always sits flush to the top of each card and ends at the
-      // white gap before the car title. Instead of guessing a fixed percentage,
-      // we scan each card top-to-bottom and cut exactly at that white band, so
-      // the crop works regardless of screenshot resolution.
+      // Cards may have a dark-blue "Timed Sale / Simulcast Live" header bar on
+      // top; the photo sits below it and ends at the white gap before the car
+      // title. Rather than guessing fixed percentages, we detect both edges per
+      // card: the bottom of the blue header (photo top) and the first all-white
+      // row (photo bottom). Works regardless of screenshot resolution and
+      // whether or not the header bar is present.
       const croppedPhotos = [];
       if (Jimp && rawVehicles.length > 0) {
         try {
@@ -887,14 +889,39 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
           const CARD_W = Math.floor(W / COLS);
           const CARD_H = Math.floor(H / ROWS);
 
-          // Find the bottom of the photo for one card by locating the first
-          // (nearly) all-white horizontal row — the gap between photo and title.
-          const detectPhotoBottom = (cardX, cardY) => {
-            const minY = cardY + Math.round(CARD_H * 0.28);
-            const maxY = cardY + Math.round(CARD_H * 0.62);
+          // Evenly spaced sample columns across one card (skip the side borders).
+          const cols = (cardX) => {
             const xs = [];
             const step = Math.max(2, Math.floor(CARD_W / 40));
             for (let sx = cardX + 4; sx < cardX + CARD_W - 4; sx += step) xs.push(sx);
+            return xs;
+          };
+
+          // Bottom of the blue header band = top of the photo. Returns an offset
+          // from the card top (0 when there is no header bar).
+          const detectPhotoTop = (cardX, cardY) => {
+            const xs = cols(cardX);
+            const maxScan = Math.round(CARD_H * 0.25);
+            let sawHeader = false;
+            for (let dy = 0; dy <= maxScan && cardY + dy < H; dy++) {
+              let blue = 0;
+              for (const sx of xs) {
+                const c = Jimp.intToRGBA(img.getPixelColor(sx, cardY + dy));
+                if (c.b > 60 && c.b > c.r + 25 && c.b > c.g + 15 && c.r < 130) blue++;
+              }
+              const frac = xs.length ? blue / xs.length : 0;
+              if (frac > 0.5) sawHeader = true;
+              else if (sawHeader) return dy; // first non-blue row after the band
+            }
+            return 0;
+          };
+
+          // First (nearly) all-white row below the photo = photo bottom.
+          // Returns an offset from the card top.
+          const detectPhotoBottom = (cardX, cardY, topOff) => {
+            const xs = cols(cardX);
+            const minY = cardY + topOff + Math.round(CARD_H * 0.15);
+            const maxY = cardY + topOff + Math.round(CARD_H * 0.55);
             for (let y = minY; y <= maxY && y < H; y++) {
               let light = 0;
               for (const sx of xs) {
@@ -903,7 +930,7 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
               }
               if (xs.length && light / xs.length > 0.93) return y - cardY;
             }
-            return Math.round(CARD_H * 0.45); // fallback if no clean gap found
+            return topOff + Math.round(CARD_H * 0.42); // fallback
           };
 
           for (let i = 0; i < count; i++) {
@@ -911,10 +938,12 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
             const row = Math.floor(i / COLS);
             const cardX = col * CARD_W;
             const cardY = row * CARD_H;
+            const topOff = detectPhotoTop(cardX, cardY);
+            const bottomOff = detectPhotoBottom(cardX, cardY, topOff);
             const x = cardX + 1;
-            const y = cardY;
+            const y = cardY + topOff;
             const w = CARD_W - 2;
-            const h = detectPhotoBottom(cardX, cardY);
+            const h = bottomOff - topOff;
             if (x + w > W || y + h > H || h < 10) { croppedPhotos.push(null); continue; }
             const cropped = img.clone().crop(x, y, w, h);
             await applyEdgeBlur(cropped);
@@ -949,7 +978,13 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
           }
 
           const vin_full = v.manheim_id ? ('00000000000000000' + v.manheim_id).slice(-17) : '';
-          const end_time = v.sale_date ? parseSaleDate(v.sale_date) : null;
+          // The date badge maps to the live start for simulcast sales and to the
+          // closing time for timed sales, so the catalog countdown targets the
+          // right field for each sale type.
+          const saleTime = v.sale_date ? parseSaleDate(v.sale_date) : null;
+          const isSimulcast = (v.sale_type || 'timed') === 'simulcast';
+          const end_time = isSimulcast ? null : saleTime;
+          const start_time = isSimulcast ? saleTime : null;
 
           const { lot } = await withNextLotInsert(
             new Date().getFullYear(),
@@ -979,7 +1014,7 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
               condition_report: !!v.cr_score,
               sale_type: v.sale_type || 'timed',
               end_time,
-              start_time: null,
+              start_time,
               mmr_avg: v.bid_price || v.mmr_avg || null,
               buy_now: v.buy_now || null,
               location: v.location || '',
