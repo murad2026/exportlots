@@ -870,20 +870,21 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
           const W = img.bitmap.width;
           const H = img.bitmap.height;
           const COLS = 6;
+          const count = Math.min(rawVehicles.length, 12);
+          const ROWS = count <= 6 ? 1 : 2;
           const CARD_W = Math.floor(W / COLS);
-          // Manheim grid: 2 rows with a small gap between them (~1.6% of H)
-          // Row 0 starts at y=0, row 1 starts at ~50.8% of total height
-          // Each card: blue header = 6.5% of card height, photo = 43% of card height
-          const CARD_H = Math.round(H * 0.492);
-          const ROW1_Y = Math.round(H * 0.508); // where second row starts
-          const HEADER_H = Math.round(CARD_H * 0.065);
-          const PHOTO_H = Math.round(CARD_H * 0.432);
+          const CARD_H = Math.floor(H / ROWS);
+          // Skip blue "Timed Sale" header (top ~13% of card), then take photo (~50%)
+          const HEADER_H = Math.round(CARD_H * 0.13);
+          const PHOTO_H = Math.round(CARD_H * 0.50);
+          // For 2-row layout account for ~1.6% gap between rows
+          const ROW_STEP = ROWS === 2 ? Math.round(H * 0.508) : 0;
 
-          for (let i = 0; i < Math.min(rawVehicles.length, 12); i++) {
+          for (let i = 0; i < count; i++) {
             const col = i % COLS;
             const row = Math.floor(i / COLS);
             const x = col * CARD_W + 1;
-            const y = (row === 0 ? 0 : ROW1_Y) + HEADER_H;
+            const y = (ROWS === 2 ? (row === 0 ? 0 : ROW_STEP) : row * CARD_H) + HEADER_H;
             const w = CARD_W - 2;
             const h = PHOTO_H;
             if (x + w > W || y + h > H) { croppedPhotos.push(null); continue; }
