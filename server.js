@@ -4,11 +4,12 @@ const path = require('path');
 const url = require('url');
 const crypto = require('crypto');
 
-let bcrypt, multer, Jimp, uuid, nodemailer;
+let bcrypt, multer, Jimp, uuid, nodemailer, Anthropic;
 try { bcrypt = require('bcryptjs'); } catch(e) { bcrypt = null; }
 try { uuid = require('uuid'); } catch(e) { uuid = { v4: () => crypto.randomUUID() }; }
 try { Jimp = require('jimp'); } catch(e) { Jimp = null; }
 try { nodemailer = require('nodemailer'); } catch(e) { nodemailer = null; }
+try { Anthropic = require('@anthropic-ai/sdk'); } catch(e) { Anthropic = null; }
 
 const { initDb, allDocs, getDoc, insertDoc, updateDoc, deleteDoc, withNextLotInsert, getPhoto, findLotByVin } = require('./db');
 
@@ -342,6 +343,16 @@ function parseTimeLeft(raw) {
   return new Date(Date.now() + (d * 86400 + h * 3600 + m * 60) * 1000).toISOString();
 }
 
+// Parse sale_date like "6/23" into end_time (assumes current year, end of day ET)
+function parseSaleDate(raw) {
+  if (!raw) return null;
+  const m = raw.match(/(\d+)\/(\d+)/);
+  if (!m) return null;
+  const year = new Date().getFullYear();
+  // Auction ends at ~8pm ET = midnight UTC next day approx
+  return new Date(year, parseInt(m[1]) - 1, parseInt(m[2]), 20, 0, 0).toISOString();
+}
+
 // Parse starts_raw like "06/10 - 1:00pm" into start_time ISO string
 function parseStartTime(raw) {
   if (!raw) return null;
@@ -422,9 +433,10 @@ const PAGE_ROUTES = {
   '/shipping':      'shipping.html',
   '/how-it-works':  'how-it-works.html',
   '/detail':        'detail.html',
-  '/admin':         'admin/index.html',
-  '/admin/operator':'admin/operator.html',
-  '/admin/login':   'admin/login.html',
+  '/admin':              'admin/index.html',
+  '/admin/operator':     'admin/operator.html',
+  '/admin/screenshot':   'admin/screenshot.html',
+  '/admin/login':        'admin/login.html',
 };
 
 const server = http.createServer(async (req, res) => {
@@ -750,6 +762,217 @@ async function handleRequest(req, res) {
       return res.end(JSON.stringify({ ok: true, data: parsed }));
     }
 
+    // POST /api/parse-screenshot — parse a Manheim grid screenshot via Claude Vision
+    if (pathname === '/api/parse-screenshot' && req.method === 'POST') {
+      const s = getSession(req);
+      if (!s || !['owner', 'operator'].includes(s.role)) return res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
+
+      if (!Anthropic) return res.end(JSON.stringify({ ok: false, error: 'Anthropic SDK not available' }));
+      const apiKey = process.env.ANTHROPIC_API_KEY;
+      if (!apiKey) return res.end(JSON.stringify({ ok: false, error: 'ANTHROPIC_API_KEY not set' }));
+
+      const { fields, file } = await parseMultipart(req);
+      if (!file) return res.end(JSON.stringify({ ok: false, error: 'No screenshot uploaded' }));
+
+      const screenshotBuf = file.buffer;
+      const screenshotB64 = screenshotBuf.toString('base64');
+      const mimeType = file.originalname.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
+
+      const client = new Anthropic({ apiKey });
+
+      const prompt = `You are analyzing a screenshot from Manheim auto auction website showing a grid of vehicle cards.
+
+Extract ALL vehicles visible in the screenshot. For each card extract:
+- year (number)
+- make (string)
+- model (string)
+- trim (string, may be empty)
+- mileage (number, miles)
+- engine (e.g. "5.7L 8 Cyl")
+- drivetrain (e.g. "4WD", "FWD", "AWD", "RWD")
+- fuel (e.g. "Gasoline", "Electric", "Hybrid")
+- location (city/state shown, e.g. "TX - HOUSTON", strip "Manheim" from name)
+- sale_type: "timed" if card says "Timed Sale", "simulcast" if says "Simulcast Live"
+- mmr_low (lower MMR range number, no $ sign)
+- mmr_high (upper MMR range number, no $ sign)
+- bid_price (the "Bid $X,XXX" or "Starting Bid" price as a number, null if not shown)
+- buy_now_price (the "Buy Now $X,XXX" price as a number, null if not shown)
+- manheim_id (the 8-digit number shown on each card, e.g. "13501227" — this is the last 8 chars of the VIN)
+- sale_date (the date shown like "6/23" or "6/24", as a string)
+- cr_score (Condition Report score like "3.8", "4.4" — number or null)
+- title_ok (true if no salvage/rebuild badge visible, false if red "Salvage" tag shown)
+
+Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON array.`;
+
+      const response = await client.messages.create({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 4096,
+        messages: [{
+          role: 'user',
+          content: [{
+            type: 'image',
+            source: { type: 'base64', media_type: mimeType, data: screenshotB64 }
+          }, {
+            type: 'text',
+            text: prompt
+          }]
+        }]
+      });
+
+      let vehicles = [];
+      try {
+        const text = response.content[0].text.trim();
+        const jsonStr = text.startsWith('[') ? text : text.match(/\[[\s\S]*\]/)?.[0] || '[]';
+        vehicles = JSON.parse(jsonStr);
+      } catch(e) {
+        return res.end(JSON.stringify({ ok: false, error: 'Failed to parse Claude response: ' + e.message }));
+      }
+
+      // Compute mmr_avg and apply markup to buy_now
+      const MARKUP = 0.12;
+      vehicles = vehicles.map(v => {
+        const mmr_avg = (v.mmr_low && v.mmr_high) ? Math.round((v.mmr_low + v.mmr_high) / 2) : (v.mmr_low || v.mmr_high || null);
+        const buy_now = v.buy_now_price ? Math.round(v.buy_now_price * (1 + MARKUP)) : null;
+        const bid = v.bid_price || mmr_avg || null;
+        return {
+          year: v.year,
+          make: v.make,
+          model: v.model,
+          trim: v.trim || '',
+          mileage: v.mileage,
+          engine: v.engine || '',
+          drivetrain: v.drivetrain || '',
+          fuel: v.fuel || 'Gasoline',
+          location: (v.location || '').replace(/\bManheim\s*/gi, '').trim(),
+          sale_type: v.sale_type || 'timed',
+          mmr_avg: mmr_avg,
+          mmr_low: v.mmr_low,
+          mmr_high: v.mmr_high,
+          buy_now: buy_now,
+          bid_price: bid,
+          manheim_id: v.manheim_id || '',
+          sale_date: v.sale_date || '',
+          cr_score: v.cr_score || null,
+          title_status: v.title_ok === false ? 'Salvage' : 'Clean',
+          vin_masked: v.manheim_id ? '•••••••••' + v.manheim_id : '',
+          status: 'active',
+        };
+      });
+
+      // Crop individual car photos from the screenshot
+      // Manheim grid: 6 columns, detect card image regions
+      const croppedPhotos = [];
+      if (Jimp && vehicles.length > 0) {
+        try {
+          const img = await Jimp.read(screenshotBuf);
+          const W = img.bitmap.width;
+          const H = img.bitmap.height;
+          // Manheim search results: header ~150px, cards start after.
+          // Each card image is roughly top 55% of the card height.
+          // We estimate a 6-col grid.
+          const COLS = 6;
+          const CARD_W = Math.floor(W / COLS);
+          // Find card start row by looking for first solid-color stripe (header ends)
+          // Simple approach: assume cards start at ~22% from top
+          const cardStartY = Math.floor(H * 0.18);
+          const CARD_H = Math.floor((H - cardStartY) / 2); // 2 rows visible
+          const IMG_H = Math.floor(CARD_H * 0.52); // image portion of card
+
+          for (let i = 0; i < Math.min(vehicles.length, 12); i++) {
+            const col = i % COLS;
+            const row = Math.floor(i / COLS);
+            const x = col * CARD_W + 4;
+            const y = cardStartY + row * CARD_H + 4;
+            const cropW = CARD_W - 8;
+            const cropH = IMG_H - 4;
+            if (x + cropW > W || y + cropH > H) { croppedPhotos.push(null); continue; }
+            const cropped = img.clone().crop(x, y, cropW, cropH);
+            await applyEdgeBlur(cropped);
+            const jpgBuf = await cropped.quality(82).getBufferAsync(Jimp.MIME_JPEG);
+            croppedPhotos.push(jpgBuf.toString('base64'));
+          }
+        } catch(e) {
+          console.log('Screenshot crop error:', e.message);
+        }
+      }
+
+      return res.end(JSON.stringify({ ok: true, vehicles, photos: croppedPhotos }));
+    }
+
+    // POST /api/vehicles/bulk — add multiple vehicles at once (from screenshot parser)
+    if (pathname === '/api/vehicles/bulk' && req.method === 'POST') {
+      const s = getSession(req);
+      if (!s || !['owner', 'operator'].includes(s.role)) return res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
+
+      const body = await readBody(req);
+      const { vehicles, photos, markets } = body; // photos: array of base64 strings or nulls
+      if (!Array.isArray(vehicles) || !vehicles.length) return res.end(JSON.stringify({ ok: false, error: 'No vehicles' }));
+
+      const results = [];
+      for (let i = 0; i < vehicles.length; i++) {
+        const v = vehicles[i];
+        try {
+          let processedPhoto = null;
+          if (photos && photos[i]) {
+            const photoBuf = Buffer.from(photos[i], 'base64');
+            processedPhoto = await processImage(photoBuf);
+          }
+
+          const vin_full = v.manheim_id ? ('00000000000000000' + v.manheim_id).slice(-17) : '';
+          const end_time = v.sale_date ? parseSaleDate(v.sale_date) : null;
+
+          const { lot } = await withNextLotInsert(
+            new Date().getFullYear(),
+            (lot) => ({
+              lot,
+              vin_masked: v.vin_masked || '',
+              year: v.year,
+              make: v.make,
+              model: v.model,
+              trim: v.trim || '',
+              mileage: v.mileage || null,
+              engine: v.engine || '',
+              transmission: '',
+              drivetrain: v.drivetrain || '',
+              fuel: v.fuel || 'Gasoline',
+              color_ext: '',
+              color_int: '',
+              body: 'SUV',
+              grade: v.cr_score || null,
+              autocheck: null,
+              owners: null,
+              accidents: null,
+              title_status: v.title_status || 'Not Specified',
+              announcements: null,
+              remarks: null,
+              seller_comments: null,
+              condition_report: !!v.cr_score,
+              sale_type: v.sale_type || 'timed',
+              end_time,
+              start_time: null,
+              mmr_avg: v.bid_price || v.mmr_avg || null,
+              buy_now: v.buy_now || null,
+              location: v.location || '',
+              auction_house: '',
+              msrp: null,
+              photo: processedPhoto ? `/uploads/${lot}.jpg` : null,
+              markets: markets || v.markets || [],
+              status: 'active',
+              is_sample: false,
+              added: new Date().toISOString(),
+            }),
+            (lot) => ({ lot, vin_full, manheim_lot: v.manheim_id || '', buy_price: null, seller: '' }),
+            processedPhoto
+          );
+          results.push({ ok: true, lot, make: v.make, model: v.model });
+        } catch(e) {
+          results.push({ ok: false, error: e.message, make: v.make, model: v.model });
+        }
+      }
+
+      return res.end(JSON.stringify({ ok: true, results }));
+    }
+
     res.writeHead(404);
     return res.end(JSON.stringify({ ok: false, error: 'Not found' }));
   }
@@ -763,7 +986,7 @@ async function handleRequest(req, res) {
     }
   }
   // Protect admin pages
-  if (pathname === '/admin' || pathname === '/admin/operator') {
+  if (pathname === '/admin' || pathname === '/admin/operator' || pathname === '/admin/screenshot') {
     const s = getSession(req);
     if (!s || !['owner', 'operator'].includes(s.role)) {
       res.writeHead(302, { Location: '/admin/login' }); return res.end();

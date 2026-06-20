@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Screenshot Import — ExportLots Operator</title>
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="stylesheet" href="../style.css">
+<style>
+.ss-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; margin-top:24px; }
+.ss-card { background:var(--bg-elev); border:1px solid var(--line); border-radius:var(--radius-lg); overflow:hidden; position:relative; }
+.ss-card.selected { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-s); }
+.ss-card-img { width:100%; height:160px; object-fit:cover; display:block; background:var(--line-soft); }
+.ss-card-img-placeholder { width:100%; height:160px; background:var(--line-soft); display:flex; align-items:center; justify-content:center; color:var(--ink-mute); font-size:12px; font-family:var(--mono); }
+.ss-card-body { padding:12px 14px; }
+.ss-card-title { font-weight:600; font-size:14px; margin-bottom:6px; }
+.ss-card-meta { font-size:11px; color:var(--ink-soft); font-family:var(--mono); line-height:1.8; }
+.ss-check { position:absolute; top:10px; left:10px; width:22px; height:22px; border-radius:50%; border:2px solid #fff; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background 0.15s; }
+.ss-card.selected .ss-check { background:var(--accent); border-color:var(--accent); }
+.ss-check svg { display:none; }
+.ss-card.selected .ss-check svg { display:block; }
+.ss-price-row { display:flex; gap:8px; align-items:center; margin-top:8px; flex-wrap:wrap; }
+.ss-badge { font-size:10px; font-family:var(--mono); padding:2px 7px; border-radius:3px; font-weight:600; }
+.ss-badge-start { background:#fef3c7; color:#92400e; }
+.ss-badge-buynow { background:#dcfce7; color:#166534; }
+.ss-badge-salvage { background:#fee2e2; color:#991b1b; }
+.ss-badge-clean { background:#dcfce7; color:#166534; }
+.markup-note { font-size:11px; color:var(--ink-mute); }
+.step-bar { display:flex; gap:0; margin-bottom:32px; }
+.step { flex:1; padding:12px 16px; font-size:12px; font-family:var(--mono); color:var(--ink-mute); border-bottom:2px solid var(--line); }
+.step.active { color:var(--accent); border-color:var(--accent); font-weight:600; }
+.step.done { color:var(--ink-soft); border-color:var(--ink-soft); }
+#market-bar { display:flex; flex-wrap:wrap; gap:8px; margin:16px 0; }
+.mkt-toggle { display:flex; align-items:center; gap:6px; padding:7px 12px; background:var(--bg); border:1px solid var(--line); border-radius:var(--radius); cursor:pointer; font-size:13px; transition:border-color 0.15s; }
+.mkt-toggle:hover { border-color:var(--accent); }
+.mkt-toggle input { accent-color:var(--accent); }
+.mkt-toggle:has(input:checked) { border-color:var(--accent); background:var(--accent-s); }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-brand"><span class="dot"></span>ExportLots</a>
+    <div class="nav-links">
+      <a href="/admin/operator">Add listing</a>
+      <a href="/admin/screenshot" class="active">Screenshot import</a>
+      <a href="/catalog">View catalog</a>
+    </div>
+    <div class="nav-cta">
+      <span style="font-size:12px;color:var(--ink-mute);font-family:var(--mono)">OPERATOR</span>
+      <button onclick="logout()" class="btn btn-ghost btn-sm">Sign out</button>
+    </div>
+  </div>
+</nav>
+
+<div style="max-width:1200px;margin:0 auto;padding:32px var(--gap)">
+  <div style="margin-bottom:28px">
+    <div class="eyebrow" style="margin-bottom:8px">Operator panel</div>
+    <h1 style="font-family:var(--serif);font-size:28px;font-weight:400">Screenshot import</h1>
+    <p style="font-size:13px;color:var(--ink-soft);margin-top:4px">Take a screenshot of the Manheim grid (up to 12 cars), drop it here — AI parses all cards at once.</p>
+  </div>
+
+  <div class="step-bar">
+    <div class="step active" id="step1">1. Upload screenshot</div>
+    <div class="step" id="step2">2. Review & select</div>
+    <div class="step" id="step3">3. Done</div>
+  </div>
+
+  <!-- STEP 1: Upload -->
+  <div id="pane-upload">
+    <div class="op-card" style="max-width:600px">
+      <h2>Drop Manheim screenshot here</h2>
+      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('ss-input').click()" style="height:180px">
+        <i class="ti ti-screenshot" style="font-size:36px;margin-bottom:8px;opacity:0.4"></i>
+        <p>Click or drag & drop screenshot<br><small>PNG or JPG · Max 20MB · Shows full grid of cars</small></p>
+      </div>
+      <input type="file" id="ss-input" accept="image/*" style="display:none" onchange="handleFile(this.files[0])">
+      <div id="upload-preview" style="display:none;margin-top:12px">
+        <img id="upload-thumb" src="" style="width:100%;border-radius:var(--radius);border:1px solid var(--line)">
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:12px" onclick="parseScreenshot()" id="parse-btn">
+          <i class="ti ti-cpu"></i> Parse all cars with AI
+        </button>
+      </div>
+      <div id="parse-error" style="display:none;margin-top:12px;padding:12px;background:#fee2e2;border-radius:var(--radius);font-size:13px;color:#991b1b"></div>
+    </div>
+  </div>
+
+  <!-- STEP 2: Review -->
+  <div id="pane-review" style="display:none">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:20px;margin-bottom:20px">
+      <div>
+        <h2 style="font-size:18px;font-weight:600;margin-bottom:4px">Select vehicles to add</h2>
+        <p style="font-size:13px;color:var(--ink-soft)">
+          Buy Now prices marked up <strong>12%</strong> · Starting Price = Bid price
+        </p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="btn btn-ghost btn-sm" onclick="selectAll()">Select all</button>
+        <button class="btn btn-ghost btn-sm" onclick="selectNone()">Deselect all</button>
+        <span id="selected-count" style="font-size:13px;color:var(--ink-mute);font-family:var(--mono)">0 selected</span>
+      </div>
+    </div>
+
+    <div style="background:var(--bg-elev);border:1px solid var(--line);border-radius:var(--radius-lg);padding:16px;margin-bottom:16px">
+      <div style="font-size:13px;font-weight:500;margin-bottom:10px">Markets for all selected vehicles</div>
+      <div id="market-bar">
+        <label class="mkt-toggle"><input type="checkbox" value="NG"> 🇳🇬 Nigeria</label>
+        <label class="mkt-toggle"><input type="checkbox" value="AE"> 🇦🇪 UAE</label>
+        <label class="mkt-toggle"><input type="checkbox" value="GH"> 🇬🇭 Ghana</label>
+        <label class="mkt-toggle"><input type="checkbox" value="LT"> 🇱🇹 E. Europe</label>
+        <label class="mkt-toggle"><input type="checkbox" value="DO"> 🇩🇴 Dom. Republic</label>
+        <label class="mkt-toggle"><input type="checkbox" value="GE"> 🇬🇪 Georgia</label>
+        <label class="mkt-toggle"><input type="checkbox" value="AM"> 🇦🇲 Armenia</label>
+      </div>
+    </div>
+
+    <div class="ss-grid" id="ss-grid"></div>
+
+    <div style="margin-top:24px;display:flex;gap:12px;align-items:center">
+      <button class="btn btn-accent btn-lg" onclick="submitSelected()" id="submit-btn">
+        <i class="ti ti-plus"></i> Add selected to catalog
+      </button>
+      <button class="btn btn-ghost btn-sm" onclick="resetToUpload()">← Start over</button>
+    </div>
+    <div id="submit-error" style="display:none;margin-top:12px;padding:12px;background:#fee2e2;border-radius:var(--radius);font-size:13px;color:#991b1b"></div>
+  </div>
+
+  <!-- STEP 3: Done -->
+  <div id="pane-done" style="display:none">
+    <div style="max-width:600px">
+      <div style="font-size:48px;margin-bottom:16px">✓</div>
+      <h2 style="font-size:24px;font-weight:600;margin-bottom:12px">Done!</h2>
+      <div id="done-results" style="font-size:14px;line-height:2;color:var(--ink-soft)"></div>
+      <div style="display:flex;gap:12px;margin-top:24px">
+        <a href="/catalog" class="btn btn-primary">View catalog</a>
+        <button class="btn btn-ghost btn-sm" onclick="resetToUpload()">Import more</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let parsedVehicles = [];
+let croppedPhotos = [];
+let screenshotFile = null;
+
+// Drag & drop
+const dz = document.getElementById('drop-zone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('over'); const f = e.dataTransfer.files[0]; if (f) handleFile(f); });
+
+function handleFile(file) {
+  if (!file) return;
+  screenshotFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('upload-thumb').src = e.target.result;
+    document.getElementById('upload-preview').style.display = 'block';
+    document.getElementById('parse-error').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function parseScreenshot() {
+  const btn = document.getElementById('parse-btn');
+  const errEl = document.getElementById('parse-error');
+  errEl.style.display = 'none';
+  btn.innerHTML = '<i class="ti ti-loader"></i> Parsing with AI... (takes ~15 seconds)';
+  btn.disabled = true;
+
+  try {
+    const form = new FormData();
+    form.append('screenshot', screenshotFile, screenshotFile.name);
+    const res = await fetch('/api/parse-screenshot', { method: 'POST', body: form });
+    const d = await res.json();
+    if (!d.ok) { errEl.textContent = d.error || 'Parse failed'; errEl.style.display = 'block'; btn.innerHTML = '<i class="ti ti-cpu"></i> Parse all cars with AI'; btn.disabled = false; return; }
+
+    parsedVehicles = d.vehicles || [];
+    croppedPhotos = d.photos || [];
+    renderReview();
+  } catch(e) {
+    errEl.textContent = 'Network error: ' + e.message;
+    errEl.style.display = 'block';
+    btn.innerHTML = '<i class="ti ti-cpu"></i> Parse all cars with AI';
+    btn.disabled = false;
+  }
+}
+
+function fmtPrice(n) { return n ? '$' + Math.round(n).toLocaleString() : '—'; }
+function fmtMi(n) { return n ? n.toLocaleString() + ' mi' : '—'; }
+
+function renderReview() {
+  document.getElementById('pane-upload').style.display = 'none';
+  document.getElementById('pane-review').style.display = 'block';
+  document.getElementById('step1').className = 'step done';
+  document.getElementById('step2').className = 'step active';
+
+  const grid = document.getElementById('ss-grid');
+  grid.innerHTML = parsedVehicles.map((v, i) => {
+    const photo = croppedPhotos[i] ? `<img class="ss-card-img" src="data:image/jpeg;base64,${croppedPhotos[i]}">` : `<div class="ss-card-img-placeholder"><i class="ti ti-car" style="font-size:32px;opacity:0.3"></i></div>`;
+    const salvageBadge = v.title_status === 'Salvage' ? `<span class="ss-badge ss-badge-salvage">SALVAGE</span>` : `<span class="ss-badge ss-badge-clean">CLEAN</span>`;
+    return `<div class="ss-card selected" id="card-${i}" onclick="toggleCard(${i})">
+      <div class="ss-check" id="check-${i}">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      ${photo}
+      <div class="ss-card-body">
+        <div class="ss-card-title">${v.year} ${v.make} ${v.model} ${v.trim || ''}</div>
+        <div class="ss-card-meta">
+          ${fmtMi(v.mileage)} · ${v.drivetrain || ''} · ${v.engine || ''}<br>
+          ${(v.location || '').replace(/\bManheim\s*/gi,'').trim() || '—'} · ${v.sale_type === 'simulcast' ? 'Live Auction' : 'Timed Sale'}<br>
+          ${v.sale_date ? 'Sale: ' + v.sale_date : ''}
+          ${v.cr_score ? ' · CR ' + v.cr_score : ''}
+          ${v.manheim_id ? ' · #' + v.manheim_id : ''}
+        </div>
+        <div class="ss-price-row">
+          ${v.bid_price ? `<span class="ss-badge ss-badge-start">Starting: ${fmtPrice(v.bid_price)}</span>` : ''}
+          ${v.buy_now ? `<span class="ss-badge ss-badge-buynow">Buy Now: ${fmtPrice(v.buy_now)} <span class="markup-note">(+12%)</span></span>` : ''}
+          ${salvageBadge}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  updateCount();
+}
+
+function toggleCard(i) {
+  const card = document.getElementById('card-' + i);
+  card.classList.toggle('selected');
+  updateCount();
+}
+
+function selectAll() { document.querySelectorAll('.ss-card').forEach(c => c.classList.add('selected')); updateCount(); }
+function selectNone() { document.querySelectorAll('.ss-card').forEach(c => c.classList.remove('selected')); updateCount(); }
+
+function updateCount() {
+  const n = document.querySelectorAll('.ss-card.selected').length;
+  document.getElementById('selected-count').textContent = n + ' selected';
+}
+
+function getSelectedIndexes() {
+  return [...document.querySelectorAll('.ss-card.selected')].map(c => parseInt(c.id.replace('card-','')));
+}
+
+function getMarkets() {
+  return [...document.querySelectorAll('#market-bar input:checked')].map(c => c.value);
+}
+
+async function submitSelected() {
+  const idxs = getSelectedIndexes();
+  if (!idxs.length) { alert('Select at least one vehicle'); return; }
+
+  const markets = getMarkets();
+  const btn = document.getElementById('submit-btn');
+  const errEl = document.getElementById('submit-error');
+  errEl.style.display = 'none';
+
+  btn.innerHTML = '<i class="ti ti-loader"></i> Adding ' + idxs.length + ' vehicles...';
+  btn.disabled = true;
+
+  const vehicles = idxs.map(i => parsedVehicles[i]);
+  const photos = idxs.map(i => croppedPhotos[i] || null);
+
+  try {
+    const res = await fetch('/api/vehicles/bulk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vehicles, photos, markets })
+    });
+    const d = await res.json();
+    if (!d.ok) { errEl.textContent = d.error || 'Failed'; errEl.style.display = 'block'; btn.innerHTML = '<i class="ti ti-plus"></i> Add selected to catalog'; btn.disabled = false; return; }
+
+    // Show results
+    document.getElementById('pane-review').style.display = 'none';
+    document.getElementById('pane-done').style.display = 'block';
+    document.getElementById('step2').className = 'step done';
+    document.getElementById('step3').className = 'step active';
+
+    const successCount = d.results.filter(r => r.ok).length;
+    const doneHtml = d.results.map(r =>
+      r.ok ? `✓ ${r.make} ${r.model} → Lot <strong>${r.lot}</strong>` : `✗ ${r.make} ${r.model}: ${r.error}`
+    ).join('<br>');
+    document.getElementById('done-results').innerHTML = `<strong>${successCount} of ${d.results.length} vehicles added</strong><br><br>` + doneHtml;
+  } catch(e) {
+    errEl.textContent = 'Network error: ' + e.message;
+    errEl.style.display = 'block';
+    btn.innerHTML = '<i class="ti ti-plus"></i> Add selected to catalog';
+    btn.disabled = false;
+  }
+}
+
+function resetToUpload() {
+  parsedVehicles = []; croppedPhotos = []; screenshotFile = null;
+  document.getElementById('pane-upload').style.display = 'block';
+  document.getElementById('pane-review').style.display = 'none';
+  document.getElementById('pane-done').style.display = 'none';
+  document.getElementById('upload-preview').style.display = 'none';
+  document.getElementById('ss-input').value = '';
+  document.getElementById('parse-btn').innerHTML = '<i class="ti ti-cpu"></i> Parse all cars with AI';
+  document.getElementById('parse-btn').disabled = false;
+  ['step1','step2','step3'].forEach((id,i) => document.getElementById(id).className = 'step' + (i===0?' active':''));
+}
+
+async function logout() {
+  await fetch('/api/auth/logout', { method: 'POST' });
+  window.location.href = '/admin/login';
+}
+</script>
+</body>
+</html>
