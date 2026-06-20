@@ -720,7 +720,7 @@ async function handleRequest(req, res) {
       const s = getSession(req);
       if (!s || s.role !== 'owner') return res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
       const body = await readBody(req);
-      const { lots } = JSON.parse(body);
+      const { lots } = body;
       if (!Array.isArray(lots) || !lots.length) return res.end(JSON.stringify({ ok: false, error: 'No lots provided' }));
       for (const lot of lots) {
         await deleteDoc('vehicles', 'lot', lot);
