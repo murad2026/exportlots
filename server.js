@@ -883,9 +883,9 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
           const COLS = ROWS === 1 ? count : 6;
           const CARD_W = Math.floor(W / COLS);
           const CARD_H = Math.floor(H / ROWS);
-          // Skip lot header + Timed Sale badge (top ~7%), take photo body (42%), skip name overlay at bottom
-          const HEADER_H = Math.round(CARD_H * 0.07);
-          const PHOTO_H = Math.round(CARD_H * 0.42);
+          // Photo starts at top of card (no header), takes ~47% of card height
+          const HEADER_H = 0;
+          const PHOTO_H = Math.round(CARD_H * 0.47);
           // For 2-row layout account for ~1.6% gap between rows
           const ROW_STEP = ROWS === 2 ? Math.round(H * 0.508) : 0;
 
