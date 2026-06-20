@@ -113,7 +113,7 @@ function getCountdown(v) {
   if (v.status === 'sold') return { label:'SOLD', cls:'vs-sold', timer:'Ended', timerCls:'' };
   if (v.status === 'live') return { label:'LIVE', cls:'vs-live', timer:'🔴 LIVE NOW', timerCls:'v-timer-live' };
   const target = v.sale_type === 'simulcast' ? v.start_time : v.end_time;
-  if (!target) return { label:'ACTIVE', cls:'vs-active', timer:'', timerCls:'' };
+  if (!target) return { label:'ACTIVE', cls:'vs-active', timer:'Check availability', timerCls:'', icon:'ti-circle-check' };
   const diff = new Date(target).getTime() - now;
   if (diff <= 0) {
     if (v.sale_type === 'simulcast') return { label:'LIVE', cls:'vs-live', timer:'🔴 LIVE NOW', timerCls:'v-timer-live' };
@@ -123,7 +123,7 @@ function getCountdown(v) {
   const h = Math.floor((diff % 86400000) / 3600000);
   const m = Math.floor((diff % 3600000) / 60000);
   const timeStr = (d > 0 ? d + 'd ' : '') + h + 'h ' + m + 'm';
-  const prefix = v.sale_type === 'simulcast' ? 'Starts in: ' : 'Ends in: ';
+  const prefix = 'Ends in: ';
   const isUrgent = diff < 21600000;
   return { label: isUrgent ? 'URGENT' : 'ACTIVE', cls: isUrgent ? 'vs-urgent' : 'vs-active', timer: prefix + timeStr, timerCls: isUrgent ? 'v-timer-urgent' : '' };
 }
@@ -163,9 +163,7 @@ function buildCard(v) {
   return `<div class="v-card${v.status==='sold'?' sold':''}" onclick="window.location='/detail?lot=${v.lot}'" style="cursor:pointer">
     <div class="v-img">
       ${photo}
-      <span class="v-status ${cd.cls}">${cd.label}</span>
-      <span class="v-type">${v.sale_type==='simulcast'?'LIVE AUCTION':'TIMED SALE'}</span>
-      ${cd.timer ? `<span class="v-timer-overlay ${cd.timerCls}"><i class="ti ti-clock"></i>${cd.timer}</span>` : ''}
+      ${cd.timer ? `<span class="v-timer-overlay ${cd.timerCls}"><i class="ti ${cd.icon||'ti-clock'}"></i>${cd.timer}</span>` : ''}
     </div>
     <div class="v-body">
       <div class="v-title">${v.year} ${v.make} ${v.model} ${v.trim||''}</div>

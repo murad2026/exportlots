@@ -146,10 +146,10 @@ function renderDetail(v) {
   }
 
   function getTimerHtml() {
-    if (!auctionEnd) return `<div class="dht-label">Status</div><div class="dht-time" style="font-size:14px">Available</div>`;
+    if (!auctionEnd) return `<div class="dht-label">Status</div><div class="dht-time" style="font-size:14px">Check availability</div>`;
     const sec = Math.max(0, Math.floor((new Date(auctionEnd) - new Date()) / 1000));
     if (sec <= 0) return `<div class="dht-label">Status</div><div class="dht-time" style="font-size:14px;color:var(--ink-mute)">Ended</div>`;
-    const label = v.sale_type === 'simulcast' ? 'Live auction starts in' : 'Auction ends in';
+    const label = 'Auction ends in';
     return `<div class="dht-label">${label}</div><div class="dht-time" id="dcd">${fmtTime(sec)}</div>`;
   }
 
@@ -194,7 +194,6 @@ function renderDetail(v) {
         </div>
         <div class="dh-sub">${(v.mileage||0).toLocaleString()} mi &nbsp;·&nbsp; ${v.drivetrain||''} &nbsp;·&nbsp; ${v.engine||''} &nbsp;·&nbsp; ${v.color_ext||''}</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
-          <span class="vb" style="background:var(--bg);border:1px solid var(--line);padding:3px 8px;border-radius:4px;font-size:11px;font-family:var(--mono)">${v.sale_type === 'simulcast' ? 'LIVE AUCTION' : 'TIMED SALE'}</span>
           <span class="vb" style="background:var(--bg);border:1px solid ${titleCls};color:${titleCls};padding:3px 8px;border-radius:4px;font-size:11px;font-family:var(--mono)">${titleStatus}</span>
           ${v.grade ? `<span class="vb" style="background:var(--bg);border:1px solid var(--line);padding:3px 8px;border-radius:4px;font-size:11px;font-family:var(--mono)">Score ${v.grade}</span>` : ''}
           ${v.autocheck ? `<span class="vb" style="background:var(--bg);border:1px solid var(--line);padding:3px 8px;border-radius:4px;font-size:11px;font-family:var(--mono)">History ${v.autocheck}/100</span>` : ''}
