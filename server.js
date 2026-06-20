@@ -30,7 +30,7 @@ async function sendNotification(subject, html) {
 const PORT = process.env.PORT || 3002;
 
 // ---- CONFIG ----
-const OWNER_PASSWORD = process.env.OWNER_PASS || 'DapexOwner2026!';
+const OWNER_PASSWORD = process.env.OWNER_PASS || 'murad123';
 const OPERATOR_PASSWORD = process.env.OPERATOR_PASS || 'DapexOp2026!';
 
 // ---- SESSION STORE (signed cookie — stateless, survives restarts) ----
@@ -496,12 +496,6 @@ async function handleRequest(req, res) {
         res.writeHead(200, { 'Set-Cookie': `sid=${sid}; Path=/; HttpOnly; Max-Age=86400` });
         return res.end(JSON.stringify({ ok: true, role: 'owner' }));
       }
-      if (role === 'operator' && email === 'operator' && password === OPERATOR_PASSWORD) {
-        const sid = createSession('operator', 'op-1');
-        res.writeHead(200, { 'Set-Cookie': `sid=${sid}; Path=/; HttpOnly; Max-Age=86400` });
-        return res.end(JSON.stringify({ ok: true, role: 'operator' }));
-      }
-
       // Dealer login
       if (email === 'test@dapex.net' && password === 'test123') {
         const sid = createSession('dealer', 'test-001');
@@ -570,7 +564,7 @@ async function handleRequest(req, res) {
     if (pathname === '/api/vehicles' && req.method === 'GET') {
       const s = getSession(req);
       const vehicles = await allDocs('vehicles');
-      const isDealer = s && ['dealer', 'owner', 'operator'].includes(s.role);
+      const isDealer = s && ['dealer', 'owner'].includes(s.role);
       const active = vehicles.filter(v => v.status === 'active' || v.status === 'live');
       const list = isDealer ? active : active.slice(0, 6);
       return res.end(JSON.stringify({ ok: true, vehicles: list, isDealer }));
@@ -579,7 +573,7 @@ async function handleRequest(req, res) {
     // POST /api/vehicles (add new vehicle with photo)
     if (pathname === '/api/vehicles' && req.method === 'POST') {
       const s = getSession(req);
-      if (!s || !['owner', 'operator'].includes(s.role)) {
+      if (!s || !['owner'].includes(s.role)) {
         return res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
       }
 
@@ -692,7 +686,7 @@ async function handleRequest(req, res) {
     // PATCH /api/vehicles/:lot
     if (pathname.match(/^\/api\/vehicles\/[A-Z0-9-]+$/) && req.method === 'PATCH') {
       const s = getSession(req);
-      if (!s || !['owner', 'operator'].includes(s.role)) {
+      if (!s || !['owner'].includes(s.role)) {
         return res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
       }
       const lot = pathname.split('/').pop();
@@ -771,7 +765,7 @@ async function handleRequest(req, res) {
     // POST /api/parse (parse Manheim text)
     if (pathname === '/api/parse' && req.method === 'POST') {
       const s = getSession(req);
-      if (!s || !['owner', 'operator'].includes(s.role)) return res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
+      if (!s || !['owner'].includes(s.role)) return res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
       const body = await readBody(req);
       const parsed = parseManheim(body.text || '');
       return res.end(JSON.stringify({ ok: true, data: parsed }));
@@ -780,7 +774,7 @@ async function handleRequest(req, res) {
     // POST /api/parse-screenshot — parse a Manheim grid screenshot via Claude Vision
     if (pathname === '/api/parse-screenshot' && req.method === 'POST') {
       const s = getSession(req);
-      if (!s || !['owner', 'operator'].includes(s.role)) return res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
+      if (!s || !['owner'].includes(s.role)) return res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
 
       if (!Anthropic) return res.end(JSON.stringify({ ok: false, error: 'Anthropic SDK not available' }));
       const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -919,7 +913,7 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
     // POST /api/vehicles/bulk — add multiple vehicles at once (from screenshot parser)
     if (pathname === '/api/vehicles/bulk' && req.method === 'POST') {
       const s = getSession(req);
-      if (!s || !['owner', 'operator'].includes(s.role)) return res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
+      if (!s || !['owner'].includes(s.role)) return res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
 
       const body = await readBody(req);
       const { vehicles, photos, markets } = body; // photos: array of base64 strings or nulls
@@ -998,18 +992,15 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
   // Protect catalog
   if (pathname === '/catalog') {
     const s = getSession(req);
-    if (!s || !['dealer', 'owner', 'operator'].includes(s.role)) {
+    if (!s || !['dealer', 'owner'].includes(s.role)) {
       res.writeHead(302, { Location: '/login' }); return res.end();
     }
   }
   // Protect admin pages
   if (pathname === '/admin' || pathname === '/admin/operator' || pathname === '/admin/screenshot') {
     const s = getSession(req);
-    if (!s || !['owner', 'operator'].includes(s.role)) {
+    if (!s || !['owner'].includes(s.role)) {
       res.writeHead(302, { Location: '/admin/login' }); return res.end();
-    }
-    if (pathname === '/admin' && s.role === 'operator') {
-      res.writeHead(302, { Location: '/admin/operator' }); return res.end();
     }
   }
 
