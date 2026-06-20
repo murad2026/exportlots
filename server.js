@@ -873,9 +873,10 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
           const ROWS = 2;
           const CARD_W = Math.floor(W / COLS);
           const CARD_H = Math.floor(H / ROWS);
-          // Manheim card: blue header ~28px, then car photo ~45% of card height
-          const HEADER_H = Math.round(CARD_H * 0.065);
-          const PHOTO_H = Math.round(CARD_H * 0.445);
+          // Manheim card: blue "Timed Sale" header ~7% of card height, photo ~43%
+          // Skip header fully, then take photo portion only
+          const HEADER_H = Math.round(CARD_H * 0.07);
+          const PHOTO_H = Math.round(CARD_H * 0.43);
 
           for (let i = 0; i < Math.min(rawVehicles.length, 12); i++) {
             const col = i % COLS;
