@@ -709,6 +709,15 @@ async function handleRequest(req, res) {
       return res.end(JSON.stringify({ ok: true }));
     }
 
+    // POST /api/admin/cleanup-photos — delete orphaned photos (no matching vehicle)
+    if (pathname === '/api/admin/cleanup-photos' && req.method === 'POST') {
+      const s = getSession(req);
+      if (!s || s.role !== 'owner') return res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
+      const { pool } = require('./db');
+      const result = await pool.query(`DELETE FROM photos WHERE lot NOT IN (SELECT lot FROM vehicles)`);
+      return res.end(JSON.stringify({ ok: true, deleted: result.rowCount }));
+    }
+
     // POST /api/vehicles/bulk-delete
     if (pathname === '/api/vehicles/bulk-delete' && req.method === 'POST') {
       const s = getSession(req);
