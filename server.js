@@ -709,16 +709,6 @@ async function handleRequest(req, res) {
       return res.end(JSON.stringify({ ok: true }));
     }
 
-    // POST /api/admin/cleanup-photos — delete orphaned photos (no matching vehicle)
-    if (pathname === '/api/admin/cleanup-photos' && req.method === 'POST') {
-      const s = getSession(req);
-      if (!s || s.role !== 'owner') return res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
-      const { pool } = require('./db');
-      // Delete ALL photos — user will re-import via screenshot
-      const result = await pool.query(`DELETE FROM photos`);
-      return res.end(JSON.stringify({ ok: true, deleted: result.rowCount }));
-    }
-
     // POST /api/vehicles/bulk-delete
     if (pathname === '/api/vehicles/bulk-delete' && req.method === 'POST') {
       const s = getSession(req);
@@ -726,11 +716,11 @@ async function handleRequest(req, res) {
       const body = await readBody(req);
       const { lots } = body;
       if (!Array.isArray(lots) || !lots.length) return res.end(JSON.stringify({ ok: false, error: 'No lots provided' }));
-      for (const lot of lots) {
-        await deleteDoc('vehicles', 'lot', lot);
-        await deleteDoc('vehicles_private', 'lot', lot);
-        await deleteDoc('photos', 'lot', lot);
-      }
+      const { pool } = require('./db');
+      const placeholders = lots.map((_, i) => `$${i + 1}`).join(',');
+      await pool.query(`DELETE FROM vehicles WHERE lot IN (${placeholders})`, lots);
+      await pool.query(`DELETE FROM vehicles_private WHERE lot IN (${placeholders})`, lots);
+      await pool.query(`DELETE FROM photos WHERE lot IN (${placeholders})`, lots);
       return res.end(JSON.stringify({ ok: true, deleted: lots.length }));
     }
 

@@ -61,8 +61,7 @@
           <option value="live">Live</option>
           <option value="sold">Sold</option>
         </select>
-        <button onclick="cleanupPhotos()" class="btn btn-ghost btn-sm" style="border-color:var(--red);color:var(--red)" title="Delete all photos not linked to current listings"><i class="ti ti-photo-off"></i> Clean photos</button>
-        <a href="/admin/operator" class="btn btn-accent btn-sm"><i class="ti ti-plus"></i> Add listing</a>
+<a href="/admin/operator" class="btn btn-accent btn-sm"><i class="ti ti-plus"></i> Add listing</a>
       </div>
     </div>
     <!-- BULK ACTION BAR -->
@@ -310,17 +309,6 @@ async function deleteLot(lot) {
   const r = await fetch(`/api/vehicles/${lot}`, { method: 'DELETE' });
   const d = await r.json();
   if (d.ok) { allVehicles = allVehicles.filter(v => v.lot !== lot); filterInventory(); loadDashboard(); }
-  else alert('Error: ' + d.error);
-}
-
-async function cleanupPhotos() {
-  if (!confirm('Delete all orphaned photos from DB? This will also clear photos for current listings without a proper photo.')) return;
-  // First delete all photos for current lots so old ones are cleared
-  const lots = allVehicles.map(v => v.lot);
-  // Delete orphaned + stale
-  const r = await fetch('/api/admin/cleanup-photos', { method: 'POST' });
-  const d = await r.json();
-  if (d.ok) alert(`Cleaned up ${d.deleted} orphaned photos. Now delete listings and re-import screenshots.`);
   else alert('Error: ' + d.error);
 }
 
