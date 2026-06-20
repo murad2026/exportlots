@@ -714,7 +714,8 @@ async function handleRequest(req, res) {
       const s = getSession(req);
       if (!s || s.role !== 'owner') return res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
       const { pool } = require('./db');
-      const result = await pool.query(`DELETE FROM photos WHERE lot NOT IN (SELECT lot FROM vehicles)`);
+      // Delete ALL photos — user will re-import via screenshot
+      const result = await pool.query(`DELETE FROM photos`);
       return res.end(JSON.stringify({ ok: true, deleted: result.rowCount }));
     }
 
