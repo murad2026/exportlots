@@ -782,7 +782,9 @@ async function handleRequest(req, res) {
 
       const prompt = `You are analyzing a screenshot from Manheim auto auction website showing a grid of vehicle cards.
 
-Extract ALL vehicles visible in the screenshot. For each card extract:
+The screenshot dimensions will be provided. Extract ALL vehicles visible in the screenshot.
+
+For each card extract:
 - year (number)
 - make (string)
 - model (string)
@@ -801,6 +803,7 @@ Extract ALL vehicles visible in the screenshot. For each card extract:
 - sale_date (the date shown like "6/23" or "6/24", as a string)
 - cr_score (Condition Report score like "3.8", "4.4" — number or null)
 - title_ok (true if no salvage/rebuild badge visible, false if red "Salvage" tag shown)
+- photo_box: the bounding box of the CAR PHOTO IMAGE within this card (not the whole card) as { x, y, w, h } in pixels. This is the image area at the top of each card showing the vehicle photo. Be precise — measure where the actual photo pixels start and end.
 
 Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON array.`;
 
@@ -819,18 +822,18 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
         }]
       });
 
-      let vehicles = [];
+      let rawVehicles = [];
       try {
         const text = response.content[0].text.trim();
         const jsonStr = text.startsWith('[') ? text : text.match(/\[[\s\S]*\]/)?.[0] || '[]';
-        vehicles = JSON.parse(jsonStr);
+        rawVehicles = JSON.parse(jsonStr);
       } catch(e) {
         return res.end(JSON.stringify({ ok: false, error: 'Failed to parse Claude response: ' + e.message }));
       }
 
       // Compute mmr_avg and apply markup to buy_now
       const MARKUP = 0.12;
-      vehicles = vehicles.map(v => {
+      let vehicles = rawVehicles.map(v => {
         const mmr_avg = (v.mmr_low && v.mmr_high) ? Math.round((v.mmr_low + v.mmr_high) / 2) : (v.mmr_low || v.mmr_high || null);
         const buy_now = v.buy_now_price ? Math.round(v.buy_now_price * (1 + MARKUP)) : null;
         const bid = v.bid_price || mmr_avg || null;
@@ -859,34 +862,24 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
         };
       });
 
-      // Crop individual car photos from the screenshot
-      // Manheim grid: 6 columns, detect card image regions
+      // Crop individual car photos using bounding boxes returned by Claude
       const croppedPhotos = [];
-      if (Jimp && vehicles.length > 0) {
+      if (Jimp && rawVehicles.length > 0) {
         try {
           const img = await Jimp.read(screenshotBuf);
           const W = img.bitmap.width;
           const H = img.bitmap.height;
-          // Manheim search results: header ~150px, cards start after.
-          // Each card image is roughly top 55% of the card height.
-          // We estimate a 6-col grid.
-          const COLS = 6;
-          const CARD_W = Math.floor(W / COLS);
-          // Find card start row by looking for first solid-color stripe (header ends)
-          // Simple approach: assume cards start at ~22% from top
-          const cardStartY = Math.floor(H * 0.18);
-          const CARD_H = Math.floor((H - cardStartY) / 2); // 2 rows visible
-          const IMG_H = Math.floor(CARD_H * 0.52); // image portion of card
 
-          for (let i = 0; i < Math.min(vehicles.length, 12); i++) {
-            const col = i % COLS;
-            const row = Math.floor(i / COLS);
-            const x = col * CARD_W + 4;
-            const y = cardStartY + row * CARD_H + 4;
-            const cropW = CARD_W - 8;
-            const cropH = IMG_H - 4;
-            if (x + cropW > W || y + cropH > H) { croppedPhotos.push(null); continue; }
-            const cropped = img.clone().crop(x, y, cropW, cropH);
+          for (let i = 0; i < rawVehicles.length; i++) {
+            const box = rawVehicles[i].photo_box;
+            if (!box || !box.w || !box.h) { croppedPhotos.push(null); continue; }
+            // Clamp to image bounds
+            const x = Math.max(0, Math.round(box.x));
+            const y = Math.max(0, Math.round(box.y));
+            const w = Math.min(Math.round(box.w), W - x);
+            const h = Math.min(Math.round(box.h), H - y);
+            if (w < 20 || h < 20) { croppedPhotos.push(null); continue; }
+            const cropped = img.clone().crop(x, y, w, h);
             await applyEdgeBlur(cropped);
             const jpgBuf = await cropped.quality(82).getBufferAsync(Jimp.MIME_JPEG);
             croppedPhotos.push(jpgBuf.toString('base64'));
