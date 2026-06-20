@@ -64,10 +64,19 @@
         <a href="/admin/operator" class="btn btn-accent btn-sm"><i class="ti ti-plus"></i> Add listing</a>
       </div>
     </div>
+    <!-- BULK ACTION BAR -->
+    <div id="bulk-bar" style="display:none;padding:12px 24px;background:var(--accent);color:#fff;align-items:center;justify-content:space-between;gap:12px">
+      <span id="bulk-count" style="font-family:var(--mono);font-size:13px;font-weight:600"></span>
+      <div style="display:flex;gap:8px">
+        <button onclick="bulkDelete()" style="background:rgba(0,0,0,0.25);color:#fff;border:1px solid rgba(255,255,255,0.4);border-radius:var(--radius);padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--mono)"><i class="ti ti-trash"></i> Delete selected</button>
+        <button onclick="clearSelection()" style="background:none;color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:var(--radius);padding:6px 14px;font-size:12px;cursor:pointer;font-family:var(--mono)">Cancel</button>
+      </div>
+    </div>
     <div style="overflow-x:auto">
       <table class="data-table" id="inv-table">
         <thead>
           <tr>
+            <th style="width:36px"><input type="checkbox" id="select-all" onchange="toggleSelectAll(this.checked)" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer"></th>
             <th>Lot</th>
             <th>Vehicle</th>
             <th>Full VIN</th>
@@ -81,7 +90,7 @@
           </tr>
         </thead>
         <tbody id="inv-body">
-          <tr><td colspan="9" style="text-align:center;padding:30px;color:var(--ink-mute)">Loading...</td></tr>
+          <tr><td colspan="11" style="text-align:center;padding:30px;color:var(--ink-mute)">Loading...</td></tr>
         </tbody>
       </table>
     </div>
@@ -180,12 +189,13 @@ function filterInventory() {
 
 function renderInventory(list) {
   const tbody = document.getElementById('inv-body');
-  if (!list.length) { tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--ink-mute)">No listings.</td></tr>'; return; }
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:30px;color:var(--ink-mute)">No listings.</td></tr>'; return; }
 
   tbody.innerHTML = list.map(v => {
     const price = v.buy_now ? '$'+v.buy_now.toLocaleString() : (v.mmr_avg ? '~$'+v.mmr_avg.toLocaleString() : '—');
     const statusColor = v.status==='sold'?'#999':v.status==='live'?'var(--red)':v.status==='active'&&getTimerText(v).includes('h')&&parseInt(getTimerText(v))<6?'var(--accent)':'var(--green-d)';
     return `<tr>
+      <td style="text-align:center"><input type="checkbox" class="row-cb" data-lot="${v.lot}" onchange="onRowCheck()" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer"></td>
       <td style="font-family:var(--mono);font-size:12px;font-weight:600;color:var(--accent)">${v.lot}</td>
       <td>
         <div style="font-weight:500;font-size:13px">${v.year} ${v.make} ${v.model} ${v.trim||''}</div>
@@ -300,6 +310,50 @@ async function deleteLot(lot) {
   const d = await r.json();
   if (d.ok) { allVehicles = allVehicles.filter(v => v.lot !== lot); filterInventory(); loadDashboard(); }
   else alert('Error: ' + d.error);
+}
+
+function getSelectedLots() {
+  return [...document.querySelectorAll('.row-cb:checked')].map(cb => cb.dataset.lot);
+}
+
+function onRowCheck() {
+  const selected = getSelectedLots();
+  const bar = document.getElementById('bulk-bar');
+  bar.style.display = selected.length ? 'flex' : 'none';
+  document.getElementById('bulk-count').textContent = selected.length + ' selected';
+  const all = document.querySelectorAll('.row-cb');
+  document.getElementById('select-all').checked = all.length && selected.length === all.length;
+}
+
+function toggleSelectAll(checked) {
+  document.querySelectorAll('.row-cb').forEach(cb => cb.checked = checked);
+  onRowCheck();
+}
+
+function clearSelection() {
+  document.querySelectorAll('.row-cb').forEach(cb => cb.checked = false);
+  document.getElementById('select-all').checked = false;
+  onRowCheck();
+}
+
+async function bulkDelete() {
+  const lots = getSelectedLots();
+  if (!lots.length) return;
+  if (!confirm(`Delete ${lots.length} listing(s)? This cannot be undone.`)) return;
+  const r = await fetch('/api/vehicles/bulk-delete', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ lots })
+  });
+  const d = await r.json();
+  if (d.ok) {
+    allVehicles = allVehicles.filter(v => !lots.includes(v.lot));
+    clearSelection();
+    filterInventory();
+    loadDashboard();
+  } else {
+    alert('Error: ' + (d.error || 'Unknown'));
+  }
 }
 
 async function logout() {

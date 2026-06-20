@@ -715,6 +715,21 @@ async function handleRequest(req, res) {
       return res.end(JSON.stringify({ ok: true }));
     }
 
+    // POST /api/vehicles/bulk-delete
+    if (pathname === '/api/vehicles/bulk-delete' && req.method === 'POST') {
+      const s = getSession(req);
+      if (!s || s.role !== 'owner') return res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
+      const body = await readBody(req);
+      const { lots } = JSON.parse(body);
+      if (!Array.isArray(lots) || !lots.length) return res.end(JSON.stringify({ ok: false, error: 'No lots provided' }));
+      for (const lot of lots) {
+        await deleteDoc('vehicles', 'lot', lot);
+        await deleteDoc('vehicles_private', 'lot', lot);
+        await deleteDoc('photos', 'lot', lot);
+      }
+      return res.end(JSON.stringify({ ok: true, deleted: lots.length }));
+    }
+
     // GET /api/vehicles/:lot/private
     if (pathname.match(/^\/api\/vehicles\/[A-Z0-9-]+\/private$/) && req.method === 'GET') {
       const s = getSession(req);
