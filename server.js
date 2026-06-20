@@ -870,8 +870,11 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
         };
       });
 
-      // Crop individual car photos from clean Manheim grid screenshot
-      // Format: 6 cols x 2 rows, no browser chrome, card = H/2, photo starts after ~28px header
+      // Crop individual car photos from a clean Manheim grid screenshot.
+      // The photo always sits flush to the top of each card and ends at the
+      // white gap before the car title. Instead of guessing a fixed percentage,
+      // we scan each card top-to-bottom and cut exactly at that white band, so
+      // the crop works regardless of screenshot resolution.
       const croppedPhotos = [];
       if (Jimp && rawVehicles.length > 0) {
         try {
@@ -883,20 +886,36 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
           const COLS = ROWS === 1 ? count : 6;
           const CARD_W = Math.floor(W / COLS);
           const CARD_H = Math.floor(H / ROWS);
-          // Photo starts at top of card (no header), takes ~47% of card height
-          const HEADER_H = 0;
-          const PHOTO_H = Math.round(CARD_H * 0.47);
-          // For 2-row layout account for ~1.6% gap between rows
-          const ROW_STEP = ROWS === 2 ? Math.round(H * 0.508) : 0;
+
+          // Find the bottom of the photo for one card by locating the first
+          // (nearly) all-white horizontal row — the gap between photo and title.
+          const detectPhotoBottom = (cardX, cardY) => {
+            const minY = cardY + Math.round(CARD_H * 0.28);
+            const maxY = cardY + Math.round(CARD_H * 0.62);
+            const xs = [];
+            const step = Math.max(2, Math.floor(CARD_W / 40));
+            for (let sx = cardX + 4; sx < cardX + CARD_W - 4; sx += step) xs.push(sx);
+            for (let y = minY; y <= maxY && y < H; y++) {
+              let light = 0;
+              for (const sx of xs) {
+                const c = Jimp.intToRGBA(img.getPixelColor(sx, y));
+                if (c.r > 232 && c.g > 232 && c.b > 232) light++;
+              }
+              if (xs.length && light / xs.length > 0.93) return y - cardY;
+            }
+            return Math.round(CARD_H * 0.45); // fallback if no clean gap found
+          };
 
           for (let i = 0; i < count; i++) {
             const col = i % COLS;
             const row = Math.floor(i / COLS);
-            const x = col * CARD_W + 1;
-            const y = (ROWS === 2 ? (row === 0 ? 0 : ROW_STEP) : row * CARD_H) + HEADER_H;
+            const cardX = col * CARD_W;
+            const cardY = row * CARD_H;
+            const x = cardX + 1;
+            const y = cardY;
             const w = CARD_W - 2;
-            const h = PHOTO_H;
-            if (x + w > W || y + h > H) { croppedPhotos.push(null); continue; }
+            const h = detectPhotoBottom(cardX, cardY);
+            if (x + w > W || y + h > H || h < 10) { croppedPhotos.push(null); continue; }
             const cropped = img.clone().crop(x, y, w, h);
             await applyEdgeBlur(cropped);
             const jpgBuf = await cropped.quality(82).getBufferAsync(Jimp.MIME_JPEG);
