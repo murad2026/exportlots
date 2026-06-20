@@ -41,6 +41,9 @@ async function initDb() {
   `);
   const { rows } = await pool.query('SELECT count(*) FROM vehicles');
   console.log(`Postgres connected. vehicles table has ${rows[0].count} row(s).`);
+  // Clean up orphaned photos on every startup
+  const cleanup = await pool.query(`DELETE FROM photos WHERE lot NOT IN (SELECT lot FROM vehicles)`);
+  if (cleanup.rowCount > 0) console.log(`Cleaned up ${cleanup.rowCount} orphaned photo(s).`);
 }
 
 // ---- generic document-table helpers ----
