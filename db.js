@@ -79,11 +79,16 @@ async function withNextLotInsert(year, vehicleFn, privateFn, photoBuffer) {
   try {
     await client.query('BEGIN');
     await client.query('SELECT pg_advisory_xact_lock(727271)');
-    const { rows } = await client.query(
+    const { rows: vrows } = await client.query(
       `SELECT lot FROM vehicles WHERE lot LIKE $1`,
       [`EL-${year}-%`]
     );
-    const nums = rows
+    const { rows: prows } = await client.query(
+      `SELECT lot FROM photos WHERE lot LIKE $1`,
+      [`EL-${year}-%`]
+    );
+    const allLots = [...vrows, ...prows];
+    const nums = allLots
       .map(r => parseInt(r.lot.split('-')[2]))
       .filter(n => !isNaN(n));
     const next = nums.length ? Math.max(...nums) + 1 : 1;
@@ -95,6 +100,8 @@ async function withNextLotInsert(year, vehicleFn, privateFn, photoBuffer) {
     await client.query('INSERT INTO vehicles_private (lot, data) VALUES ($1, $2)', [lot, priv]);
     if (photoBuffer) {
       await client.query('INSERT INTO photos (lot, data) VALUES ($1, $2) ON CONFLICT (lot) DO UPDATE SET data = $2', [lot, photoBuffer]);
+    } else {
+      await client.query('DELETE FROM photos WHERE lot = $1', [lot]);
     }
 
     await client.query('COMMIT');
