@@ -42,13 +42,13 @@
 <nav class="nav">
   <div class="nav-inner">
     <a href="/" class="nav-brand"><span class="dot"></span>ExportLots</a>
-    <div class="nav-links">
+    <div class="nav-links" id="nav-links">
       <a href="/admin/operator">Add listing</a>
       <a href="/admin/screenshot" class="active">Screenshot import</a>
       <a href="/catalog">View catalog</a>
     </div>
     <div class="nav-cta">
-      <span style="font-size:12px;color:var(--ink-mute);font-family:var(--mono)">OPERATOR</span>
+      <span id="nav-role" style="font-size:12px;color:var(--ink-mute);font-family:var(--mono);font-weight:600"></span>
       <button onclick="logout()" class="btn btn-ghost btn-sm">Sign out</button>
     </div>
   </div>
@@ -307,6 +307,26 @@ async function logout() {
   await fetch('/api/auth/logout', { method: 'POST' });
   window.location.href = '/admin/login';
 }
+
+async function initNav() {
+  const r = await fetch('/api/session');
+  const d = await r.json();
+  if (!d.ok) return;
+  const roleEl = document.getElementById('nav-role');
+  const navLinks = document.getElementById('nav-links');
+  if (d.role === 'owner') {
+    roleEl.textContent = 'OWNER';
+    roleEl.style.color = 'var(--accent)';
+    const dashLink = document.createElement('a');
+    dashLink.href = '/admin';
+    dashLink.textContent = 'Dashboard';
+    navLinks.insertBefore(dashLink, navLinks.firstChild);
+  } else {
+    roleEl.textContent = 'OPERATOR';
+  }
+}
+
+initNav();
 </script>
 </body>
 </html>
