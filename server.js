@@ -754,13 +754,13 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
         };
       });
 
-      // Crop individual car photos from a clean Manheim grid screenshot.
-      // Cards may have a dark-blue "Timed Sale / Simulcast Live" header bar on
-      // top; the photo sits below it and ends at the white gap before the car
-      // title. Rather than guessing fixed percentages, we detect both edges per
-      // card: the bottom of the blue header (photo top) and the first all-white
-      // row (photo bottom). Works regardless of screenshot resolution and
-      // whether or not the header bar is present.
+      // Crop individual car photos from a Manheim grid screenshot. The grid of
+      // cards (rows × columns) is detected from the dark-blue "Timed Sale /
+      // Simulcast Live" header bars rather than guessed from the parsed car
+      // count — so a 2×8 grid of 16 cars crops correctly even if the parser
+      // miscounts. For each card we then find the photo top (bottom of the blue
+      // header) and bottom (first near-white row before the title). Falls back
+      // to an even count-based grid when no header bars are present.
       const croppedPhotos = [];
       if (Jimp && rawVehicles.length > 0) {
         try {
@@ -768,67 +768,102 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
           const W = img.bitmap.width;
           const H = img.bitmap.height;
           const count = Math.min(rawVehicles.length, 16);
-          const ROWS = count <= 8 ? 1 : 2;
-          const COLS = ROWS === 1 ? count : Math.ceil(count / 2);
-          const CARD_W = Math.floor(W / COLS);
-          const CARD_H = Math.floor(H / ROWS);
 
-          // Evenly spaced sample columns across one card (skip the side borders).
-          const cols = (cardX) => {
-            const xs = [];
-            const step = Math.max(2, Math.floor(CARD_W / 40));
-            for (let sx = cardX + 4; sx < cardX + CARD_W - 4; sx += step) xs.push(sx);
-            return xs;
+          const isBlue = (c) => c.b > 60 && c.b > c.r + 25 && c.b > c.g + 15 && c.r < 130;
+          const xStep = Math.max(2, Math.floor(W / 250));
+          const blueRowFrac = (y) => {
+            let blue = 0, n = 0;
+            for (let x = 2; x < W - 2; x += xStep) { if (isBlue(Jimp.intToRGBA(img.getPixelColor(x, y)))) blue++; n++; }
+            return n ? blue / n : 0;
           };
 
-          // Bottom of the blue header band = top of the photo. Returns an offset
-          // from the card top (0 when there is no header bar).
-          const detectPhotoTop = (cardX, cardY) => {
-            const xs = cols(cardX);
-            const maxScan = Math.round(CARD_H * 0.25);
+          // Detect the dark-blue header bands — one per row of cards.
+          const bands = [];
+          { let top = -1;
+            for (let y = 0; y < H; y++) {
+              const f = blueRowFrac(y);
+              if (f > 0.35 && top < 0) top = y;
+              else if (f < 0.15 && top >= 0) { bands.push({ top, bottom: y }); top = -1; }
+            }
+            if (top >= 0) bands.push({ top, bottom: H });
+          }
+
+          // Columns within a band = runs of x that contain blue somewhere in the
+          // band; the white gaps between cards separate them. Immune to the white
+          // date badge (the bar is still blue above/below it).
+          const detectCols = (band) => {
+            const ys = [];
+            for (let dy = 1; dy < (band.bottom - band.top) && dy < 30; dy++) ys.push(band.top + dy);
+            const runs = [];
+            let start = -1;
+            for (let x = 0; x < W; x++) {
+              let hasBlue = false;
+              for (const sy of ys) { if (sy < H && isBlue(Jimp.intToRGBA(img.getPixelColor(x, sy)))) { hasBlue = true; break; } }
+              if (hasBlue && start < 0) start = x;
+              else if (!hasBlue && start >= 0) { runs.push([start, x]); start = -1; }
+            }
+            if (start >= 0) runs.push([start, W]);
+            return runs.filter(([a, b]) => b - a > W * 0.02);
+          };
+
+          // Build the grid of card cells {x,y,w,h}.
+          let cells = [];
+          if (bands.length >= 1) {
+            for (let r = 0; r < bands.length; r++) {
+              const cy = bands[r].top;
+              const ch = (r + 1 < bands.length ? bands[r + 1].top : H) - cy;
+              for (const [x0, x1] of detectCols(bands[r])) cells.push({ x: x0, y: cy, w: x1 - x0, h: ch });
+            }
+          }
+          if (cells.length < 2) { // no usable headers — even count-based grid
+            cells = [];
+            const ROWS = count <= 8 ? 1 : 2;
+            const COLS = ROWS === 1 ? count : Math.ceil(count / 2);
+            const cw = Math.floor(W / COLS), chh = Math.floor(H / ROWS);
+            for (let i = 0; i < count; i++) cells.push({ x: (i % COLS) * cw, y: Math.floor(i / COLS) * chh, w: cw, h: chh });
+          }
+
+          // Evenly spaced sample columns across one cell (skip the side borders).
+          const colsOf = (cell) => {
+            const xs = [];
+            const step = Math.max(2, Math.floor(cell.w / 40));
+            for (let sx = cell.x + 4; sx < cell.x + cell.w - 4; sx += step) xs.push(sx);
+            return xs;
+          };
+          // Bottom of the blue header within a cell = photo top (offset from cell top).
+          const detectPhotoTop = (cell) => {
+            const xs = colsOf(cell);
+            const maxScan = Math.round(cell.h * 0.25);
             let sawHeader = false;
-            for (let dy = 0; dy <= maxScan && cardY + dy < H; dy++) {
+            for (let dy = 0; dy <= maxScan && cell.y + dy < H; dy++) {
               let blue = 0;
-              for (const sx of xs) {
-                const c = Jimp.intToRGBA(img.getPixelColor(sx, cardY + dy));
-                if (c.b > 60 && c.b > c.r + 25 && c.b > c.g + 15 && c.r < 130) blue++;
-              }
+              for (const sx of xs) if (isBlue(Jimp.intToRGBA(img.getPixelColor(sx, cell.y + dy)))) blue++;
               const frac = xs.length ? blue / xs.length : 0;
               if (frac > 0.5) sawHeader = true;
-              else if (sawHeader) return dy; // first non-blue row after the band
+              else if (sawHeader) return dy;
             }
             return 0;
           };
-
-          // First (nearly) all-white row below the photo = photo bottom.
-          // Returns an offset from the card top.
-          const detectPhotoBottom = (cardX, cardY, topOff) => {
-            const xs = cols(cardX);
-            const minY = cardY + topOff + Math.round(CARD_H * 0.15);
-            const maxY = cardY + topOff + Math.round(CARD_H * 0.55);
+          // First near-white row below the photo = photo bottom (offset from cell top).
+          const detectPhotoBottom = (cell, topOff) => {
+            const xs = colsOf(cell);
+            const minY = cell.y + topOff + Math.round(cell.h * 0.15);
+            const maxY = cell.y + topOff + Math.round(cell.h * 0.55);
             for (let y = minY; y <= maxY && y < H; y++) {
               let light = 0;
-              for (const sx of xs) {
-                const c = Jimp.intToRGBA(img.getPixelColor(sx, y));
-                if (c.r > 232 && c.g > 232 && c.b > 232) light++;
-              }
-              if (xs.length && light / xs.length > 0.93) return y - cardY;
+              for (const sx of xs) { const c = Jimp.intToRGBA(img.getPixelColor(sx, y)); if (c.r > 232 && c.g > 232 && c.b > 232) light++; }
+              if (xs.length && light / xs.length > 0.93) return y - cell.y;
             }
-            return topOff + Math.round(CARD_H * 0.42); // fallback
+            return topOff + Math.round(cell.h * 0.42);
           };
 
           for (let i = 0; i < count; i++) {
-            const col = i % COLS;
-            const row = Math.floor(i / COLS);
-            const cardX = col * CARD_W;
-            const cardY = row * CARD_H;
-            const topOff = detectPhotoTop(cardX, cardY);
-            const bottomOff = detectPhotoBottom(cardX, cardY, topOff);
-            const x = cardX + 1;
-            const y = cardY + topOff;
-            const w = CARD_W - 2;
-            const h = bottomOff - topOff;
-            if (x + w > W || y + h > H || h < 10) { croppedPhotos.push(null); continue; }
+            const cell = cells[i];
+            if (!cell) { croppedPhotos.push(null); continue; }
+            const topOff = detectPhotoTop(cell);
+            const bottomOff = detectPhotoBottom(cell, topOff);
+            const x = cell.x + 1, y = cell.y + topOff, w = cell.w - 2, h = bottomOff - topOff;
+            if (x + w > W || y + h > H || h < 10 || w < 10) { croppedPhotos.push(null); continue; }
             const cropped = img.clone().crop(x, y, w, h);
             await applyEdgeBlur(cropped);
             const jpgBuf = await cropped.quality(82).getBufferAsync(Jimp.MIME_JPEG);
