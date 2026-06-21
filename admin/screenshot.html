@@ -70,14 +70,14 @@
   <!-- STEP 1: Upload -->
   <div id="pane-upload">
     <div class="op-card" style="max-width:600px">
-      <h2>Drop Manheim screenshot here</h2>
+      <h2>Drop Manheim screenshots here</h2>
       <div class="drop-zone" id="drop-zone" onclick="document.getElementById('ss-input').click()" style="height:180px">
         <i class="ti ti-screenshot" style="font-size:36px;margin-bottom:8px;opacity:0.4"></i>
-        <p>Click or drag & drop screenshot<br><small>PNG or JPG · Max 20MB · Shows full grid of cars</small></p>
+        <p>Click or drag & drop screenshots<br><small>PNG or JPG · Max 20MB each · Several at once is OK</small></p>
       </div>
-      <input type="file" id="ss-input" accept="image/*" style="display:none" onchange="handleFile(this.files[0])">
+      <input type="file" id="ss-input" accept="image/*" multiple style="display:none" onchange="handleFiles(this.files)">
       <div id="upload-preview" style="display:none;margin-top:12px">
-        <img id="upload-thumb" src="" style="width:100%;border-radius:var(--radius);border:1px solid var(--line)">
+        <div id="upload-thumbs" style="display:flex;gap:8px;flex-wrap:wrap"></div>
         <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:12px" onclick="parseScreenshot()" id="parse-btn">
           <i class="ti ti-cpu"></i> Parse all cars with AI
         </button>
@@ -94,6 +94,7 @@
         <p style="font-size:13px;color:var(--ink-soft)">
           Buy Now prices marked up <strong>12%</strong> · Starting Price = Bid price
         </p>
+        <p id="parse-cost" style="font-size:12px;color:var(--ink-mute);font-family:var(--mono);margin-top:4px"></p>
       </div>
       <div style="display:flex;gap:10px;align-items:center">
         <button class="btn btn-ghost btn-sm" onclick="selectAll()">Select all</button>
@@ -143,45 +144,62 @@
 <script>
 let parsedVehicles = [];
 let croppedPhotos = [];
-let screenshotFile = null;
+let screenshotFiles = [];
+let lastCostUsd = 0;
 
 // Drag & drop
 const dz = document.getElementById('drop-zone');
 dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
 dz.addEventListener('dragleave', () => dz.classList.remove('over'));
-dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('over'); const f = e.dataTransfer.files[0]; if (f) handleFile(f); });
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('over'); handleFiles(e.dataTransfer.files); });
 
-function handleFile(file) {
-  if (!file) return;
-  screenshotFile = file;
-  const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById('upload-thumb').src = e.target.result;
-    document.getElementById('upload-preview').style.display = 'block';
-    document.getElementById('parse-error').style.display = 'none';
-  };
-  reader.readAsDataURL(file);
+function handleFiles(files) {
+  const list = [...(files || [])].filter(f => f.type.startsWith('image/'));
+  if (!list.length) return;
+  screenshotFiles = list;
+  const thumbs = document.getElementById('upload-thumbs');
+  thumbs.innerHTML = '';
+  list.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.style.cssText = 'width:120px;height:72px;object-fit:cover;border-radius:var(--radius);border:1px solid var(--line)';
+      thumbs.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  });
+  document.getElementById('upload-preview').style.display = 'block';
+  document.getElementById('parse-error').style.display = 'none';
+  document.getElementById('parse-btn').innerHTML = `<i class="ti ti-cpu"></i> Parse ${list.length} screenshot${list.length>1?'s':''} with AI`;
 }
 
 async function parseScreenshot() {
   const btn = document.getElementById('parse-btn');
   const errEl = document.getElementById('parse-error');
   errEl.style.display = 'none';
-  btn.innerHTML = '<i class="ti ti-loader"></i> Parsing with AI... (takes ~15 seconds)';
   btn.disabled = true;
 
-  try {
-    const form = new FormData();
-    form.append('screenshot', screenshotFile, screenshotFile.name);
-    const res = await fetch('/api/parse-screenshot', { method: 'POST', body: form });
-    const d = await res.json();
-    if (!d.ok) { errEl.textContent = d.error || 'Parse failed'; errEl.style.display = 'block'; btn.innerHTML = '<i class="ti ti-cpu"></i> Parse all cars with AI'; btn.disabled = false; return; }
+  parsedVehicles = [];
+  croppedPhotos = [];
+  lastCostUsd = 0;
 
-    parsedVehicles = d.vehicles || [];
-    croppedPhotos = d.photos || [];
+  try {
+    for (let i = 0; i < screenshotFiles.length; i++) {
+      const file = screenshotFiles[i];
+      btn.innerHTML = `<i class="ti ti-loader"></i> Parsing ${i+1} of ${screenshotFiles.length}...`;
+      const form = new FormData();
+      form.append('screenshot', file, file.name);
+      const res = await fetch('/api/parse-screenshot', { method: 'POST', body: form });
+      const d = await res.json();
+      if (!d.ok) { throw new Error(d.error || 'Parse failed on ' + file.name); }
+      parsedVehicles.push(...(d.vehicles || []));
+      croppedPhotos.push(...(d.photos || []));
+      if (d.usage) lastCostUsd += d.usage.cost_usd || 0;
+    }
     renderReview();
   } catch(e) {
-    errEl.textContent = 'Network error: ' + e.message;
+    errEl.textContent = e.message;
     errEl.style.display = 'block';
     btn.innerHTML = '<i class="ti ti-cpu"></i> Parse all cars with AI';
     btn.disabled = false;
@@ -196,6 +214,9 @@ function renderReview() {
   document.getElementById('pane-review').style.display = 'block';
   document.getElementById('step1').className = 'step done';
   document.getElementById('step2').className = 'step active';
+
+  document.getElementById('parse-cost').textContent =
+    `${screenshotFiles.length} screenshot${screenshotFiles.length>1?'s':''} · ${parsedVehicles.length} cars · AI cost ≈ $${lastCostUsd.toFixed(3)}`;
 
   const grid = document.getElementById('ss-grid');
   grid.innerHTML = parsedVehicles.map((v, i) => {
@@ -292,11 +313,12 @@ async function submitSelected() {
 }
 
 function resetToUpload() {
-  parsedVehicles = []; croppedPhotos = []; screenshotFile = null;
+  parsedVehicles = []; croppedPhotos = []; screenshotFiles = []; lastCostUsd = 0;
   document.getElementById('pane-upload').style.display = 'block';
   document.getElementById('pane-review').style.display = 'none';
   document.getElementById('pane-done').style.display = 'none';
   document.getElementById('upload-preview').style.display = 'none';
+  document.getElementById('upload-thumbs').innerHTML = '';
   document.getElementById('ss-input').value = '';
   document.getElementById('parse-btn').innerHTML = '<i class="ti ti-cpu"></i> Parse all cars with AI';
   document.getElementById('parse-btn').disabled = false;

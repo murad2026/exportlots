@@ -874,7 +874,17 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
         }
       }
 
-      return res.end(JSON.stringify({ ok: true, vehicles: mergedVehicles, photos: mergedPhotos }));
+      // Report token usage and an approximate cost for this screenshot so the
+      // operator can see what the Vision call cost. Sonnet 4.6: $3 / 1M input,
+      // $15 / 1M output.
+      const u = response.usage || {};
+      const inTok = (u.input_tokens || 0) + (u.cache_read_input_tokens || 0) + (u.cache_creation_input_tokens || 0);
+      const outTok = u.output_tokens || 0;
+      const costUsd = Math.round((inTok / 1e6 * 3 + outTok / 1e6 * 15) * 10000) / 10000;
+      console.log(`parse-screenshot usage: in=${inTok} out=${outTok} cost=$${costUsd}`);
+      const usage = { input_tokens: inTok, output_tokens: outTok, cost_usd: costUsd };
+
+      return res.end(JSON.stringify({ ok: true, vehicles: mergedVehicles, photos: mergedPhotos, usage }));
     }
 
     // POST /api/vehicles/bulk — add multiple vehicles at once (from screenshot parser)
