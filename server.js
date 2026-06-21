@@ -398,6 +398,33 @@ async function applyEdgeBlur(img) {
   return img;
 }
 
+// Content-aware background blur: keep the car (a rectangular box in pixels)
+// sharp and heavily blur everything outside it, with a soft feathered edge.
+// This wipes dealership signage, license plates and lot background regardless
+// of where they sit. Falls back to the radial edge blur when no usable box is
+// given.
+async function applyBackgroundBlur(img, box) {
+  if (!box) return applyEdgeBlur(img);
+  const w = img.bitmap.width, h = img.bitmap.height;
+  const blurred = img.clone().blur(22);
+  const feather = Math.max(8, Math.round(Math.min(w, h) * 0.06));
+  const bx0 = box.x, by0 = box.y, bx1 = box.x + box.w, by1 = box.y + box.h;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const dx = x < bx0 ? bx0 - x : (x > bx1 ? x - bx1 : 0);
+      const dy = y < by0 ? by0 - y : (y > by1 ? y - by1 : 0);
+      if (dx === 0 && dy === 0) continue; // inside the car box → stay sharp
+      let t = Math.sqrt(dx * dx + dy * dy) / feather;
+      if (t > 1) t = 1;
+      const s = Jimp.intToRGBA(img.getPixelColor(x, y));
+      const b = Jimp.intToRGBA(blurred.getPixelColor(x, y));
+      const mix = (a, c) => Math.round(a + (c - a) * t);
+      img.setPixelColor(Jimp.rgbaToInt(mix(s.r, b.r), mix(s.g, b.g), mix(s.b, b.b), 255), x, y);
+    }
+  }
+  return img;
+}
+
 async function processImage(buffer) {
   try {
     if (!Jimp) throw new Error('no jimp');
@@ -689,6 +716,7 @@ For each card extract:
 - sale_date: some cards show a small calendar badge in the TOP-RIGHT corner like "6/24 3-158" or "6/25 5-73" (date followed by lane-run). Extract ONLY the M/D date part (e.g. "6/24"). Return null if there is no such date badge (e.g. plain "Timed Sale" cards).
 - cr_score (Condition Report score like "3.8", "4.4" — number or null)
 - title_ok (true if no salvage/rebuild badge visible, false if red "Salvage" tag shown)
+- box: the bounding box of the CAR body in that card's photo, given as fractions of the WHOLE screenshot image (0 to 1): {"x":left, "y":top, "w":width, "h":height}. Draw it tightly around the vehicle (wheels to roof, bumper to bumper); exclude background, signage and sky. Use null only if the car isn't clearly visible.
 
 Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON array.`;
 
@@ -817,6 +845,23 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
             return topOff + Math.round(CARD_H * 0.42); // fallback
           };
 
+          // Map a vehicle's full-image car box (fractions 0..1) into the cropped
+          // photo's pixel space, padded outward so we never clip the car. Returns
+          // null when the box is missing or doesn't sensibly cover the crop, so
+          // the blur falls back to the geometric edge blur.
+          const localCarBox = (box, cx, cy, cw, ch) => {
+            if (!box || [box.x, box.y, box.w, box.h].some(n => typeof n !== 'number' || isNaN(n))) return null;
+            const pad = Math.round(Math.min(cw, ch) * 0.06);
+            let lx0 = Math.max(0, box.x * W - cx - pad);
+            let ly0 = Math.max(0, box.y * H - cy - pad);
+            let lx1 = Math.min(cw, (box.x + box.w) * W - cx + pad);
+            let ly1 = Math.min(ch, (box.y + box.h) * H - cy + pad);
+            const bw = lx1 - lx0, bh = ly1 - ly0;
+            // Reject boxes that barely overlap or already cover almost everything.
+            if (bw < cw * 0.25 || bh < ch * 0.25 || (bw > cw * 0.98 && bh > ch * 0.98)) return null;
+            return { x: lx0, y: ly0, w: bw, h: bh };
+          };
+
           for (let i = 0; i < count; i++) {
             const col = i % COLS;
             const row = Math.floor(i / COLS);
@@ -830,7 +875,8 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
             const h = bottomOff - topOff;
             if (x + w > W || y + h > H || h < 10) { croppedPhotos.push(null); continue; }
             const cropped = img.clone().crop(x, y, w, h);
-            await applyEdgeBlur(cropped);
+            const carBox = localCarBox(rawVehicles[i] && rawVehicles[i].box, x, y, w, h);
+            await applyBackgroundBlur(cropped, carBox);
             const jpgBuf = await cropped.quality(82).getBufferAsync(Jimp.MIME_JPEG);
             croppedPhotos.push(jpgBuf.toString('base64'));
           }
