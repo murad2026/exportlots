@@ -230,14 +230,11 @@ function fmtMi(n) { return n ? n.toLocaleString() + ' mi' : '—'; }
 function getCountdown(v) {
   const now = Date.now();
   if (v.status === 'sold') return { label:'SOLD', cls:'vs-sold', timer:'Ended', timerCls:'' };
-  if (v.status === 'live') return { label:'LIVE', cls:'vs-live', timer:'🔴 LIVE NOW', timerCls:'v-timer-live' };
+  if (v.status === 'live') return { label:'ACTIVE', cls:'vs-active', timer:'Check availability', timerCls:'', icon:'ti-circle-check' };
   const target = v.sale_type === 'simulcast' ? v.start_time : v.end_time;
   if (!target) return { label:'ACTIVE', cls:'vs-active', timer:'Check availability', timerCls:'', icon:'ti-circle-check' };
   const diff = new Date(target).getTime() - now;
-  if (diff <= 0) {
-    if (v.sale_type === 'simulcast') return { label:'LIVE', cls:'vs-live', timer:'🔴 LIVE NOW', timerCls:'v-timer-live' };
-    return { label:'SOLD', cls:'vs-sold', timer:'Sold', timerCls:'' };
-  }
+  if (diff <= 0) return { label:'ACTIVE', cls:'vs-active', timer:'Check availability', timerCls:'', icon:'ti-circle-check' };
   const d = Math.floor(diff / 86400000);
   const h = Math.floor((diff % 86400000) / 3600000);
   const m = Math.floor((diff % 3600000) / 60000);
