@@ -53,8 +53,8 @@
     </select>
     <select class="filter-select" id="f-type" onchange="applyFilters()">
       <option value="">All types</option>
-      <option value="timed">Timed sale (Buy Now)</option>
-      <option value="simulcast">Live Auction</option>
+      <option value="timed">Fixed price</option>
+      <option value="simulcast">Auction</option>
     </select>
     <select class="filter-select" id="f-status" onchange="applyFilters()">
       <option value="active">Active only</option>
@@ -172,7 +172,7 @@ function buildCard(v) {
         <div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             ${starting ? `<span class="v-price">${starting}</span><span class="v-price-tag v-price-tag-est">STARTING</span>` : ''}
-            ${price ? `<span class="v-price v-price-buynow">${price}</span><span class="v-price-tag v-price-tag-fixed">BUY NOW</span>` : ''}
+            ${price ? `<span class="v-price v-price-buynow">${price}</span><span class="v-price-tag v-price-tag-fixed">FIXED PRICE</span>` : ''}
           </div>
           <div class="v-price-label">${v.lot}</div>
         </div>
