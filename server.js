@@ -767,9 +767,9 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
           const img = await Jimp.read(screenshotBuf);
           const W = img.bitmap.width;
           const H = img.bitmap.height;
-          const count = Math.min(rawVehicles.length, 12);
+          const count = Math.min(rawVehicles.length, 16);
           const ROWS = count <= 8 ? 1 : 2;
-          const COLS = ROWS === 1 ? count : 6;
+          const COLS = ROWS === 1 ? count : Math.ceil(count / 2);
           const CARD_W = Math.floor(W / COLS);
           const CARD_H = Math.floor(H / ROWS);
 
