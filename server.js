@@ -834,7 +834,40 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
         }
       }
 
-      return res.end(JSON.stringify({ ok: true, vehicles, photos: croppedPhotos }));
+      // Manheim often lists the same car twice — once as a Simulcast Live card
+      // (carrying the auction date) and once as a Timed Sale card (carrying the
+      // Buy Now price). Merge cards that share a Manheim id into a single
+      // listing that keeps the starting bid, the Buy Now price and the sale date
+      // together, and keep the first available photo for the group.
+      const mergedVehicles = [];
+      const mergedPhotos = [];
+      const indexById = new Map();
+      for (let i = 0; i < vehicles.length; i++) {
+        const v = vehicles[i];
+        const id = (v.manheim_id || '').trim().toUpperCase();
+        const photo = croppedPhotos[i] || null;
+        if (id && indexById.has(id)) {
+          const j = indexById.get(id);
+          const t = mergedVehicles[j];
+          // Fill in whatever the existing entry is missing from this duplicate.
+          t.buy_now = t.buy_now || v.buy_now;
+          t.bid_price = t.bid_price || v.bid_price;
+          t.sale_date = t.sale_date || v.sale_date;
+          t.mmr_avg = t.mmr_avg || v.mmr_avg;
+          t.mmr_low = t.mmr_low || v.mmr_low;
+          t.mmr_high = t.mmr_high || v.mmr_high;
+          t.cr_score = t.cr_score || v.cr_score;
+          // A listing with a Buy Now price and a deadline behaves like a timed sale.
+          if (t.buy_now) t.sale_type = 'timed';
+          if (!mergedPhotos[j] && photo) mergedPhotos[j] = photo;
+        } else {
+          if (id) indexById.set(id, mergedVehicles.length);
+          mergedVehicles.push(v);
+          mergedPhotos.push(photo);
+        }
+      }
+
+      return res.end(JSON.stringify({ ok: true, vehicles: mergedVehicles, photos: mergedPhotos }));
     }
 
     // POST /api/vehicles/bulk — add multiple vehicles at once (from screenshot parser)
