@@ -898,6 +898,44 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
           const end_time = isSimulcast ? null : saleTime;
           const start_time = isSimulcast ? saleTime : null;
 
+          // Cross-screenshot dedup: if a listing for this Manheim id already
+          // exists (e.g. the date came in one screenshot and the Buy Now price
+          // in another), merge the new info into it instead of creating a
+          // duplicate lot.
+          const existingLot = vin_full ? await findLotByVin(vin_full) : null;
+          if (existingLot) {
+            const existing = await getDoc('vehicles', 'lot', existingLot);
+            if (existing) {
+              const existDate = existing.end_time || existing.start_time;
+              const saleDate = existDate || end_time || start_time;
+              const merged = Object.assign({}, existing, {
+                buy_now: existing.buy_now || v.buy_now || null,
+                mmr_avg: existing.mmr_avg || v.bid_price || v.mmr_avg || null,
+                grade: existing.grade || v.cr_score || null,
+                condition_report: existing.condition_report || !!v.cr_score,
+                status: 'active',
+              });
+              // A Buy Now price + a deadline behaves like a timed sale, so the
+              // countdown targets end_time.
+              if (merged.buy_now) {
+                merged.sale_type = 'timed';
+                merged.end_time = saleDate || null;
+                merged.start_time = null;
+              } else if (saleDate && !existDate) {
+                if ((existing.sale_type || 'timed') === 'simulcast') merged.start_time = saleDate;
+                else merged.end_time = saleDate;
+              }
+              if (!existing.photo && processedPhoto) {
+                const { pool } = require('./db');
+                await pool.query('INSERT INTO photos (lot, data) VALUES ($1, $2) ON CONFLICT (lot) DO UPDATE SET data = $2', [existingLot, processedPhoto]);
+                merged.photo = `/uploads/${existingLot}.jpg`;
+              }
+              await updateDoc('vehicles', 'lot', existingLot, merged);
+              results.push({ ok: true, lot: existingLot, merged: true, make: v.make, model: v.model });
+              continue;
+            }
+          }
+
           const { lot } = await withNextLotInsert(
             new Date().getFullYear(),
             (lot) => ({
