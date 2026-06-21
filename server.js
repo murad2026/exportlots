@@ -407,8 +407,7 @@ async function processImage(buffer) {
     if (img.bitmap.width > 1200 || img.bitmap.height > 900) {
       img.scaleToFit(1200, 900);
     }
-    // The screenshot crop already produced the final look (tight car crop or
-    // edge blur), so just normalize size and re-encode here — no second blur.
+    await applyEdgeBlur(img);
     return await img.quality(85).getBufferAsync(Jimp.MIME_JPEG);
   } catch(e) {
     console.log('Image processing error:', e.message, '— saving raw');
@@ -690,7 +689,6 @@ For each card extract:
 - sale_date: some cards show a small calendar badge in the TOP-RIGHT corner like "6/24 3-158" or "6/25 5-73" (date followed by lane-run). Extract ONLY the M/D date part (e.g. "6/24"). Return null if there is no such date badge (e.g. plain "Timed Sale" cards).
 - cr_score (Condition Report score like "3.8", "4.4" — number or null)
 - title_ok (true if no salvage/rebuild badge visible, false if red "Salvage" tag shown)
-- box: the bounding box of the CAR body in that card's photo, given as fractions of the WHOLE screenshot image (0 to 1): {"x":left, "y":top, "w":width, "h":height}. Draw it tightly around the vehicle (wheels to roof, bumper to bumper); exclude background, signage and sky. Use null only if the car isn't clearly visible.
 
 Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON array.`;
 
@@ -819,22 +817,6 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
             return topOff + Math.round(CARD_H * 0.42); // fallback
           };
 
-          // Tight crop to the car using its Vision bounding box (fractions of
-          // the full image), padded outward so we never clip the vehicle and
-          // clamped to the card's photo region. Returns a pixel rect, or null
-          // when the box is missing/unreliable so we fall back to the full photo.
-          const carCropRect = (box, px, py, pw, ph) => {
-            if (!box || [box.x, box.y, box.w, box.h].some(n => typeof n !== 'number' || isNaN(n))) return null;
-            let cx0 = box.x * W, cy0 = box.y * H, cx1 = (box.x + box.w) * W, cy1 = (box.y + box.h) * H;
-            const padX = (cx1 - cx0) * 0.15, padY = (cy1 - cy0) * 0.15;
-            cx0 = Math.max(px, cx0 - padX); cy0 = Math.max(py, cy0 - padY);
-            cx1 = Math.min(px + pw, cx1 + padX); cy1 = Math.min(py + ph, cy1 + padY);
-            const cw = Math.round(cx1 - cx0), ch = Math.round(cy1 - cy0);
-            // Reject boxes that barely cover the photo or already cover all of it.
-            if (cw < pw * 0.30 || ch < ph * 0.30 || (cw > pw * 0.95 && ch > ph * 0.95)) return null;
-            return { x: Math.round(cx0), y: Math.round(cy0), w: cw, h: ch };
-          };
-
           for (let i = 0; i < count; i++) {
             const col = i % COLS;
             const row = Math.floor(i / COLS);
@@ -847,19 +829,10 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
             const w = CARD_W - 2;
             const h = bottomOff - topOff;
             if (x + w > W || y + h > H || h < 10) { croppedPhotos.push(null); continue; }
-            const rect = carCropRect(rawVehicles[i] && rawVehicles[i].box, x, y, w, h);
-            let outBuf;
-            if (rect) {
-              // Clean tight crop to the car — no blur, signage is simply out of frame.
-              const cropped = img.clone().crop(rect.x, rect.y, rect.w, rect.h);
-              outBuf = await cropped.quality(85).getBufferAsync(Jimp.MIME_JPEG);
-            } else {
-              // No usable box — keep the whole photo and soften the edges.
-              const cropped = img.clone().crop(x, y, w, h);
-              await applyEdgeBlur(cropped);
-              outBuf = await cropped.quality(82).getBufferAsync(Jimp.MIME_JPEG);
-            }
-            croppedPhotos.push(outBuf.toString('base64'));
+            const cropped = img.clone().crop(x, y, w, h);
+            await applyEdgeBlur(cropped);
+            const jpgBuf = await cropped.quality(82).getBufferAsync(Jimp.MIME_JPEG);
+            croppedPhotos.push(jpgBuf.toString('base64'));
           }
         } catch(e) {
           console.log('Screenshot crop error:', e.message);
