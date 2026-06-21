@@ -103,7 +103,7 @@ async function initNav() {
     }
     if (s.ok && s.role === 'operator') {
       document.getElementById('nav-cta').innerHTML = `
-        <a href="/admin/operator" class="btn btn-ghost btn-sm">← Operator panel</a>
+        <a href="/admin" class="btn btn-ghost btn-sm">← Admin panel</a>
         <button onclick="fetch('/api/auth/logout',{method:'POST'}).then(()=>location.href='/admin/login')" class="btn btn-ghost btn-sm">Sign out</button>`;
     } else if (s.ok && (s.role === 'dealer' || s.role === 'owner')) {
       document.getElementById('nav-cta').innerHTML = `

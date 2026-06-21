@@ -434,7 +434,6 @@ const PAGE_ROUTES = {
   '/how-it-works':  'how-it-works.html',
   '/detail':        'detail.html',
   '/admin':              'admin/index.html',
-  '/admin/operator':     'admin/operator.html',
   '/admin/screenshot':   'admin/screenshot.html',
   '/admin/login':        'admin/login.html',
 };
@@ -570,119 +569,6 @@ async function handleRequest(req, res) {
       return res.end(JSON.stringify({ ok: true, vehicles: list, isDealer }));
     }
 
-    // POST /api/vehicles (add new vehicle with photo)
-    if (pathname === '/api/vehicles' && req.method === 'POST') {
-      const s = getSession(req);
-      if (!s || !['owner'].includes(s.role)) {
-        return res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
-      }
-
-      const contentType = req.headers['content-type'] || '';
-      let parsed_data, photoBuffer = null, photoExt = '.jpg';
-
-      if (contentType.includes('multipart/form-data')) {
-        const { fields, file } = await parseMultipart(req);
-        parsed_data = fields.data ? JSON.parse(fields.data) : {};
-        if (file) {
-          photoBuffer = file.buffer;
-          photoExt = path.extname(file.originalname).toLowerCase() || '.jpg';
-        }
-      } else {
-        parsed_data = await readBody(req);
-      }
-
-      // Process the photo (slow, async) before the DB transaction below so
-      // the transaction itself stays short.
-      let processedPhoto = null;
-      if (photoBuffer) {
-        processedPhoto = await processImage(photoBuffer);
-      }
-
-      const vin_full = parsed_data.vin_full || '';
-      const vin_masked = vin_full ? vin_full.substring(0, 9) + '••••••••' : '';
-      const end_time = parsed_data.time_left_raw ? parseTimeLeft(parsed_data.time_left_raw) :
-                       parsed_data.end_time || null;
-      const start_time = parsed_data.starts_raw ? parseStartTime(parsed_data.starts_raw) :
-                         parsed_data.start_time || null;
-
-      // If this VIN already exists, just refresh its countdown and status
-      // instead of creating a duplicate lot.
-      if (vin_full) {
-        const existingLot = await findLotByVin(vin_full);
-        if (existingLot) {
-          const existing = await getDoc('vehicles', 'lot', existingLot);
-          const updated = Object.assign({}, existing, {
-            end_time,
-            start_time,
-            status: 'active',
-            ...(processedPhoto ? { photo: `/uploads/${existingLot}.jpg` } : {}),
-          });
-          await updateDoc('vehicles', 'lot', existingLot, updated);
-          if (processedPhoto) {
-            const { pool } = require('./db');
-            await pool.query('INSERT INTO photos (lot, data) VALUES ($1, $2) ON CONFLICT (lot) DO UPDATE SET data = $2', [existingLot, processedPhoto]);
-          }
-          return res.end(JSON.stringify({ ok: true, lot: existingLot, reused: true }));
-        }
-      }
-
-      const year = new Date().getFullYear();
-      const { lot } = await withNextLotInsert(
-        year,
-        (lot) => {
-          const photoPath = processedPhoto ? `/uploads/${lot}.jpg` : null;
-          return {
-            lot,
-            vin_masked,
-            year: parsed_data.year,
-            make: parsed_data.make,
-            model: parsed_data.model,
-            trim: parsed_data.trim || '',
-            mileage: parsed_data.mileage,
-            engine: parsed_data.engine || '',
-            transmission: parsed_data.transmission || '',
-            drivetrain: parsed_data.drivetrain || '',
-            fuel: parsed_data.fuel || 'Gasoline',
-            color_ext: parsed_data.color_ext || '',
-            color_int: parsed_data.color_int || '',
-            body: parsed_data.body || 'Sedan',
-            grade: parsed_data.grade || null,
-            autocheck: parsed_data.autocheck || null,
-            owners: parsed_data.owners || null,
-            accidents: parsed_data.accidents || null,
-            title_status: parsed_data.title_status || 'Not Specified',
-            announcements: parsed_data.announcements || null,
-            remarks: parsed_data.remarks || null,
-            seller_comments: null,
-            condition_report: false,
-            sale_type: parsed_data.sale_type || 'timed',
-            end_time,
-            start_time,
-            mmr_avg: parsed_data.mmr_avg || null,
-            buy_now: parsed_data.buy_now || null,
-            location: parsed_data.location || '',
-            auction_house: parsed_data.auction_house || '',
-            msrp: parsed_data.msrp || null,
-            photo: photoPath,
-            markets: parsed_data.markets || [],
-            status: 'active',
-            is_sample: parsed_data.is_sample || false,
-            added: new Date().toISOString(),
-          };
-        },
-        (lot) => ({
-          lot,
-          vin_full,
-          manheim_lot: parsed_data.manheim_lot || '',
-          buy_price: parsed_data.buy_price || null,
-          seller: parsed_data.seller || '',
-        }),
-        processedPhoto
-      );
-
-      return res.end(JSON.stringify({ ok: true, lot }));
-    }
-
     // PATCH /api/vehicles/:lot
     if (pathname.match(/^\/api\/vehicles\/[A-Z0-9-]+$/) && req.method === 'PATCH') {
       const s = getSession(req);
@@ -760,15 +646,6 @@ async function handleRequest(req, res) {
       const id = pathname.split('/')[3];
       await deleteDoc('pending', 'id', id);
       return res.end(JSON.stringify({ ok: true }));
-    }
-
-    // POST /api/parse (parse Manheim text)
-    if (pathname === '/api/parse' && req.method === 'POST') {
-      const s = getSession(req);
-      if (!s || !['owner'].includes(s.role)) return res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
-      const body = await readBody(req);
-      const parsed = parseManheim(body.text || '');
-      return res.end(JSON.stringify({ ok: true, data: parsed }));
     }
 
     // POST /api/parse-screenshot — parse a Manheim grid screenshot via Claude Vision
@@ -865,7 +742,9 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
           sale_date: v.sale_date || '',
           cr_score: v.cr_score || null,
           title_status: v.title_ok === false ? 'Salvage' : 'Clean',
-          vin_masked: v.manheim_id ? '•••••••••' + v.manheim_id : '',
+          // Never embed the Manheim id in the public-facing masked VIN. The real
+          // id is kept admin-only in vehicles_private.manheim_lot.
+          vin_masked: '•••••••••••••••••',
           status: 'active',
         };
       });
@@ -1051,7 +930,7 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
     }
   }
   // Protect admin pages
-  if (pathname === '/admin' || pathname === '/admin/operator' || pathname === '/admin/screenshot') {
+  if (pathname === '/admin' || pathname === '/admin/screenshot') {
     const s = getSession(req);
     if (!s || !['owner'].includes(s.role)) {
       res.writeHead(302, { Location: '/admin/login' }); return res.end();
