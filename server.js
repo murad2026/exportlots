@@ -723,6 +723,8 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
         const buy_now = v.buy_now_price ? Math.round(v.buy_now_price * (1 + MARKUP)) : null;
         const bid = v.bid_price || mmr_avg || null;
         const start_price = v.bid_price || null; // real starting bid only (no MMR fallback, no markup)
+        // Fallback price for listings with no bid/Buy Now: the high MMR + markup.
+        const expected_price = v.mmr_high ? Math.round(v.mmr_high * (1 + MARKUP)) : null;
         return {
           year: v.year,
           make: v.make,
@@ -740,6 +742,7 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
           buy_now: buy_now,
           bid_price: bid,
           start_price: start_price,
+          expected_price: expected_price,
           manheim_id: v.manheim_id || '',
           sale_date: v.sale_date || '',
           cr_score: v.cr_score || null,
@@ -855,6 +858,7 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
           t.buy_now = t.buy_now || v.buy_now;
           t.bid_price = t.bid_price || v.bid_price;
           t.start_price = t.start_price || v.start_price;
+          t.expected_price = t.expected_price || v.expected_price;
           t.sale_date = t.sale_date || v.sale_date;
           t.mmr_avg = t.mmr_avg || v.mmr_avg;
           t.mmr_low = t.mmr_low || v.mmr_low;
@@ -915,6 +919,7 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
                 buy_now: existing.buy_now || v.buy_now || null,
                 mmr_avg: existing.mmr_avg || v.bid_price || v.mmr_avg || null,
                 start_price: existing.start_price || v.start_price || null,
+                expected_price: existing.expected_price || v.expected_price || null,
                 grade: existing.grade || v.cr_score || null,
                 condition_report: existing.condition_report || !!v.cr_score,
                 status: 'active',
@@ -971,6 +976,7 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
               start_time,
               mmr_avg: v.bid_price || v.mmr_avg || null,
               start_price: v.start_price || null,
+              expected_price: v.expected_price || null,
               buy_now: v.buy_now || null,
               location: v.location || '',
               auction_house: '',

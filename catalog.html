@@ -129,6 +129,7 @@ function buildCard(v) {
   const price = v.buy_now ? fmtUSD(v.buy_now) : null;
   const mmr = fmtUSD(v.mmr_avg);
   const starting = v.start_price ? fmtUSD(v.start_price) : null;
+  const expected = (!v.start_price && !v.buy_now && v.expected_price) ? fmtUSD(v.expected_price) : null;
   const originPort = PORT_FROM_LOC(v.location);
 
   // Per-market all-in prices
@@ -169,6 +170,7 @@ function buildCard(v) {
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             ${starting ? `<span class="v-price">${starting}</span><span class="v-price-tag v-price-tag-est">STARTING</span>` : ''}
             ${price ? `<span class="v-price v-price-buynow">${price}</span><span class="v-price-tag v-price-tag-fixed">FIXED PRICE</span>` : ''}
+            ${expected ? `<span class="v-price">${expected}</span><span class="v-price-tag v-price-tag-est">EXPECTED PRICE</span>` : ''}
           </div>
           <div class="v-price-label">${v.lot}</div>
         </div>
