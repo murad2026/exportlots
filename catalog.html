@@ -57,6 +57,13 @@
       <option value="active">Active only</option>
       <option value="">All (incl. sold)</option>
     </select>
+    <select class="filter-select" id="f-sort" onchange="applyFilters()">
+      <option value="">Sort: Ending soonest</option>
+      <option value="mi-asc">Mileage: low to high</option>
+      <option value="mi-desc">Mileage: high to low</option>
+      <option value="price-asc">Price: low to high</option>
+      <option value="price-desc">Price: high to low</option>
+    </select>
     <div class="filter-count" id="filter-count"></div>
   </div>
 </div>
@@ -211,10 +218,19 @@ function applyFilters() {
     return true;
   });
 
-  // Sort: active/live/urgent first, then sold
+  // Effective price for sorting: Buy Now, else starting/expected/MMR.
+  const sort = document.getElementById('f-sort').value;
+  const effPrice = v => v.buy_now || v.start_price || v.expected_price || v.mmr_avg || 0;
+
   filtered.sort((a,b) => {
+    // Sold always sink to the bottom regardless of the chosen sort.
     if (a.status === 'sold' && b.status !== 'sold') return 1;
     if (b.status === 'sold' && a.status !== 'sold') return -1;
+    if (sort === 'mi-asc')    return (a.mileage||0) - (b.mileage||0);
+    if (sort === 'mi-desc')   return (b.mileage||0) - (a.mileage||0);
+    if (sort === 'price-asc')  return effPrice(a) - effPrice(b);
+    if (sort === 'price-desc') return effPrice(b) - effPrice(a);
+    // Default: live first, then ending soonest.
     if (a.status === 'live') return -1;
     if (b.status === 'live') return 1;
     const ta = a.sale_type === 'simulcast' ? a.start_time : a.end_time;
