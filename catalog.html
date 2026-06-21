@@ -38,22 +38,20 @@
 
 <div class="filters-bar">
   <div class="filters-inner">
-    <select class="filter-select" id="f-market" onchange="applyFilters()">
-      <option value="">All destinations</option>
-      <option value="NG">🇳🇬 Nigeria</option>
-      <option value="AE">🇦🇪 UAE</option>
-      <option value="GH">🇬🇭 Ghana</option>
-      <option value="LT">🇱🇹 Eastern Europe</option>
-      <option value="DO">🇩🇴 Dominican Republic</option>
-      <option value="GE">🇬🇪 Georgia</option>
-      <option value="AM">🇦🇲 Armenia</option>
-    </select>
-    <select class="filter-select" id="f-make" onchange="applyFilters()">
+    <select class="filter-select" id="f-make" onchange="onMakeChange()">
       <option value="">All makes</option>
     </select>
-    <select class="filter-select" id="f-type" onchange="applyFilters()">
-      <option value="">All types</option>
-      <option value="timed">Fixed price</option>
+    <select class="filter-select" id="f-model" onchange="applyFilters()">
+      <option value="">All models</option>
+    </select>
+    <select class="filter-select" id="f-year" onchange="applyFilters()">
+      <option value="">All years</option>
+    </select>
+    <select class="filter-select" id="f-price" onchange="applyFilters()">
+      <option value="">All prices</option>
+      <option value="fixed">Fixed price</option>
+      <option value="starting">Starting price</option>
+      <option value="expected">Expected price</option>
     </select>
     <select class="filter-select" id="f-status" onchange="applyFilters()">
       <option value="active">Active only</option>
@@ -191,15 +189,24 @@ function buildCard(v) {
 }
 
 function applyFilters() {
-  const market = document.getElementById('f-market').value;
   const make = document.getElementById('f-make').value;
-  const type = document.getElementById('f-type').value;
+  const model = document.getElementById('f-model').value;
+  const year = document.getElementById('f-year').value;
+  const price = document.getElementById('f-price').value;
   const status = document.getElementById('f-status').value;
 
   let filtered = allVehicles.filter(v => {
-    if (market && !(v.markets||[]).includes(market)) return false;
     if (make && v.make !== make) return false;
-    if (type && v.sale_type !== type) return false;
+    if (model && v.model !== model) return false;
+    if (year && String(v.year) !== year) return false;
+    if (price) {
+      const hasFixed = !!v.buy_now;
+      const hasStarting = !!v.start_price;
+      const hasExpected = !v.start_price && !v.buy_now && !!v.expected_price;
+      if (price === 'fixed' && !hasFixed) return false;
+      if (price === 'starting' && !hasStarting) return false;
+      if (price === 'expected' && !hasExpected) return false;
+    }
     if (status === 'active' && (v.status === 'sold')) return false;
     return true;
   });
@@ -227,10 +234,29 @@ function applyFilters() {
   grid.innerHTML = filtered.map(buildCard).join('');
 }
 
-function populateMakeFilter(vehicles) {
-  const makes = [...new Set(vehicles.map(v=>v.make).filter(Boolean))].sort();
-  const sel = document.getElementById('f-make');
-  makes.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; sel.appendChild(o); });
+function addOpt(sel, val, text) {
+  const o = document.createElement('option'); o.value = val; o.textContent = text || val; sel.appendChild(o);
+}
+
+function populateFilters(vehicles) {
+  const makeSel = document.getElementById('f-make');
+  [...new Set(vehicles.map(v=>v.make).filter(Boolean))].sort().forEach(m => addOpt(makeSel, m));
+  const yearSel = document.getElementById('f-year');
+  [...new Set(vehicles.map(v=>v.year).filter(Boolean))].sort((a,b)=>b-a).forEach(y => addOpt(yearSel, String(y)));
+  populateModelFilter('');
+}
+
+// Models depend on the selected make so the list stays relevant.
+function populateModelFilter(make) {
+  const sel = document.getElementById('f-model');
+  sel.innerHTML = '<option value="">All models</option>';
+  [...new Set(allVehicles.filter(v=>!make||v.make===make).map(v=>v.model).filter(Boolean))].sort()
+    .forEach(m => addOpt(sel, m));
+}
+
+function onMakeChange() {
+  populateModelFilter(document.getElementById('f-make').value);
+  applyFilters();
 }
 
 async function loadCatalog() {
@@ -248,7 +274,7 @@ async function loadCatalog() {
     }
     allVehicles = data.vehicles || [];
     document.getElementById('total-count').textContent = allVehicles.filter(v=>v.status!=='sold').length + ' active';
-    populateMakeFilter(allVehicles);
+    populateFilters(allVehicles);
     applyFilters();
   } catch { window.location.href = '/login'; }
 }
