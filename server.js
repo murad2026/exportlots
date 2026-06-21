@@ -398,6 +398,51 @@ async function applyEdgeBlur(img) {
   return img;
 }
 
+// ---- BACKGROUND REPLACEMENT (Poof API) ----
+// When a Poof API key is configured, cut the car out of its photo and place it
+// on a clean studio background — this removes all dealership signage, plates and
+// lot background entirely, instead of blurring. Falls back (returns null) when
+// no key is set or the call fails, so the caller can blur instead.
+const POOF_API_KEY = process.env.POOF_API_KEY || '';
+
+// Drop a transparent (background-removed) car image onto a soft light-grey
+// vertical gradient, with a little padding so it doesn't sit edge-to-edge.
+function compositeOnStudio(fg) {
+  const W = fg.bitmap.width, H = fg.bitmap.height;
+  const padX = Math.round(W * 0.06), padY = Math.round(H * 0.06);
+  const cw = W + padX * 2, ch = H + padY * 2;
+  const bg = new Jimp(cw, ch, 0xffffffff);
+  for (let y = 0; y < ch; y++) {
+    const t = y / ch; // top white → bottom light grey
+    const color = Jimp.rgbaToInt(
+      Math.round(255 - 24 * t), Math.round(255 - 22 * t), Math.round(255 - 19 * t), 255);
+    for (let x = 0; x < cw; x++) bg.setPixelColor(color, x, y);
+  }
+  bg.composite(fg, padX, padY);
+  return bg;
+}
+
+async function removeBgStudio(jpegBuffer) {
+  if (!POOF_API_KEY || !Jimp) return null;
+  try {
+    const form = new FormData();
+    form.append('image_file', new Blob([jpegBuffer], { type: 'image/jpeg' }), 'car.jpg');
+    const res = await fetch('https://api.poof.bg/v1/remove', {
+      method: 'POST',
+      headers: { 'x-api-key': POOF_API_KEY },
+      body: form,
+    });
+    if (!res.ok) { console.log('Poof bg-removal failed:', res.status, await res.text().catch(()=>'')); return null; }
+    const pngBuf = Buffer.from(await res.arrayBuffer());
+    const fg = await Jimp.read(pngBuf);
+    const composed = compositeOnStudio(fg);
+    return await composed.quality(86).getBufferAsync(Jimp.MIME_JPEG);
+  } catch (e) {
+    console.log('Poof bg-removal error:', e.message);
+    return null;
+  }
+}
+
 async function processImage(buffer) {
   try {
     if (!Jimp) throw new Error('no jimp');
@@ -407,7 +452,8 @@ async function processImage(buffer) {
     if (img.bitmap.width > 1200 || img.bitmap.height > 900) {
       img.scaleToFit(1200, 900);
     }
-    await applyEdgeBlur(img);
+    // The screenshot crop already produced the final look (studio background or
+    // edge blur), so just normalize size and re-encode here — no second blur.
     return await img.quality(85).getBufferAsync(Jimp.MIME_JPEG);
   } catch(e) {
     console.log('Image processing error:', e.message, '— saving raw');
@@ -830,9 +876,16 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
             const h = bottomOff - topOff;
             if (x + w > W || y + h > H || h < 10) { croppedPhotos.push(null); continue; }
             const cropped = img.clone().crop(x, y, w, h);
-            await applyEdgeBlur(cropped);
-            const jpgBuf = await cropped.quality(82).getBufferAsync(Jimp.MIME_JPEG);
-            croppedPhotos.push(jpgBuf.toString('base64'));
+            // Prefer cutting the car out and placing it on a clean studio
+            // background (Poof). Fall back to the radial edge blur when no key
+            // is set or the API call fails, so a photo is always produced.
+            const cropJpeg = await cropped.clone().quality(90).getBufferAsync(Jimp.MIME_JPEG);
+            let outBuf = await removeBgStudio(cropJpeg);
+            if (!outBuf) {
+              await applyEdgeBlur(cropped);
+              outBuf = await cropped.quality(82).getBufferAsync(Jimp.MIME_JPEG);
+            }
+            croppedPhotos.push(outBuf.toString('base64'));
           }
         } catch(e) {
           console.log('Screenshot crop error:', e.message);
