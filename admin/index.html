@@ -222,6 +222,8 @@ function renderInventory(list) {
             <option value="live">Live</option>
             <option value="sold">Sold</option>
           </select>
+          <button class="btn btn-ghost btn-sm" style="padding:4px 8px" title="Replace photo" onclick="document.getElementById('photo-${v.lot}').click()"><i class="ti ti-photo"></i></button>
+          <input type="file" id="photo-${v.lot}" accept="image/*" style="display:none" onchange="replacePhoto('${v.lot}', this.files[0])">
           <button class="btn btn-ghost btn-sm" style="border-color:var(--red);color:var(--red);padding:4px 8px" onclick="deleteLot('${v.lot}')"><i class="ti ti-trash"></i></button>
         </div>
       </td>
@@ -302,6 +304,18 @@ async function toggleSample(lot, is_sample) {
   const d = await r.json();
   if (d.ok) { allVehicles = allVehicles.map(v => v.lot===lot ? {...v, is_sample} : v); }
   else alert('Error: ' + d.error);
+}
+
+async function replacePhoto(lot, file) {
+  if (!file) return;
+  const form = new FormData();
+  form.append('photo', file, file.name);
+  try {
+    const r = await fetch(`/api/vehicles/${lot}/photo`, { method: 'POST', body: form });
+    const d = await r.json();
+    if (d.ok) { loadDashboard(); }
+    else alert('Error: ' + (d.error || 'upload failed'));
+  } catch(e) { alert('Network error: ' + e.message); }
 }
 
 async function deleteLot(lot) {

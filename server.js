@@ -595,6 +595,34 @@ async function handleRequest(req, res) {
       return res.end(JSON.stringify({ ok: true }));
     }
 
+    // POST /api/vehicles/:lot/photo — replace a listing's cover photo (manual upload)
+    if (pathname.match(/^\/api\/vehicles\/[A-Z0-9-]+\/photo$/) && req.method === 'POST') {
+      const s = getSession(req);
+      if (!s || s.role !== 'owner') return res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
+      const lot = pathname.split('/')[3];
+      const existing = await getDoc('vehicles', 'lot', lot);
+      if (!existing) return res.end(JSON.stringify({ ok: false, error: 'Not found' }));
+      const { file } = await parseMultipart(req);
+      if (!file || !file.buffer || !file.buffer.length) return res.end(JSON.stringify({ ok: false, error: 'No image uploaded' }));
+      // Normalize the uploaded image (white bg, resize, strip EXIF) — no blur,
+      // since the operator is supplying a clean photo on purpose.
+      let processed = file.buffer;
+      if (Jimp) {
+        try {
+          const im = await Jimp.read(file.buffer);
+          im.background(0xFFFFFFFF);
+          if (im.bitmap.width > 1200 || im.bitmap.height > 900) im.scaleToFit(1200, 900);
+          processed = await im.quality(85).getBufferAsync(Jimp.MIME_JPEG);
+        } catch(e) { console.log('Replace photo process error:', e.message); }
+      }
+      const { pool } = require('./db');
+      await pool.query('INSERT INTO photos (lot, data) VALUES ($1, $2) ON CONFLICT (lot) DO UPDATE SET data = $2', [lot, processed]);
+      // Cache-bust the photo URL so the new image shows immediately.
+      const updated = Object.assign({}, existing, { photo: `/uploads/${lot}.jpg?v=${Date.now()}` });
+      await updateDoc('vehicles', 'lot', lot, updated);
+      return res.end(JSON.stringify({ ok: true, photo: updated.photo }));
+    }
+
     // POST /api/vehicles/bulk-delete
     if (pathname === '/api/vehicles/bulk-delete' && req.method === 'POST') {
       const s = getSession(req);
