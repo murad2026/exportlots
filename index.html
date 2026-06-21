@@ -256,6 +256,7 @@ function buildCard(v) {
   const cd = getCountdown(v);
   const price = v.buy_now ? fmtUSD(v.buy_now) : null;
   const mmr = fmtUSD(v.mmr_avg);
+  const starting = v.start_price ? fmtUSD(v.start_price) : null;
   const markets = (v.markets||[]).map(m=>`<span class="v-market-flag" title="${MARKET_NAMES[m]||m}">${MARKET_FLAGS[m]||m}</span>`).join('');
   const tags = [
     v.grade ? `<span class="vtag vtag-ok">Score ${v.grade}</span>` : '',
@@ -275,7 +276,7 @@ function buildCard(v) {
     <div class="v-body">
       <div class="v-title">${v.year} ${v.make} ${v.model} ${v.trim||''}</div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        ${mmr ? `<span class="v-price">${mmr}</span><span class="v-price-tag v-price-tag-est">STARTING</span>` : ''}
+        ${starting ? `<span class="v-price">${starting}</span><span class="v-price-tag v-price-tag-est">STARTING</span>` : ''}
         ${price ? `<span class="v-price v-price-buynow">${price}</span><span class="v-price-tag v-price-tag-fixed">BUY NOW</span>` : ''}
       </div>
       <div class="v-price-label">Lot ${v.lot}</div>
