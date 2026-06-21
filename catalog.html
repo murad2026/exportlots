@@ -169,13 +169,12 @@ function buildCard(v) {
       <div class="v-title">${v.year} ${v.make} ${v.model} ${v.trim||''}</div>
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
         <div>
-          <div style="display:flex;align-items:center;gap:8px">
-            ${price ? `<span class="v-price v-price-buynow">${price}</span><span class="v-price-tag v-price-tag-fixed">FIXED PRICE</span>` : ''}
-            ${!price && mmr ? `<span class="v-price">${mmr}</span><span class="v-price-tag v-price-tag-est">STARTING PRICE</span>` : ''}
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            ${mmr ? `<span class="v-price">${mmr}</span><span class="v-price-tag v-price-tag-est">STARTING</span>` : ''}
+            ${price ? `<span class="v-price v-price-buynow">${price}</span><span class="v-price-tag v-price-tag-fixed">BUY NOW</span>` : ''}
           </div>
           <div class="v-price-label">${v.lot}</div>
         </div>
-        ${price && mmr ? `<div class="v-mmr" style="margin:0">Market Low: <span class="v-mmr-value">${mmr}</span></div>` : ''}
       </div>
       <div class="v-secondary">
         <div class="v-sub">${fmtMi(v.mileage)} · ${v.drivetrain||''} · ${v.engine||''} · ${v.color_ext||''}</div>

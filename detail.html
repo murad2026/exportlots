@@ -188,9 +188,10 @@ function renderDetail(v) {
       <div>
         <div class="dh-lot">Lot ${v.lot}</div>
         <div class="dh-title" style="text-transform:uppercase">${v.year} ${v.make} ${v.model}${v.trim ? ' ' + v.trim : ''}</div>
-        <div style="font-size:18px;font-weight:800;color:${v.buy_now ? 'var(--accent)' : 'var(--ink)'};margin:2px 0 4px">
-          ${v.buy_now ? '$' + v.buy_now.toLocaleString() : (v.mmr_avg ? '$' + v.mmr_avg.toLocaleString() : '—')}
-          <span class="v-price-tag ${v.buy_now ? 'v-price-tag-fixed' : 'v-price-tag-est'}" style="margin-left:6px">${v.buy_now ? 'FIXED PRICE' : 'STARTING PRICE'}</span>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:2px 0 4px">
+          ${v.mmr_avg ? `<span style="font-size:18px;font-weight:800;color:var(--ink)">$${v.mmr_avg.toLocaleString()}<span class="v-price-tag v-price-tag-est" style="margin-left:6px">STARTING</span></span>` : ''}
+          ${v.buy_now ? `<span style="font-size:18px;font-weight:800;color:var(--accent)">$${v.buy_now.toLocaleString()}<span class="v-price-tag v-price-tag-fixed" style="margin-left:6px">BUY NOW</span></span>` : ''}
+          ${!v.mmr_avg && !v.buy_now ? '<span style="font-size:18px;font-weight:800;color:var(--ink)">—</span>' : ''}
         </div>
         <div class="dh-sub">${(v.mileage||0).toLocaleString()} mi &nbsp;·&nbsp; ${v.drivetrain||''} &nbsp;·&nbsp; ${v.engine||''} &nbsp;·&nbsp; ${v.color_ext||''}</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
