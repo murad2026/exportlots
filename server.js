@@ -717,7 +717,6 @@ For each card extract:
 - sale_date: some cards show a small calendar badge in the TOP-RIGHT corner like "6/24 3-158" or "6/25 5-73" (date followed by lane-run). Extract ONLY the M/D date part (e.g. "6/24"). Return null if there is no such date badge (e.g. plain "Timed Sale" cards).
 - cr_score (Condition Report score like "3.8", "4.4" — number or null)
 - title_ok (true if no salvage/rebuild badge visible, false if red "Salvage" tag shown)
-- text_boxes: an array of bounding boxes covering anything to HIDE inside that card's PHOTO image — overlay badges (e.g. "DealShield Select", "New"), corner icons/flags/360 buttons, watermarks/logos, any visible dealership name or signage in the background, and readable license plates. Each box as fractions of the WHOLE screenshot image: {"x":left,"y":top,"w":width,"h":height}. Keep each box tight around the item. Return [] if there is nothing to hide. Do NOT box the car itself.
 
 Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON array.`;
 
@@ -902,22 +901,9 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
             const yBot = detectPhotoBottom(cell, yTop);
             const x = cell.x + 1, y = yTop, w = cell.w - 2, h = yBot - yTop;
             if (x + w > W || y + h > H || h < 10 || w < 10) { croppedPhotos.push(null); continue; }
-            // Keep the photo as-is, but pixelate any text/badges/signage the
-            // parser flagged (DealShield/New badges, flags, watermarks, dealer
-            // signage, plates) so only those areas are hidden.
+            // Keep the photo as-is. The top overlay band (DealShield/flag/360)
+            // is already out of frame via the crop offset above.
             const cropped = img.clone().crop(x, y, w, h);
-            const tboxes = (rawVehicles[i] && rawVehicles[i].text_boxes) || [];
-            for (const tb of tboxes) {
-              if (!tb || [tb.x, tb.y, tb.w, tb.h].some(n => typeof n !== 'number' || isNaN(n))) continue;
-              const lx = Math.round(Math.max(0, tb.x * W - x));
-              const ly = Math.round(Math.max(0, tb.y * H - y));
-              const lx2 = Math.round(Math.min(w, (tb.x + tb.w) * W - x));
-              const ly2 = Math.round(Math.min(h, (tb.y + tb.h) * H - y));
-              const lw = lx2 - lx, lh = ly2 - ly;
-              if (lw < 4 || lh < 4) continue;          // too small / off-photo
-              if (lw * lh > w * h * 0.4) continue;      // guard: never blur a huge area (likely a bad box)
-              try { cropped.pixelate(10, lx, ly, lw, lh); } catch(e) {}
-            }
             const jpgBuf = await cropped.quality(85).getBufferAsync(Jimp.MIME_JPEG);
             croppedPhotos.push(jpgBuf.toString('base64'));
           }
