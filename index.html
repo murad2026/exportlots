@@ -50,13 +50,13 @@
       </div>
     </div>
     <div class="inv-tabs">
-      <button id="tab-ev" class="inv-tab inv-tab-ev inv-tab-active" onclick="switchTab('ev')">
-        <span class="inv-tab-icon">⚡</span>
-        <span class="inv-tab-label">Electric</span>
-      </button>
-      <button id="tab-all" class="inv-tab inv-tab-gas" onclick="switchTab('all')">
+      <button id="tab-all" class="inv-tab inv-tab-gas inv-tab-active" onclick="switchTab('all')">
         <span class="inv-tab-icon">⛽</span>
         <span class="inv-tab-label">Gasoline</span>
+      </button>
+      <button id="tab-ev" class="inv-tab inv-tab-ev" onclick="switchTab('ev')">
+        <span class="inv-tab-icon">⚡</span>
+        <span class="inv-tab-label">Electric</span>
       </button>
     </div>
   </div>
@@ -348,7 +348,7 @@ const stockCardAll = `<div class="v-card" style="cursor:default">
 </div>`;
 
 let allSamples = [];
-let currentTab = 'ev';
+let currentTab = 'all';
 
 function renderGrid(tab) {
   const grid = document.getElementById('sample-grid');
