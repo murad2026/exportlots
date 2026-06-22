@@ -4,12 +4,13 @@ const path = require('path');
 const url = require('url');
 const crypto = require('crypto');
 
-let bcrypt, multer, Jimp, uuid, nodemailer, Anthropic;
+let bcrypt, multer, Jimp, uuid, nodemailer, Anthropic, Tesseract;
 try { bcrypt = require('bcryptjs'); } catch(e) { bcrypt = null; }
 try { uuid = require('uuid'); } catch(e) { uuid = { v4: () => crypto.randomUUID() }; }
 try { Jimp = require('jimp'); } catch(e) { Jimp = null; }
 try { nodemailer = require('nodemailer'); } catch(e) { nodemailer = null; }
 try { Anthropic = require('@anthropic-ai/sdk'); } catch(e) { Anthropic = null; }
+try { Tesseract = require('tesseract.js'); } catch(e) { Tesseract = null; }
 
 const { initDb, allDocs, getDoc, insertDoc, updateDoc, deleteDoc, withNextLotInsert, getPhoto, findLotByVin } = require('./db');
 
@@ -396,6 +397,45 @@ async function applyEdgeBlur(img) {
     }
   }
   return img;
+}
+
+// ---- HIDE TEXT/BADGES ON A PHOTO ----
+// Two complementary passes that hide overlays without touching the car:
+// 1) the amber "DealShield Select" badge by its distinctive colour (reliable),
+// 2) any real text words via OCR (Tesseract) — pixelate only tight word boxes.
+const isAmberBadge = (c) => c.r > 222 && c.g > 172 && c.g < 218 && c.b < 115 && (c.r - c.b) > 125 && (c.g - c.b) > 80;
+
+function pixelateAmberBadge(im) {
+  const w = im.bitmap.width, h = im.bitmap.height;
+  let minX = 1e9, minY = 1e9, maxX = -1, maxY = -1, cnt = 0;
+  const yLim = Math.round(h * 0.30); // badge lives in the top strip
+  for (let y = 0; y < yLim; y++) for (let x = 0; x < w; x++) {
+    const c = Jimp.intToRGBA(im.getPixelColor(x, y));
+    if (isAmberBadge(c)) { if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; if (y > maxY) maxY = y; cnt++; }
+  }
+  if (cnt > 40 && maxX > minX) {
+    const bx = Math.max(0, minX - 3), by = Math.max(0, minY - 3);
+    im.pixelate(7, bx, by, Math.min(w - bx, maxX - minX + 6), Math.min(h - by, maxY - minY + 6));
+  }
+}
+
+async function pixelateTextWords(im, worker) {
+  if (!worker) return;
+  try {
+    const SC = 3; // upscale so small text is legible to the OCR
+    const buf = await im.clone().scale(SC).getBufferAsync(Jimp.MIME_PNG);
+    const { data } = await worker.recognize(buf);
+    const w = im.bitmap.width, h = im.bitmap.height;
+    for (const word of (data.words || [])) {
+      if (word.confidence <= 68) continue;
+      if (!/^[A-Za-z][A-Za-z0-9]{2,}$/.test((word.text || '').trim())) continue; // real word, drop junk
+      const b = word.bbox;
+      const x0 = b.x0 / SC, y0 = b.y0 / SC, bw = (b.x1 - b.x0) / SC, bh = (b.y1 - b.y0) / SC;
+      if (bw < 6 || bh < 5) continue;
+      const px = Math.max(0, Math.round(x0 - 3)), py = Math.max(0, Math.round(y0 - 3));
+      im.pixelate(6, px, py, Math.min(w - px, Math.round(bw + 6)), Math.min(h - py, Math.round(bh + 6)));
+    }
+  } catch (e) { console.log('OCR error:', e.message); }
 }
 
 async function processImage(buffer) {
@@ -890,23 +930,36 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
             return yTop + Math.round(cell.h * 0.40);
           };
 
+          // One OCR worker for all cards in this screenshot (degrades to no-OCR
+          // if Tesseract can't start — the colour badge pass still runs).
+          let ocrWorker = null;
+          if (Tesseract) {
+            try {
+              ocrWorker = await Tesseract.createWorker('eng', 1, {
+                langPath: path.join(__dirname, 'tessdata'),
+                gzip: true,
+                cachePath: require('os').tmpdir(),
+              });
+            } catch (e) { console.log('OCR init failed:', e.message); ocrWorker = null; }
+          }
+
           for (let i = 0; i < count; i++) {
             const cell = cells[i];
             if (!cell) { croppedPhotos.push(null); continue; }
-            let yTop = detectPhotoTop(cell);
-            // On header (Manheim) cards, skip the thin overlay band right under
-            // the header where the "DealShield Select" badge / flag / 360 icons
-            // sit, so they're simply out of frame.
-            if (typeof cell.photoTop === 'number') yTop += Math.round(cell.h * 0.07);
+            const yTop = detectPhotoTop(cell);
             const yBot = detectPhotoBottom(cell, yTop);
             const x = cell.x + 1, y = yTop, w = cell.w - 2, h = yBot - yTop;
             if (x + w > W || y + h > H || h < 10 || w < 10) { croppedPhotos.push(null); continue; }
-            // Keep the photo as-is. The top overlay band (DealShield/flag/360)
-            // is already out of frame via the crop offset above.
+            // Original photo (no blur, no crop offset); hide only the overlays:
+            // the amber DealShield badge by colour, and any real text via OCR.
             const cropped = img.clone().crop(x, y, w, h);
+            pixelateAmberBadge(cropped);
+            await pixelateTextWords(cropped, ocrWorker);
             const jpgBuf = await cropped.quality(85).getBufferAsync(Jimp.MIME_JPEG);
             croppedPhotos.push(jpgBuf.toString('base64'));
           }
+
+          if (ocrWorker) { try { await ocrWorker.terminate(); } catch (e) {} }
         } catch(e) {
           console.log('Screenshot crop error:', e.message);
         }
