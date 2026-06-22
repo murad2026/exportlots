@@ -187,9 +187,11 @@ function filterInventory() {
   const q = (document.getElementById('inv-search').value || '').trim().toLowerCase();
   let filtered = status ? allVehicles.filter(v=>v.status===status) : allVehicles;
   if (q) {
-    filtered = filtered.filter(v =>
-      `${v.lot} ${v.year||''} ${v.make||''} ${v.model||''} ${v.trim||''}`.toLowerCase().includes(q)
-    );
+    const tokens = q.split(/\s+/).filter(Boolean);
+    filtered = filtered.filter(v => {
+      const hay = `lot ${v.lot} ${v.year||''} ${v.make||''} ${v.model||''} ${v.trim||''}`.toLowerCase();
+      return tokens.every(t => hay.includes(t));
+    });
   }
   renderInventory(filtered);
 }
