@@ -894,7 +894,11 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
           for (let i = 0; i < count; i++) {
             const cell = cells[i];
             if (!cell) { croppedPhotos.push(null); continue; }
-            const yTop = detectPhotoTop(cell);
+            let yTop = detectPhotoTop(cell);
+            // On header (Manheim) cards, skip the thin overlay band right under
+            // the header where the "DealShield Select" badge / flag / 360 icons
+            // sit, so they're simply out of frame.
+            if (typeof cell.photoTop === 'number') yTop += Math.round(cell.h * 0.07);
             const yBot = detectPhotoBottom(cell, yTop);
             const x = cell.x + 1, y = yTop, w = cell.w - 2, h = yBot - yTop;
             if (x + w > W || y + h > H || h < 10 || w < 10) { croppedPhotos.push(null); continue; }
