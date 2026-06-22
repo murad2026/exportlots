@@ -407,7 +407,7 @@ async function processImage(buffer) {
     if (img.bitmap.width > 1200 || img.bitmap.height > 900) {
       img.scaleToFit(1200, 900);
     }
-    await applyEdgeBlur(img);
+    // No blur — the screenshot crop already produced the final framed photo.
     return await img.quality(85).getBufferAsync(Jimp.MIME_JPEG);
   } catch(e) {
     console.log('Image processing error:', e.message, '— saving raw');
@@ -806,7 +806,7 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
           };
 
           // Detect the dark-blue header bands — one per row of cards.
-          const bands = [];
+          let bands = [];
           { let top = -1;
             for (let y = 0; y < H; y++) {
               const f = blueRowFrac(y);
@@ -815,6 +815,9 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
             }
             if (top >= 0) bands.push({ top, bottom: H });
           }
+          // Drop thin false bands (colored condition circles, dividers); a real
+          // header bar is tens of px tall.
+          bands = bands.filter(b => b.bottom - b.top >= 10);
 
           // Columns within a band = runs of x that contain blue somewhere in the
           // band; the white gaps between cards separate them. Immune to the white
@@ -840,7 +843,7 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
             for (let r = 0; r < bands.length; r++) {
               const cy = bands[r].top;
               const ch = (r + 1 < bands.length ? bands[r + 1].top : H) - cy;
-              for (const [x0, x1] of detectCols(bands[r])) cells.push({ x: x0, y: cy, w: x1 - x0, h: ch });
+              for (const [x0, x1] of detectCols(bands[r])) cells.push({ x: x0, y: cy, w: x1 - x0, h: ch, photoTop: bands[r].bottom });
             }
           }
           if (cells.length < 2) { // no usable headers — even count-based grid
@@ -858,8 +861,10 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
             for (let sx = cell.x + 4; sx < cell.x + cell.w - 4; sx += step) xs.push(sx);
             return xs;
           };
-          // Bottom of the blue header within a cell = photo top (offset from cell top).
+          // Photo top: bottom of the blue header. Header cells already know it
+          // (band.bottom); the fallback grid scans for the header per cell.
           const detectPhotoTop = (cell) => {
+            if (typeof cell.photoTop === 'number') return cell.photoTop;
             const xs = colsOf(cell);
             const maxScan = Math.round(cell.h * 0.25);
             let sawHeader = false;
@@ -868,33 +873,33 @@ Return a JSON array of objects, one per vehicle card. No markdown, just raw JSON
               for (const sx of xs) if (isBlue(Jimp.intToRGBA(img.getPixelColor(sx, cell.y + dy)))) blue++;
               const frac = xs.length ? blue / xs.length : 0;
               if (frac > 0.5) sawHeader = true;
-              else if (sawHeader) return dy;
+              else if (sawHeader) return cell.y + dy;
             }
-            return 0;
+            return cell.y;
           };
-          // First near-white row below the photo = photo bottom (offset from cell top).
-          const detectPhotoBottom = (cell, topOff) => {
+          // First near-white full-width row below the photo = photo bottom.
+          const detectPhotoBottom = (cell, yTop) => {
             const xs = colsOf(cell);
-            const minY = cell.y + topOff + Math.round(cell.h * 0.15);
-            const maxY = cell.y + topOff + Math.round(cell.h * 0.55);
+            const minY = yTop + Math.round(cell.h * 0.10);
+            const maxY = yTop + Math.round(cell.h * 0.60);
             for (let y = minY; y <= maxY && y < H; y++) {
               let light = 0;
               for (const sx of xs) { const c = Jimp.intToRGBA(img.getPixelColor(sx, y)); if (c.r > 232 && c.g > 232 && c.b > 232) light++; }
-              if (xs.length && light / xs.length > 0.93) return y - cell.y;
+              if (xs.length && light / xs.length > 0.93) return y;
             }
-            return topOff + Math.round(cell.h * 0.42);
+            return yTop + Math.round(cell.h * 0.40);
           };
 
           for (let i = 0; i < count; i++) {
             const cell = cells[i];
             if (!cell) { croppedPhotos.push(null); continue; }
-            const topOff = detectPhotoTop(cell);
-            const bottomOff = detectPhotoBottom(cell, topOff);
-            const x = cell.x + 1, y = cell.y + topOff, w = cell.w - 2, h = bottomOff - topOff;
+            const yTop = detectPhotoTop(cell);
+            const yBot = detectPhotoBottom(cell, yTop);
+            const x = cell.x + 1, y = yTop, w = cell.w - 2, h = yBot - yTop;
             if (x + w > W || y + h > H || h < 10 || w < 10) { croppedPhotos.push(null); continue; }
+            // Keep the photo as-is (no blur); the car is framed by the detected cell.
             const cropped = img.clone().crop(x, y, w, h);
-            await applyEdgeBlur(cropped);
-            const jpgBuf = await cropped.quality(82).getBufferAsync(Jimp.MIME_JPEG);
+            const jpgBuf = await cropped.quality(85).getBufferAsync(Jimp.MIME_JPEG);
             croppedPhotos.push(jpgBuf.toString('base64'));
           }
         } catch(e) {
