@@ -55,6 +55,7 @@
     <div style="padding:20px 24px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
       <h2 style="font-family:var(--serif);font-size:20px;font-weight:500">All listings</h2>
       <div style="display:flex;gap:10px">
+        <input type="text" id="inv-search" placeholder="Search lot or vehicle…" oninput="filterInventory()" style="min-width:200px;font-size:13px;padding:7px 12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg);font-family:var(--mono)">
         <select class="filter-select" id="inv-filter" onchange="filterInventory()">
           <option value="">All statuses</option>
           <option value="active">Active</option>
@@ -137,7 +138,7 @@ async function loadDashboard() {
     document.getElementById('s-dealers').textContent = '—';
 
     renderPending(pending);
-    renderInventory(allVehicles);
+    filterInventory();
   } catch(e) {
     console.error(e);
   }
@@ -183,7 +184,13 @@ function getTimerText(v) {
 
 function filterInventory() {
   const status = document.getElementById('inv-filter').value;
-  const filtered = status ? allVehicles.filter(v=>v.status===status) : allVehicles;
+  const q = (document.getElementById('inv-search').value || '').trim().toLowerCase();
+  let filtered = status ? allVehicles.filter(v=>v.status===status) : allVehicles;
+  if (q) {
+    filtered = filtered.filter(v =>
+      `${v.lot} ${v.year||''} ${v.make||''} ${v.model||''} ${v.trim||''}`.toLowerCase().includes(q)
+    );
+  }
   renderInventory(filtered);
 }
 
