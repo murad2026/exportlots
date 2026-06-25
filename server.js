@@ -12,7 +12,7 @@ try { nodemailer = require('nodemailer'); } catch(e) { nodemailer = null; }
 try { Anthropic = require('@anthropic-ai/sdk'); } catch(e) { Anthropic = null; }
 try { Tesseract = require('tesseract.js'); } catch(e) { Tesseract = null; }
 
-const { initDb, allDocs, getDoc, insertDoc, updateDoc, deleteDoc, withNextLotInsert, getPhoto, findLotByVin } = require('./db');
+const { initDb, allDocs, getDoc, insertDoc, updateDoc, deleteDoc, withNextLotInsert, getPhoto, findLotByVin, logEvent, getEvents } = require('./db');
 
 async function sendNotification(subject, html) {
   const apiKey = process.env.RESEND_API_KEY;
@@ -597,6 +597,86 @@ async function handleRequest(req, res) {
     if (pathname === '/api/session' && req.method === 'GET') {
       const s = getSession(req);
       return res.end(JSON.stringify(s ? { ok: true, role: s.role } : { ok: false }));
+    }
+
+    // POST /api/track — record a dealer activity event.
+    // Identity is taken from the session, NOT the request body, so it can't
+    // be spoofed. Only logged-in dealers/owners are tracked; everyone else
+    // is silently ignored (no error, so the client never breaks).
+    if (pathname === '/api/track' && req.method === 'POST') {
+      const s = getSession(req);
+      if (!s || !['dealer', 'owner'].includes(s.role)) {
+        return res.end(JSON.stringify({ ok: true, skipped: true }));
+      }
+      // The owner browsing their own catalog shouldn't pollute dealer stats.
+      if (s.role === 'owner') return res.end(JSON.stringify({ ok: true, skipped: true }));
+      const body = await readBody(req);
+      const ALLOWED = ['view', 'whatsapp', 'search'];
+      const type = ALLOWED.includes(body.type) ? body.type : null;
+      if (!type) return res.end(JSON.stringify({ ok: false, error: 'bad type' }));
+      const lot = typeof body.lot === 'string' ? body.lot.slice(0, 40) : null;
+      let meta = null;
+      if (body.meta && typeof body.meta === 'object') {
+        meta = {};
+        for (const k of ['query', 'make', 'model', 'dwell']) {
+          if (body.meta[k] != null) meta[k] = String(body.meta[k]).slice(0, 120);
+        }
+        if (!Object.keys(meta).length) meta = null;
+      }
+      try { await logEvent(s.userId, lot, type, meta); } catch(e) { console.log('track error:', e.message); }
+      return res.end(JSON.stringify({ ok: true }));
+    }
+
+    // GET /api/admin/activity — per-dealer activity summary for the owner.
+    if (pathname === '/api/admin/activity' && req.method === 'GET') {
+      const s = getSession(req);
+      if (!s || s.role !== 'owner') return res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
+      const days = Math.min(365, Math.max(1, parseInt(parsed.query.days) || 30));
+      const events = await getEvents(days);
+      const dealers = await allDocs('dealers');
+      const vehicles = await allDocs('vehicles');
+
+      // Lookups: dealer id -> readable name, lot -> "year make model".
+      const dealerName = {};
+      dealers.forEach(d => { dealerName[d.id] = d.company || d.name || d.email || d.id; });
+      dealerName['test-001'] = 'Demo dealer (test@dapex.net)';
+      const lotTitle = {};
+      vehicles.forEach(v => { lotTitle[v.lot] = `${v.year || ''} ${v.make || ''} ${v.model || ''}`.trim(); });
+
+      // Aggregate per dealer.
+      const byDealer = {};
+      for (const e of events) {
+        const id = e.dealer_id || 'unknown';
+        if (!byDealer[id]) {
+          byDealer[id] = { id, name: dealerName[id] || id, total: 0, lastSeen: e.created_at, cars: {}, searches: [] };
+        }
+        const d = byDealer[id];
+        d.total++;
+        if (new Date(e.created_at) > new Date(d.lastSeen)) d.lastSeen = e.created_at;
+        if (e.type === 'search') {
+          const q = (e.meta && (e.meta.query || [e.meta.make, e.meta.model].filter(Boolean).join(' '))) || '';
+          if (q && d.searches.length < 25) d.searches.push({ q, at: e.created_at });
+          continue;
+        }
+        if (!e.lot) continue;
+        if (!d.cars[e.lot]) {
+          d.cars[e.lot] = { lot: e.lot, title: lotTitle[e.lot] || '(removed listing)', views: 0, whatsapp: 0, lastSeen: e.created_at };
+        }
+        const c = d.cars[e.lot];
+        if (e.type === 'view') c.views++;
+        if (e.type === 'whatsapp') c.whatsapp++;
+        if (new Date(e.created_at) > new Date(c.lastSeen)) c.lastSeen = e.created_at;
+      }
+
+      // Shape into sorted arrays: cars ranked by interest (WhatsApp first, then views).
+      const dealersOut = Object.values(byDealer).map(d => {
+        const cars = Object.values(d.cars).sort((a, b) =>
+          (b.whatsapp - a.whatsapp) || (b.views - a.views) || (new Date(b.lastSeen) - new Date(a.lastSeen))
+        );
+        return { id: d.id, name: d.name, total: d.total, lastSeen: d.lastSeen, cars, searches: d.searches };
+      }).sort((a, b) => new Date(b.lastSeen) - new Date(a.lastSeen));
+
+      return res.end(JSON.stringify({ ok: true, days, dealers: dealersOut }));
     }
 
     // GET /api/vehicles

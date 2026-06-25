@@ -50,6 +50,21 @@
     </div>
   </div>
 
+  <!-- DEALER ACTIVITY -->
+  <div style="background:var(--bg-elev);border:1px solid var(--line);border-radius:var(--radius-lg);margin-bottom:28px">
+    <div style="padding:20px 24px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <h2 style="font-family:var(--serif);font-size:20px;font-weight:500">Dealer activity <span style="font-size:13px;color:var(--ink-mute)">— which cars they're looking at</span></h2>
+      <select class="filter-select" id="act-days" onchange="loadActivity()">
+        <option value="7">Last 7 days</option>
+        <option value="30" selected>Last 30 days</option>
+        <option value="90">Last 90 days</option>
+      </select>
+    </div>
+    <div id="activity-list" style="padding:16px 24px">
+      <div style="text-align:center;padding:20px;color:var(--ink-mute);font-size:13px;font-family:var(--mono)">Loading...</div>
+    </div>
+  </div>
+
   <!-- INVENTORY TABLE -->
   <div style="background:var(--bg-elev);border:1px solid var(--line);border-radius:var(--radius-lg)">
     <div style="padding:20px 24px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
@@ -139,8 +154,57 @@ async function loadDashboard() {
 
     renderPending(pending);
     filterInventory();
+    loadActivity();
   } catch(e) {
     console.error(e);
+  }
+}
+
+function timeAgo(ts) {
+  const s = Math.floor((Date.now() - new Date(ts)) / 1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return Math.floor(s/60) + 'm ago';
+  if (s < 86400) return Math.floor(s/3600) + 'h ago';
+  return Math.floor(s/86400) + 'd ago';
+}
+
+async function loadActivity() {
+  const el = document.getElementById('activity-list');
+  const days = document.getElementById('act-days').value;
+  try {
+    const r = await fetch('/api/admin/activity?days=' + days);
+    const d = await r.json();
+    if (!d.ok) { el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ink-mute);font-size:13px">Could not load activity.</div>'; return; }
+    if (!d.dealers.length) {
+      el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ink-mute);font-size:13px">No dealer activity in this period yet.</div>';
+      return;
+    }
+    el.innerHTML = d.dealers.map(dealer => {
+      const cars = dealer.cars.map(c => {
+        const wa = c.whatsapp ? `<span style="background:#25D366;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;font-family:var(--mono)"><i class="ti ti-brand-whatsapp"></i> ${c.whatsapp} quote${c.whatsapp>1?'s':''}</span>` : '';
+        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line-soft)">
+          <a href="/detail?lot=${c.lot}" target="_blank" style="flex:1;font-size:13px;font-weight:500;color:var(--ink);text-decoration:none">${c.title || c.lot} <span style="font-family:var(--mono);color:var(--ink-mute);font-size:11px">${c.lot}</span></a>
+          ${wa}
+          <span style="font-size:12px;color:var(--ink-soft);font-family:var(--mono)"><i class="ti ti-eye"></i> ${c.views}</span>
+          <span style="font-size:11px;color:var(--ink-mute);font-family:var(--mono);min-width:60px;text-align:right">${timeAgo(c.lastSeen)}</span>
+        </div>`;
+      }).join('');
+      const searches = dealer.searches.length
+        ? `<div style="margin-top:10px;font-size:12px;color:var(--ink-soft)"><span style="color:var(--ink-mute)">Searched:</span> ${[...new Set(dealer.searches.map(s=>s.q))].slice(0,12).map(q=>`<span style="background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:2px 9px;margin:2px;display:inline-block;font-size:11px">${q}</span>`).join('')}</div>`
+        : '';
+      return `<details style="border-bottom:1px solid var(--line-soft);padding:12px 0" ${d.dealers.length<=3?'open':''}>
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:12px;list-style:none">
+          <span style="font-weight:600;font-size:14px;flex:1">${dealer.name}</span>
+          <span style="font-size:11px;color:var(--ink-mute);font-family:var(--mono)">${dealer.cars.length} car${dealer.cars.length!==1?'s':''} · ${dealer.total} action${dealer.total!==1?'s':''} · ${timeAgo(dealer.lastSeen)}</span>
+        </summary>
+        <div style="margin-top:8px;padding-left:2px">
+          ${cars || '<div style="font-size:12px;color:var(--ink-mute);padding:6px 0">No specific cars opened — only searches.</div>'}
+          ${searches}
+        </div>
+      </details>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ink-mute);font-size:13px">Error loading activity.</div>';
   }
 }
 

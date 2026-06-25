@@ -95,6 +95,19 @@ const params = new URLSearchParams(window.location.search);
 const lot = params.get('lot');
 const initialDest = params.get('dest') || 'Lagos';
 
+// Lightweight activity tracking. The server only records it for logged-in
+// dealers (identity comes from the session cookie) and ignores everyone else.
+function track(type, lotId, meta) {
+  try {
+    const body = JSON.stringify({ type, lot: lotId, meta });
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon('/api/track', new Blob([body], { type: 'application/json' }));
+    } else {
+      fetch('/api/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true });
+    }
+  } catch {}
+}
+
 async function initNav() {
   try {
     const s = await fetch('/api/session').then(r => r.json());
@@ -131,6 +144,9 @@ function renderDetail(v) {
     document.getElementById('dcard').innerHTML = '<div style="padding:48px;text-align:center">Vehicle not found. <a href="/">Back to catalog</a></div>';
     return;
   }
+
+  // Record that this dealer opened this specific car.
+  track('view', v.lot, { make: v.make, model: v.model });
 
   // derive origin port from location
   const locState = (v.location || '').match(/^([A-Z]+)\s*-/)?.[1] || 'NJ';
@@ -242,7 +258,7 @@ function renderDetail(v) {
     </div>
 
     <div class="dfoot">
-      <a class="dwa" href="https://wa.me/12127965517?text=${waText}" target="_blank">
+      <a class="dwa" href="https://wa.me/12127965517?text=${waText}" target="_blank" onclick="track('whatsapp','${v.lot}',{make:'${(v.make||'').replace(/'/g,'')}',model:'${(v.model||'').replace(/'/g,'')}'})">
         <i class="ti ti-brand-whatsapp" style="font-size:18px"></i>
         Get a quote on WhatsApp
       </a>

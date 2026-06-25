@@ -94,6 +94,23 @@
 
 <script src="rates.js"></script>
 <script>
+// Activity tracking — server records it only for logged-in dealers.
+function track(type, lotId, meta) {
+  try {
+    const body = JSON.stringify({ type, lot: lotId, meta });
+    if (navigator.sendBeacon) navigator.sendBeacon('/api/track', new Blob([body], { type: 'application/json' }));
+    else fetch('/api/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true });
+  } catch {}
+}
+// Record a make/model search, debounced so rapid dropdown changes log once.
+let _searchTimer = null, _lastSearch = '';
+function trackSearch(make, model) {
+  const key = (make || '') + '|' + (model || '');
+  if (!make && !model) return;
+  if (key === _lastSearch) return;
+  clearTimeout(_searchTimer);
+  _searchTimer = setTimeout(() => { _lastSearch = key; track('search', null, { make, model }); }, 900);
+}
 const MARKET_FLAGS = { NG:'🇳🇬', AE:'🇦🇪', GH:'🇬🇭', LT:'🇱🇹', DO:'🇩🇴', GE:'🇬🇪', AM:'🇦🇲' };
 const MARKET_NAMES = { NG:'Nigeria', AE:'UAE', GH:'Ghana', LT:'Eastern Europe', DO:'Dominican Republic', GE:'Georgia', AM:'Armenia' };
 const DEST_KEYS = { NG:'Lagos', AE:'JebelAli', GH:'Tema', LT:'Klaipeda', DO:'RioHaina', GE:'Poti', AM:'Yerevan' };
@@ -201,6 +218,7 @@ function applyFilters() {
   const year = document.getElementById('f-year').value;
   const price = document.getElementById('f-price').value;
   const status = document.getElementById('f-status').value;
+  trackSearch(make, model);
 
   let filtered = allVehicles.filter(v => {
     if (make && v.make !== make) return false;

@@ -38,6 +38,17 @@ async function initDb() {
       lot TEXT PRIMARY KEY,
       data BYTEA NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS events (
+      id BIGSERIAL PRIMARY KEY,
+      dealer_id TEXT,
+      lot TEXT,
+      type TEXT NOT NULL,
+      meta JSONB,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+    CREATE INDEX IF NOT EXISTS events_dealer_idx ON events (dealer_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS events_lot_idx ON events (lot);
+    CREATE INDEX IF NOT EXISTS events_created_idx ON events (created_at DESC);
   `);
   const { rows } = await pool.query('SELECT count(*) FROM vehicles');
   console.log(`Postgres connected. vehicles table has ${rows[0].count} row(s).`);
@@ -122,6 +133,29 @@ async function getPhoto(lot) {
   return rows[0] ? rows[0].data : null;
 }
 
+// ---- dealer activity events ----
+// Records what a logged-in dealer does (opened a car, clicked WhatsApp,
+// searched). Identity comes from the server-side session, never the client.
+async function logEvent(dealerId, lot, type, meta) {
+  await pool.query(
+    `INSERT INTO events (dealer_id, lot, type, meta) VALUES ($1, $2, $3, $4)`,
+    [dealerId || null, lot || null, type, meta ? JSON.stringify(meta) : null]
+  );
+}
+
+// Returns recent events (default last 30 days), newest first.
+async function getEvents(sinceDays = 30, limit = 5000) {
+  const { rows } = await pool.query(
+    `SELECT dealer_id, lot, type, meta, created_at
+       FROM events
+      WHERE created_at > now() - ($1 || ' days')::interval
+      ORDER BY created_at DESC
+      LIMIT $2`,
+    [String(sinceDays), limit]
+  );
+  return rows;
+}
+
 async function findLotByVin(vin_full) {
   const { rows } = await pool.query(
     `SELECT lot FROM vehicles_private WHERE data->>'vin_full' = $1 LIMIT 1`,
@@ -130,4 +164,4 @@ async function findLotByVin(vin_full) {
   return rows[0] ? rows[0].lot : null;
 }
 
-module.exports = { pool, initDb, allDocs, getDoc, insertDoc, updateDoc, deleteDoc, withNextLotInsert, getPhoto, findLotByVin };
+module.exports = { pool, initDb, allDocs, getDoc, insertDoc, updateDoc, deleteDoc, withNextLotInsert, getPhoto, findLotByVin, logEvent, getEvents };
