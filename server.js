@@ -796,6 +796,59 @@ async function handleRequest(req, res) {
       return res.end(JSON.stringify({ ok: true }));
     }
 
+    // GET /api/dealers — list approved dealers (owner only, never leaks hashes)
+    if (pathname === '/api/dealers' && req.method === 'GET') {
+      const s = getSession(req);
+      if (!s || s.role !== 'owner') return res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
+      const dealers = await allDocs('dealers');
+      const safe = dealers.map(d => ({
+        id: d.id, name: d.name, company: d.company, country: d.country,
+        email: d.email, approved: d.approved,
+        created_at: d.approved_at || d.applied || null,
+        created_by: d.created_by || null,
+      }));
+      return res.end(JSON.stringify({ ok: true, dealers: safe }));
+    }
+
+    // POST /api/dealers/create — owner creates a ready-to-use dealer login
+    // (email = username, owner sets the password). Skips the application flow.
+    if (pathname === '/api/dealers/create' && req.method === 'POST') {
+      const s = getSession(req);
+      if (!s || s.role !== 'owner') return res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
+      const body = await readBody(req);
+      const email = (body.email || '').trim().toLowerCase();
+      const password = body.password || '';
+      const name = (body.name || '').trim();
+      const company = (body.company || '').trim();
+      const country = (body.country || '').trim();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.end(JSON.stringify({ ok: false, error: 'Enter a valid email' }));
+      if (password.length < 6) return res.end(JSON.stringify({ ok: false, error: 'Password must be at least 6 characters' }));
+      if (email === 'test@dapex.net') return res.end(JSON.stringify({ ok: false, error: 'That email is reserved' }));
+      const dealers = await allDocs('dealers');
+      const pending = await allDocs('pending');
+      if ([...dealers, ...pending].find(d => (d.email || '').toLowerCase() === email)) {
+        return res.end(JSON.stringify({ ok: false, error: 'A dealer with this email already exists' }));
+      }
+      const id = 'D' + Date.now();
+      const hash = bcrypt ? bcrypt.hashSync(password, 10) : password;
+      const dealer = {
+        id, name: name || email, company, country, email, phone: '',
+        type: 'dealer', password_hash: hash, approved: true,
+        approved_at: new Date().toISOString(), created_by: 'owner',
+      };
+      await insertDoc('dealers', 'id', id, dealer);
+      return res.end(JSON.stringify({ ok: true, dealer: { id, email, name: dealer.name } }));
+    }
+
+    // DELETE /api/dealers/:id — revoke a dealer's access (owner)
+    if (pathname.match(/^\/api\/dealers\/.+$/) && req.method === 'DELETE') {
+      const s = getSession(req);
+      if (!s || s.role !== 'owner') return res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
+      const id = pathname.split('/')[3];
+      await deleteDoc('dealers', 'id', id);
+      return res.end(JSON.stringify({ ok: true }));
+    }
+
     // POST /api/parse-screenshot — parse a Manheim grid screenshot via Claude Vision
     if (pathname === '/api/parse-screenshot' && req.method === 'POST') {
       const s = getSession(req);

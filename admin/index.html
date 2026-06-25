@@ -50,6 +50,39 @@
     </div>
   </div>
 
+  <!-- DEALERS -->
+  <div style="background:var(--bg-elev);border:1px solid var(--line);border-radius:var(--radius-lg);margin-bottom:28px">
+    <div style="padding:20px 24px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <h2 style="font-family:var(--serif);font-size:20px;font-weight:500">Dealers <span style="font-size:13px;color:var(--ink-mute)">— create a login directly, no application</span></h2>
+      <span id="dealers-count" style="background:var(--bg);border:1px solid var(--line);color:var(--ink-soft);font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;font-family:var(--mono)"></span>
+    </div>
+    <div style="padding:16px 24px">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:8px">
+        <div style="flex:2;min-width:170px">
+          <label style="display:block;font-size:10px;color:var(--ink-mute);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Email (this is the login)</label>
+          <input id="nd-email" type="email" placeholder="dealer@email.com" style="width:100%;font-size:13px;padding:8px 12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg);font-family:var(--mono)">
+        </div>
+        <div style="flex:2;min-width:150px">
+          <label style="display:block;font-size:10px;color:var(--ink-mute);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Name / company</label>
+          <input id="nd-name" type="text" placeholder="Optional" style="width:100%;font-size:13px;padding:8px 12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg)">
+        </div>
+        <div style="flex:1;min-width:90px">
+          <label style="display:block;font-size:10px;color:var(--ink-mute);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Country</label>
+          <input id="nd-country" type="text" placeholder="Optional" style="width:100%;font-size:13px;padding:8px 12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg)">
+        </div>
+        <div style="flex:2;min-width:160px">
+          <label style="display:block;font-size:10px;color:var(--ink-mute);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Password <span style="color:var(--accent);cursor:pointer;text-transform:none;letter-spacing:0" onclick="genPass()">· generate</span></label>
+          <input id="nd-pass" type="text" placeholder="min 6 chars" style="width:100%;font-size:13px;padding:8px 12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg);font-family:var(--mono)">
+        </div>
+        <button class="btn btn-accent btn-sm" style="height:36px" onclick="createDealer()"><i class="ti ti-user-plus"></i> Create login</button>
+      </div>
+      <div id="nd-msg" style="font-size:12px;margin:6px 0 14px;font-family:var(--mono)"></div>
+      <div id="dealers-list">
+        <div style="text-align:center;padding:14px;color:var(--ink-mute);font-size:13px;font-family:var(--mono)">Loading...</div>
+      </div>
+    </div>
+  </div>
+
   <!-- DEALER ACTIVITY -->
   <div style="background:var(--bg-elev);border:1px solid var(--line);border-radius:var(--radius-lg);margin-bottom:28px">
     <div style="padding:20px 24px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
@@ -154,10 +187,86 @@ async function loadDashboard() {
 
     renderPending(pending);
     filterInventory();
+    loadDealers();
     loadActivity();
   } catch(e) {
     console.error(e);
   }
+}
+
+async function loadDealers() {
+  try {
+    const r = await fetch('/api/dealers');
+    const d = await r.json();
+    if (!d.ok) return;
+    document.getElementById('s-dealers').textContent = d.dealers.length;
+    document.getElementById('dealers-count').textContent = d.dealers.length + ' active';
+    renderDealers(d.dealers);
+  } catch {}
+}
+
+function renderDealers(list) {
+  const el = document.getElementById('dealers-list');
+  if (!list.length) {
+    el.innerHTML = '<div style="text-align:center;padding:14px;color:var(--ink-mute);font-size:13px">No dealers yet. Create one above.</div>';
+    return;
+  }
+  el.innerHTML = list.map(d => `
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line-soft)">
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:13px;font-family:var(--mono)">${d.email}</div>
+        <div style="font-size:11px;color:var(--ink-mute);margin-top:2px">${[d.name && d.name!==d.email ? d.name : '', d.company, d.country].filter(Boolean).join(' · ') || '—'}${d.created_by==='owner' ? ' · <span style="color:var(--green-d)">created by you</span>' : ' · from application'}</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" style="border-color:var(--red);color:var(--red);flex-shrink:0" onclick="deleteDealer('${d.id}','${d.email}')"><i class="ti ti-ban"></i> Revoke</button>
+    </div>`).join('');
+}
+
+function genPass() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+  let p = '';
+  for (let i = 0; i < 10; i++) p += chars[Math.floor(Math.random() * chars.length)];
+  document.getElementById('nd-pass').value = p;
+}
+
+async function createDealer() {
+  const email = document.getElementById('nd-email').value.trim();
+  const name = document.getElementById('nd-name').value.trim();
+  const country = document.getElementById('nd-country').value.trim();
+  const password = document.getElementById('nd-pass').value;
+  const msg = document.getElementById('nd-msg');
+  msg.textContent = '';
+  if (!email || !password) { msg.style.color = 'var(--red)'; msg.textContent = 'Email and password are required.'; return; }
+  if (password.length < 6) { msg.style.color = 'var(--red)'; msg.textContent = 'Password must be at least 6 characters.'; return; }
+  try {
+    const r = await fetch('/api/dealers/create', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, name, company: name, country, password })
+    });
+    const d = await r.json();
+    if (d.ok) {
+      msg.style.color = 'var(--green-d)';
+      msg.innerHTML = `✓ Login ready — give the dealer:  <b>${email}</b>  /  <b>${password}</b>  (login page: exportlots.com/login)`;
+      document.getElementById('nd-email').value = '';
+      document.getElementById('nd-name').value = '';
+      document.getElementById('nd-country').value = '';
+      document.getElementById('nd-pass').value = '';
+      loadDealers();
+    } else {
+      msg.style.color = 'var(--red)';
+      msg.textContent = 'Error: ' + (d.error || 'failed');
+    }
+  } catch(e) {
+    msg.style.color = 'var(--red)';
+    msg.textContent = 'Network error: ' + e.message;
+  }
+}
+
+async function deleteDealer(id, email) {
+  if (!confirm(`Revoke access for ${email}? They will no longer be able to log in.`)) return;
+  const r = await fetch('/api/dealers/' + id, { method: 'DELETE' });
+  const d = await r.json();
+  if (d.ok) loadDealers();
+  else alert('Error: ' + (d.error || 'failed'));
 }
 
 function timeAgo(ts) {
