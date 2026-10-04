@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Калькулятор доставки авто — Поти, Грузия · ExportLots</title>
+<meta name="description" content="Расчёт доставки авто с аукционов США (Copart / IAA / Manheim) до порта Поти, Грузия. Dapex Inc. — FMC NVOCC #022641.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="style.css">
+<style>
+  .calc-wrap { max-width: 720px; margin: 0 auto; padding: 28px var(--gap) 56px; }
+  .calc-head { margin-bottom: 22px; }
+  .calc-head h1 { font-family: var(--serif); font-size: clamp(24px,3vw,32px); font-weight: 400; letter-spacing: -0.3px; margin: 8px 0 6px; }
+  .calc-head .sub { color: var(--ink-mute); font-size: 14px; }
+  .calc-card { background: var(--bg-elev); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 24px; }
+  .calc-wrap label { display: block; font-size: 11px; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; color: var(--ink-mute); margin: 16px 0 7px; }
+  .calc-card > label:first-of-type { margin-top: 0; }
+  .calc-wrap input[type=text], .calc-wrap input[type=number], .calc-wrap select { width: 100%; padding: 11px 12px; border: 1px solid var(--line); border-radius: var(--radius); font-size: 15px; background: var(--bg-elev); color: var(--ink); font-family: var(--font); outline: none; }
+  .calc-wrap input:focus, .calc-wrap select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-s); }
+  .seg { display: flex; gap: 8px; }
+  .seg button { flex: 1; padding: 10px; border: 1px solid var(--line); background: var(--bg-elev); border-radius: var(--radius); font-size: 13.5px; cursor: pointer; font-family: var(--font); color: var(--ink-soft); transition: all .12s; }
+  .seg button:hover { border-color: var(--ink-mute); }
+  .seg button.on { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+  .veh { display: flex; gap: 8px; }
+  .veh .vbox { flex: 1; }
+  .veh .vbox span { display: block; font-size: 12px; color: var(--ink-mute); margin-bottom: 5px; text-align: center; }
+  .veh input { text-align: center; }
+  .note { font-size: 12px; color: var(--ink-mute); margin-top: 5px; min-height: 15px; line-height: 1.5; }
+  .result { margin-top: 22px; background: var(--bg-deep); color: #f6f2e9; border-radius: var(--radius-lg); padding: 20px; }
+  .result .rlabel { font-size: 12px; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.06em; color: rgba(246,242,233,0.55); }
+  .result .big { font-size: 24px; font-weight: 700; margin: 3px 0 10px; font-family: var(--font); }
+  .result .row { display: flex; justify-content: space-between; font-size: 13.5px; padding: 4px 0; color: rgba(246,242,233,0.78); gap: 10px; }
+  .result .row span:last-child { text-align: right; font-family: var(--mono); }
+  .result .row.total { border-top: 1px solid rgba(246,242,233,0.2); margin-top: 8px; padding-top: 10px; color: #fff; font-weight: 600; }
+  .result .save { margin-top: 12px; background: rgba(26,158,74,0.16); border: 1px solid var(--green-d); border-radius: var(--radius); padding: 10px 12px; font-size: 14px; font-weight: 600; color: #9ff0c0; }
+  .result .wait { margin-top: 10px; background: rgba(246,242,233,0.08); border-radius: var(--radius); padding: 10px 12px; font-size: 13px; line-height: 1.45; color: rgba(246,242,233,0.85); }
+  .gear { margin-top: 18px; font-size: 13px; }
+  .gear summary { cursor: pointer; color: var(--accent); font-weight: 600; font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .income { background: var(--accent-s); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; margin-top: 12px; font-size: 14px; color: var(--accent-d); }
+  .foot { font-size: 12px; color: var(--ink-mute); margin-top: 16px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-brand"><span class="dot"></span>ExportLots</a>
+    <div class="nav-cta">
+      <a href="https://wa.me/12127965517" class="btn btn-wa btn-sm" target="_blank"><i class="ti ti-brand-whatsapp"></i> WhatsApp</a>
+    </div>
+  </div>
+</nav>
+
+<div class="trust-strip">
+  <div class="trust-strip-inner">
+    <span>Dapex Inc.</span>
+    <span class="sep">·</span>
+    <span>FMC NVOCC #022641</span>
+    <span class="sep">·</span>
+    <span>In business since 1999</span>
+    <span class="sep">·</span>
+    <span>Shipping to 113 countries</span>
+    <span class="sep">·</span>
+    <span>Direct carrier — not an agent</span>
+  </div>
+</div>
+
+<main class="calc-wrap">
+  <div class="calc-head">
+    <div class="eyebrow">Shipping calculator</div>
+    <h1>Доставка авто в Поти (Грузия)</h1>
+    <div class="sub">Расчёт доставки с аукционов США до порта Поти</div>
+  </div>
+
+  <div class="calc-card">
+    <label>Аукцион</label>
+    <div class="seg" id="srcSeg">
+      <button data-src="all" class="on">Все</button>
+      <button data-src="Copart / IAA">Copart / IAA</button>
+      <button data-src="Manheim">Manheim</button>
+    </div>
+
+    <label>Город аукциона</label>
+    <select id="citySelect"></select>
+    <div class="note" id="cityNote"></div>
+
+    <label>Ваши машины</label>
+    <div class="veh">
+      <div class="vbox"><span>Седаны</span><input type="number" id="nSedan" min="0" max="12" step="1" value="1"></div>
+      <div class="vbox"><span>SUV</span><input type="number" id="nSuv" min="0" max="12" step="1" value="0"></div>
+      <div class="vbox"><span>Пикапы</span><input type="number" id="nPickup" min="0" max="12" step="1" value="0"></div>
+    </div>
+    <div class="note" id="fitNote"></div>
+
+    <label>Доставка до склада в Нью-Джерси (inland), $ / авто</label>
+    <input type="number" id="inland" min="0" step="1" placeholder="Подставится из тарифа">
+    <div class="note" id="inlandNote"></div>
+
+    <label>Морской фрахт NY → Поти, $ / контейнер</label>
+    <input type="number" id="ocean" min="0" step="1">
+    <div class="note" id="oceanNote"></div>
+
+    <div class="result">
+      <div class="rlabel">Доставка до Поти, за 1 автомобиль</div>
+      <div class="big" id="perCar">—</div>
+      <div id="typeRows"></div>
+      <div class="row total"><span id="rTotalLbl">Итого за все машины</span><span id="rTotal">—</span></div>
+      <div class="save" id="saveBox" style="display:none;"></div>
+      <div class="wait" id="waitBox">Укажите город и машины — покажем цену и ориентир по отправке.</div>
+    </div>
+
+    <details class="gear">
+      <summary>⚙ Настройки</summary>
+      <label>Наценка (сервисный сбор), $ / авто</label>
+      <input type="number" id="margin" min="0" step="1">
+      <label>Из неё партнёру, $ / авто</label>
+      <input type="number" id="partner" min="0" step="1">
+      <label>Ваша доля прибыли, %</label>
+      <input type="number" id="share" min="0" max="100" step="1">
+      <label>Фрахт NY→Поти 40' ($, самая дешёвая линия — Maersk)</label>
+      <input type="number" id="o40" min="0" step="1">
+      <label>Фрахт NY→Поти 45' ($, Maersk)</label>
+      <input type="number" id="o45" min="0" step="1">
+      <div class="note">Фрахт по умолчанию — самая дешёвая линия (Maersk: 40' $1,515 · 45' $2,065). Цена считается по консолидации: машина платит за занятое место в контейнере (седан = 1.0, SUV = 1.33, пикап = 1.5 места; 40' = 4.0, 45' = 5.2 места; погрузка плотная, вилочным погрузчиком, коэффициент 0.85 — идут только битые). Количество машин клиента влияет на срок ожидания, а не на цену места.</div>
+      <div class="income" id="incomeBox">Ваш доход: —</div>
+    </details>
+
+    <div class="foot">
+      Дестинейшен: Поти, Грузия. Цена включает доставку с аукциона до склада в NJ, морской фрахт до Поти (доля за место в контейнере, ставка самой дешёвой линии) и сервисный сбор.
+      Не включает стоимость автомобиля и аукционные сборы. Ставки со статусом «минимальная» могут уточняться при бронировании.
+      Срок ожидания консолидации — ориентировочный. Сравнение с PGL — по их прайсу на сентябрь 2026.
+    </div>
+  </div>
+</main>
+
+<script>
+const DATA = [{"src": "Copart / IAA", "st": "COLORADO", "site": "Colorado Springs", "city": "Colorado Springs", "zip": "80907", "nj": [750.0, "min"], "pgl": 1928}, {"src": "Copart / IAA", "st": "CONNECTICUT", "site": "Hartford", "city": "East Windsor", "zip": "06088", "nj": [250.0, "exact"], "pgl": 1349}, {"src": "Copart / IAA", "st": "CONNECTICUT", "site": "Hartford", "city": "New Britain", "zip": "06051", "nj": [250.0, "exact"], "pgl": 1349}, {"src": "Copart / IAA", "st": "DELAWARE", "site": "New Castle", "city": "New Castle", "zip": "19720", "nj": [300.0, "exact"], "pgl": 1399}, {"src": "Copart / IAA", "st": "ILLINOIS", "site": "Chicago-North", "city": "East Dundee", "zip": "60118", "nj": [480.0, "exact"], "pgl": 1624}, {"src": "Copart / IAA", "st": "ILLINOIS", "site": "Chicago-West", "city": "Aurora", "zip": "60505", "nj": [570.0, "exact"], "pgl": 1878}, {"src": "Copart / IAA", "st": "ILLINOIS", "site": "Chicago South", "city": "Chicago Heights", "zip": "60411", "nj": [480.0, "exact"], "pgl": 1624}, {"src": "Copart / IAA", "st": "ILLINOIS", "site": "Chicago-South", "city": "Markham", "zip": "60428", "nj": [510.0, "exact"], "pgl": 1624}, {"src": "Copart / IAA", "st": "ILLINOIS", "site": "Lincoln", "city": "Lincoln", "zip": "62656", "nj": [580.0, "exact"], "pgl": 1674}, {"src": "Copart / IAA", "st": "ILLINOIS", "site": "Peoria", "city": "Pekin", "zip": "61554", "nj": [530.0, "exact"], "pgl": 1674}, {"src": "Copart / IAA", "st": "ILLINOIS", "site": "Southern Illinois", "city": "Alorton", "zip": "62205", "nj": [530.0, "exact"], "pgl": 1674}, {"src": "Copart / IAA", "st": "ILLINOIS", "site": "St. Louis", "city": "Granite City", "zip": "62040", "nj": [530.0, "exact"], "pgl": 1624}, {"src": "Copart / IAA", "st": "ILLINOIS", "site": "Wheeling", "city": "Wheeling", "zip": "60090", "nj": [490.0, "exact"], "pgl": 1599}, {"src": "Copart / IAA", "st": "INDIANA", "site": "Indianapolis", "city": "Indianapolis", "zip": "46254", "nj": [480.0, "exact"], "pgl": 1724}, {"src": "Copart / IAA", "st": "INDIANA", "site": "South Bend", "city": "South Bend", "zip": "46619", "nj": [550.0, "exact"], "pgl": 1649}, {"src": "Copart / IAA", "st": "IOWA", "site": "Davenport", "city": "Davenport", "zip": "52802", "nj": [600.0, "exact"], "pgl": 1724}, {"src": "Copart / IAA", "st": "IOWA", "site": "Davenport", "city": "Eldridge", "zip": "52748", "nj": [600.0, "exact"], "pgl": 1724}, {"src": "Copart / IAA", "st": "KANSAS", "site": "Kansas City", "city": "Kansas City", "zip": "66111", "nj": [800.0, "min"], "pgl": 1903}, {"src": "Copart / IAA", "st": "MASSACHUSETTS", "site": "Boston – Shirley", "city": "Shirley", "zip": "01464", "nj": [310.0, "exact"], "pgl": 1424}, {"src": "Copart / IAA", "st": "MASSACHUSETTS", "site": "West Warren", "city": "West Warren", "zip": "01092", "nj": [320.0, "exact"], "pgl": 1424}, {"src": "Copart / IAA", "st": "MICHIGAN", "site": "Grand Rapids", "city": "Byron Center", "zip": "49315", "nj": [600.0, "exact"], "pgl": 1699}, {"src": "Copart / IAA", "st": "MINNESOTA", "site": "Minneapolis", "city": "Blaine", "zip": "55434", "nj": [600.0, "exact"], "pgl": 1699}, {"src": "Copart / IAA", "st": "MINNESOTA", "site": "Minneapolis North", "city": "Ham Lake", "zip": "55304", "nj": [600.0, "exact"], "pgl": 1699}, {"src": "Copart / IAA", "st": "MINNESOTA", "site": "St. Cloud", "city": "Avon", "zip": "56310", "nj": [600.0, "exact"], "pgl": 1749}, {"src": "Copart / IAA", "st": "MISSOURI", "site": "Columbia", "city": "Columbia", "zip": "65201", "nj": [630.0, "exact"], "pgl": 1902}, {"src": "Copart / IAA", "st": "MISSOURI", "site": "Springfield", "city": "Rogersville", "zip": "65742", "nj": [630.0, "exact"], "pgl": 1774}, {"src": "Copart / IAA", "st": "MISSOURI", "site": "Springfield", "city": "Springfield", "zip": "65803", "nj": [600.0, "exact"], "pgl": 1774}, {"src": "Copart / IAA", "st": "MISSOURI", "site": "St. Louis", "city": "Bridgeton", "zip": "63044", "nj": [550.0, "exact"], "pgl": 1752}, {"src": "Copart / IAA", "st": "NEBRASKA", "site": "Lincoln", "city": "Greenwood", "zip": "68366", "nj": [650.0, "exact"], "pgl": 1749}, {"src": "Copart / IAA", "st": "NEW HAMPSHIRE", "site": "Manchester", "city": "Salem", "zip": "03079", "nj": [350.0, "exact"], "pgl": 1512}, {"src": "Copart / IAA", "st": "NEW JERSEY", "site": "Glassboro East", "city": "Glassboro", "zip": "08028", "nj": [210.0, "exact"], "pgl": 1329}, {"src": "Copart / IAA", "st": "NEW JERSEY", "site": "Southern New Jersey", "city": "Turnersville", "zip": "08012", "nj": [210.0, "exact"], "pgl": 1299}, {"src": "Copart / IAA", "st": "NEW YORK", "site": "Buffalo", "city": "Buffalo", "zip": "14207", "nj": [430.0, "exact"], "pgl": 1549}, {"src": "Copart / IAA", "st": "NEW YORK", "site": "Buffalo", "city": "Angola", "zip": "14006", "nj": [430.0, "exact"], "pgl": 1549}, {"src": "Copart / IAA", "st": "NEW YORK", "site": "Rochester", "city": "Bergen", "zip": "14416", "nj": [380.0, "exact"], "pgl": 1499}, {"src": "Copart / IAA", "st": "NEW YORK", "site": "Rochester", "city": "Leroy", "zip": "14482", "nj": [380.0, "exact"], "pgl": 1499}, {"src": "Copart / IAA", "st": "OHIO", "site": "Akron-Canton", "city": "New Philadelphia", "zip": "44663", "nj": [450.0, "exact"], "pgl": 1614}, {"src": "Copart / IAA", "st": "OHIO", "site": "Cleveland", "city": "Lorain", "zip": "44053", "nj": [450.0, "exact"], "pgl": 1544}, {"src": "Copart / IAA", "st": "OHIO", "site": "Columbus", "city": "Grove City", "zip": "43123", "nj": [470.0, "exact"], "pgl": 1574}, {"src": "Copart / IAA", "st": "OHIO", "site": "Dayton", "city": "Dayton", "zip": "45417", "nj": [470.0, "exact"], "pgl": 1574}, {"src": "Copart / IAA", "st": "OHIO", "site": "Dayton", "city": "Moraine", "zip": "45439", "nj": [470.0, "exact"], "pgl": 1574}, {"src": "Copart / IAA", "st": "PENNSYLVANIA", "site": "Altoona", "city": "Ebensburg", "zip": "15931", "nj": [370.0, "exact"], "pgl": 1474}, {"src": "Copart / IAA", "st": "PENNSYLVANIA", "site": "Altoona", "city": "East Freedom", "zip": "16637", "nj": [370.0, "exact"], "pgl": 1474}, {"src": "Copart / IAA", "st": "PENNSYLVANIA", "site": "Chambersburg", "city": "Chambersburg", "zip": "17201", "nj": [350.0, "exact"], "pgl": 1444}, {"src": "Copart / IAA", "st": "PENNSYLVANIA", "site": "Erie", "city": "Garland", "zip": "16416", "nj": [470.0, "exact"], "pgl": 1574}, {"src": "Copart / IAA", "st": "PENNSYLVANIA", "site": "Philadelphia", "city": "Conshohocken", "zip": "19428", "nj": [230.0, "exact"], "pgl": 1372}, {"src": "Copart / IAA", "st": "PENNSYLVANIA", "site": "Philadelphia", "city": "Pennsburg", "zip": "18073", "nj": [230.0, "exact"], "pgl": 1339}, {"src": "Copart / IAA", "st": "PENNSYLVANIA", "site": "York Haven", "city": "York Haven", "zip": "17370", "nj": [270.0, "exact"], "pgl": 1374}, {"src": "Copart / IAA", "st": "RHODE ISLAND", "site": "Exeter", "city": "Exeter", "zip": "02822", "nj": [310.0, "exact"], "pgl": 1424}, {"src": "Copart / IAA", "st": "SOUTH DAKOTA", "site": "Sioux Falls", "city": "Lennox", "zip": "57039", "nj": [750.0, "exact"], "pgl": 2452}, {"src": "Copart / IAA", "st": "SOUTH DAKOTA", "site": "Rapid City Sub", "city": "Rapid City", "zip": "57701", "nj": [1250.0, "exact"], "pgl": 2452}, {"src": "Copart / IAA", "st": "VERMONT", "site": "Burlington", "city": "Essex", "zip": "05451", "nj": [470.0, "exact"], "pgl": 1599}, {"src": "Copart / IAA", "st": "VERMONT", "site": "Rutland VT SUB", "city": "Fair Haven", "zip": "05743", "nj": [610.0, "exact"], "pgl": 1747}, {"src": "Copart / IAA", "st": "VIRGINIA", "site": "Fredericksburg SUB", "city": "Fredericksburg", "zip": "22408", "nj": [330.0, "exact"], "pgl": 1424}, {"src": "Copart / IAA", "st": "VIRGINIA", "site": "Pulaski", "city": "Pulaski", "zip": "24301", "nj": [410.0, "exact"], "pgl": 1509}, {"src": "Copart / IAA", "st": "VIRGINIA", "site": "Suffolk", "city": "Suffolk", "zip": "23434", "nj": [380.0, "exact"], "pgl": 1514}, {"src": "Copart / IAA", "st": "VIRGINIA", "site": "Tidewater", "city": "Yorktown", "zip": "23693", "nj": [360.0, "exact"], "pgl": 1454}, {"src": "Copart / IAA", "st": "WEST VIRGINIA", "site": "Charleston", "city": "Hurricane", "zip": "25526", "nj": [550.0, "exact"], "pgl": 1649}, {"src": "Copart / IAA", "st": "WISCONSIN", "site": "Madison", "city": "Madison", "zip": "53718", "nj": [630.0, "exact"], "pgl": 1747}, {"src": "Copart / IAA", "st": "WISCONSIN", "site": "Portage", "city": "Portage", "zip": "53901", "nj": [570.0, "exact"], "pgl": 1699}, {"src": "Copart / IAA", "st": "WYOMING", "site": "Casper", "city": "Casper", "zip": "82604", "nj": [1600.0, "exact"], "pgl": 3009}, {"src": "Manheim", "st": "COLORADO", "site": "Denver", "city": "Aurora", "zip": "80011", "nj": [750.0, "min"], "pgl": 1923}, {"src": "Manheim", "st": "INDIANA", "site": "Indianapolis", "city": "Indianapolis", "zip": "46239", "nj": [480.0, "exact"], "pgl": 1724}, {"src": "Manheim", "st": "MISSOURI", "site": "Kansas City", "city": "Kansas City", "zip": "64161", "nj": [550.0, "exact"], "pgl": 1902}, {"src": "Manheim", "st": "MISSOURI", "site": "St. Louis", "city": "Bridgeton", "zip": "63044", "nj": [550.0, "exact"], "pgl": 1752}, {"src": "Manheim", "st": "NEW JERSEY", "site": "New Jersey", "city": "Bordentown", "zip": "08505", "nj": [200.0, "exact"], "pgl": 1327}, {"src": "Manheim", "st": "OHIO", "site": "Ohio", "city": "Grove City", "zip": "43123", "nj": [470.0, "exact"], "pgl": 1574}, {"src": "Manheim", "st": "PENNSYLVANIA", "site": "Pennsylvania", "city": "Manheim", "zip": "17545", "nj": [300.0, "exact"], "pgl": 1397}, {"src": "Manheim", "st": "VIRGINIA", "site": "Harrisonburg", "city": "Harrisonburg", "zip": "22801", "nj": [440.0, "exact"], "pgl": 1597}, {"src": "Manheim", "st": "WISCONSIN", "site": "Milwaukee", "city": "Caledonia", "zip": "53108", "nj": [630.0, "exact"], "pgl": 1749}];
+const $ = id => document.getElementById(id);
+const fmt = n => "$" + Math.round(n).toLocaleString("en-US");
+const CAP40 = 4.0, CAP45 = 5.2, W = { sedan: 1.0, suv: 1.33, pickup: 1.5 }, DENSE = 0.85;
+
+let settings = { margin: 450, partner: 50, share: 35, o40: 1515, o45: 2065 };
+try { const s = JSON.parse(localStorage.getItem("potiCalcSettings6")); if (s) settings = Object.assign(settings, s); } catch(e) {}
+let srcFilter = "all", current = null;
+
+function saveSettings() { try { localStorage.setItem("potiCalcSettings6", JSON.stringify(settings)); } catch(e) {} }
+function label(e) { return `${e.site} — ${e.city}, ${e.st} ${e.zip} (${e.src})`; }
+function num(id) { return Math.max(0, parseInt($(id).value) || 0); }
+
+function filtered() {
+  return DATA.filter(e => srcFilter === "all" || e.src === srcFilter || e.src.startsWith(srcFilter));
+}
+
+function fillCities() {
+  const sel = $("citySelect");
+  const list = filtered();
+  sel.innerHTML = "";
+  const ph = document.createElement("option");
+  ph.value = "";
+  ph.textContent = `— Выберите аукцион (${list.length} направлений) —`;
+  sel.appendChild(ph);
+  list.forEach((e, i) => {
+    const o = document.createElement("option");
+    o.value = String(DATA.indexOf(e));
+    o.textContent = label(e);
+    sel.appendChild(o);
+  });
+  if (current && list.includes(current)) {
+    sel.value = String(DATA.indexOf(current));
+  } else {
+    current = null;
+    sel.value = "";
+  }
+}
+
+function plan() {
+  const nS = num("nSedan"), nU = num("nSuv"), nP = num("nPickup");
+  const n = nS + nU + nP;
+  let units = nS * W.sedan + nU * W.suv + nP * W.pickup;
+  units *= DENSE; // идут только битые — плотная погрузка всегда
+  let size, cont, price;
+  if (units <= CAP40) { size = "40'"; cont = 1; price = +settings.o40; }
+  else if (units <= CAP45) { size = "45'"; cont = 1; price = +settings.o45; }
+  else { size = "45'"; cont = Math.ceil(units / CAP45); price = +settings.o45 * cont; }
+  const capacity = (size === "40'" ? CAP40 : CAP45) * cont;
+  return { nS, nU, nP, n, units, size, cont, price, capacity };
+}
+
+function waitText(p) {
+  if (p.n === 0 || !current) return "Укажите город и машины — покажем цену и ориентир по отправке.";
+  const ratio = p.units / p.capacity;
+  if (ratio >= 0.95) return "Контейнер укомплектован вашими машинами — консолидация не нужна, погрузка к ближайшему рейсу. Самый быстрый вариант.";
+  if (ratio >= 0.60) return `Ваши машины занимают ${Math.round(ratio * 100)}% контейнера — добор обычно 3–7 дней, дальше погрузка к ближайшему рейсу.`;
+  if (ratio >= 0.35) return `Ваши машины занимают ${Math.round(ratio * 100)}% контейнера — ожидание консолидации обычно 7–12 дней. Быстрее, если добрать контейнер своими машинами.`;
+  return `Ваши машины занимают ${Math.round(ratio * 100)}% контейнера — ожидание консолидации обычно 10–20 дней: цена места та же, но ждём попутные машины. Быстрее всего — забронировать контейнер целиком.`;
+}
+
+function recalc() {
+  const p = plan();
+  const inland = parseFloat($("inland").value) || 0;
+  const rows = [
+    ["Седан", p.nS, W.sedan], ["SUV", p.nU, W.suv], ["Пикап", p.nP, W.pickup]
+  ].filter(t => t[1] > 0).map(([nm, cnt, w]) => {
+    const share = p.price * (w / p.capacity);
+    const price = inland + share + (+settings.margin || 0);
+    return { nm, cnt, share, price, sum: price * cnt };
+  });
+  const total = rows.reduce((s, r) => s + r.sum, 0);
+  $("perCar").textContent = (inland > 0 && rows.length)
+    ? rows.map(r => `${r.nm}: ${fmt(r.price)}`).join(" · ") : "—";
+  $("typeRows").innerHTML = rows.map(r =>
+    `<div class="row"><span>${r.nm} × ${r.cnt} (inland ${fmt(inland)} + место ${fmt(r.share)} + сбор ${fmt(+settings.margin || 0)})</span><span>${fmt(r.sum)}</span></div>`).join("");
+  $("rTotalLbl").textContent = p.n > 0 ? `Итого за ${p.n} авто` : "Итого за все машины";
+  $("rTotal").textContent = (inland > 0 && rows.length) ? fmt(total) : "—";
+  $("fitNote").textContent = p.n === 0 ? "" :
+    `Машин: ${p.n} · занято мест: ${p.units.toFixed(1)} · контейнер: ${p.size}${p.cont > 1 ? " × " + p.cont : ""} · фрахт контейнера: ${fmt(p.price)}`;
+  const sb = $("saveBox");
+  if (current && current.pgl && inland > 0 && rows.length) {
+    const per = rows.map(r => current.pgl - r.price);
+    const totSave = rows.reduce((s, r) => s + (current.pgl - r.price) * r.cnt, 0);
+    const pct = Math.round(100 * Math.min(...per) / current.pgl);
+    const rng = Math.min(...per) === Math.max(...per)
+      ? fmt(Math.min(...per)) : fmt(Math.min(...per)) + "–" + fmt(Math.max(...per));
+    sb.style.display = "block";
+    sb.textContent = `💰 Дешевле, чем PGL (${fmt(current.pgl)}): на ${rng} за авто (−${pct}%). Экономия за все машины: ${fmt(totSave)}.`;
+  } else {
+    sb.style.display = "none";
+  }
+  $("waitBox").textContent = waitText(p);
+  const profit = (+settings.margin || 0) - (+settings.partner || 0) + 75;
+  const income = profit * (+settings.share || 0) / 100;
+  $("incomeBox").textContent = `Ваш доход: ${fmt(income)} / авто · ${fmt(income * 4)} / контейнер (4 авто). Прибыль всего: ${fmt(profit)} / авто, партнёру: ${fmt(+settings.partner || 0)}.`;
+}
+
+function syncFromCity() {
+  const note = $("cityNote"), iNote = $("inlandNote");
+  if (!current) { note.textContent = ""; iNote.textContent = ""; recalc(); return; }
+  note.textContent = `Аукцион: ${current.site}, ${current.city} (${current.st}), ${current.src}`;
+  if (current.nj && current.nj[0] != null) {
+    $("inland").value = current.nj[0];
+    iNote.textContent = current.nj[1] === "min"
+      ? "Ставка Dapex до NJ — минимальная («от»), может уточняться."
+      : "Ставка Dapex до склада NJ.";
+  } else {
+    $("inland").value = "";
+    iNote.textContent = "Ставку до NJ введите вручную.";
+  }
+  const p = plan();
+  $("ocean").value = p.price;
+  $("oceanNote").textContent = `Контейнер ${p.size}${p.cont > 1 ? " × " + p.cont : ""}, NY → Поти, самая дешёвая линия (Maersk). Можно изменить вручную.`;
+  recalc();
+}
+
+$("citySelect").addEventListener("change", () => {
+  const v = $("citySelect").value;
+  current = v === "" ? null : DATA[parseInt(v)];
+  syncFromCity();
+});
+
+$("srcSeg").addEventListener("click", e => {
+  if (e.target.tagName !== "BUTTON") return;
+  [...$("srcSeg").children].forEach(b => b.classList.remove("on"));
+  e.target.classList.add("on");
+  srcFilter = e.target.dataset.src;
+  fillCities();
+  syncFromCity();
+});
+
+["nSedan", "nSuv", "nPickup"].forEach(id => $(id).addEventListener("input", syncFromCity));
+["inland", "ocean"].forEach(id => $(id).addEventListener("input", recalc));
+
+const bind = id => $(id).addEventListener("input", () => {
+  settings[id] = parseFloat($(id).value) || 0;
+  saveSettings(); syncFromCity();
+});
+["margin","partner","share","o40","o45"].forEach(bind);
+
+$("margin").value = settings.margin; $("partner").value = settings.partner; $("share").value = settings.share;
+$("o40").value = settings.o40; $("o45").value = settings.o45;
+fillCities();
+syncFromCity();
+</script>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="logo">ExportLots</div>
+      <p>Powered by Dapex Inc.<br>FMC NVOCC #022641<br>Old Bridge, NJ · USA</p>
+    </div>
+    <div class="footer-col">
+      <h4>Contact</h4>
+      <a href="mailto:sales@dapex.net">sales@dapex.net</a>
+      <a href="tel:+12127965517">+1 (212) 796-5517</a>
+      <a href="https://wa.me/12127965517" target="_blank">WhatsApp</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 Dapex Inc. All rights reserved.</span>
+    <span>FMC NVOCC #022641 · Old Bridge, NJ</span>
+  </div>
+</footer>
+
+<a class="wa-float" href="https://wa.me/12127965517" target="_blank">
+  <i class="ti ti-brand-whatsapp"></i> WhatsApp
+</a>
+
+</body>
+</html>
